@@ -1,10 +1,12 @@
-package org.clokey.clokeybatch;
+package org.clokey;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-class ClokeyBatchApplicationTests {
+@ActiveProfiles("test")
+class ClokeyApiApplicationTests {
 
     @Test
     void contextLoads() {}

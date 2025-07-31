@@ -1,4 +1,4 @@
-package org.clokey.clokeybatch;
+package org.clokey;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
