@@ -37,6 +37,21 @@ public class Cloth extends BaseEntity {
     @NotNull
     private Member member;
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private Cloth(String clothImageUrl, Category category, Member member) {
+        this.clothImageUrl = clothImageUrl;
+        this.category = category;
+        this.member = member;
+    }
+
+    public static Cloth createCloth(String clothImageUrl, Category category, Member member) {
+        return Cloth.builder()
+                .clothImageUrl(clothImageUrl)
+                .category(category)
+                .member(member)
+                .build();
+    }
+
     //    @OneToMany(mappedBy = "cloth", cascade = CascadeType.ALL, orphanRemoval = true)
     //    private List<HistoryCloth> historyCloths = new ArrayList<>();
     //

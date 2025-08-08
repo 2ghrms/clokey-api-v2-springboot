@@ -8,8 +8,8 @@ jar {
 
 dependencies {
     implementation project(':clokey-common')
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
+    api("org.springframework.boot:spring-boot-starter-web")
+    api("org.springframework.boot:spring-boot-starter-validation")
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+    api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 }

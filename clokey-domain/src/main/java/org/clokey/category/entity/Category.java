@@ -22,6 +22,13 @@ public class Category extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Category parent;
 
-    //    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    //    private List<Category> children = new ArrayList<>();
+    @Builder(access = AccessLevel.PRIVATE)
+    private Category(String name, Category parent) {
+        this.name = name;
+        this.parent = parent;
+    }
+
+    public static Category createCategory(String name, Category parent) {
+        return Category.builder().name(name).parent(parent).build();
+    }
 }

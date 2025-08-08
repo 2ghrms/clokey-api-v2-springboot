@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.clokey.common.model.BaseEntity;
@@ -23,9 +24,11 @@ public class Member extends BaseEntity {
     @NotNull private String email;
 
     @Column(unique = true)
+    @NotNull
     private String clokeyId;
 
     @Column(length = 30)
+    @NotNull
     private String nickname;
 
     @Embedded private OauthInfo oauthInfo;
@@ -48,6 +51,43 @@ public class Member extends BaseEntity {
     private String deviceToken;
 
     private LocalDate inactiveDate;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Member(
+            String email,
+            String clokeyId,
+            String nickname,
+            OauthInfo oauthInfo,
+            MemberStatus memberStatus,
+            RegisterStatus registerStatus,
+            Visibility visibility) {
+        this.email = email;
+        this.clokeyId = clokeyId;
+        this.nickname = nickname;
+        this.oauthInfo = oauthInfo;
+        this.memberStatus = memberStatus;
+        this.registerStatus = registerStatus;
+        this.visibility = visibility;
+    }
+
+    public static Member createMember(
+            String email,
+            String clokeyId,
+            String nickname,
+            OauthInfo oauthInfo,
+            MemberStatus memberStatus,
+            RegisterStatus registerStatus,
+            Visibility visibility) {
+        return Member.builder()
+                .email(email)
+                .clokeyId(clokeyId)
+                .nickname(nickname)
+                .oauthInfo(oauthInfo)
+                .memberStatus(memberStatus)
+                .registerStatus(registerStatus)
+                .visibility(visibility)
+                .build();
+    }
     //
     //    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     //    private List<MemberTerm> memberTermList = new ArrayList<>();

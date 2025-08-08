@@ -1,14 +1,17 @@
 package org.clokey.exception;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.clokey.dto.ErrorReasonDto;
 
 @Getter
-@AllArgsConstructor
 public class BaseCustomException extends RuntimeException {
 
-    private BaseErrorCode code;
+    private final BaseErrorCode code;
+
+    public BaseCustomException(BaseErrorCode code) {
+        super(code.getErrorReason().message());
+        this.code = code;
+    }
 
     public ErrorReasonDto getErrorReasonDto() {
         return this.code.getErrorReason();

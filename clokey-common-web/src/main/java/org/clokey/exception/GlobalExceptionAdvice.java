@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.clokey.response.BaseResponse;
 import org.springframework.beans.TypeMismatchException;
@@ -32,7 +31,6 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request) {
         String errorMessage = e.getPropertyName() + ": 올바른 값이 아닙니다.";
-
         return handleExceptionInternalMessage(e, headers, request, errorMessage);
     }
 
@@ -43,7 +41,6 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request) {
         String errorMessage = e.getParameterName() + ": 올바른 값이 아닙니다.";
-
         return handleExceptionInternalMessage(e, headers, request, errorMessage);
     }
 
@@ -53,13 +50,13 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
                 e.getConstraintViolations().stream()
                         .map(constraintViolation -> constraintViolation.getMessage())
                         .findFirst()
-                        .orElseThrow(
-                                () ->
-                                        new RuntimeException(
-                                                "ConstraintViolationException 추출 도중 에러 발생"));
+                        .orElse("COMMON400");
 
-        return handleExceptionInternalConstraint(
-                e, GlobalBaseErrorCode.valueOf(errorMessage), HttpHeaders.EMPTY, request);
+        GlobalBaseErrorCode errorCode =
+                GlobalBaseErrorCode.findByCode(errorMessage)
+                        .orElse(GlobalBaseErrorCode.BAD_REQUEST);
+
+        return handleExceptionInternalConstraint(e, errorCode, HttpHeaders.EMPTY, request);
     }
 
     @Override
@@ -76,74 +73,58 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
                 .getFieldErrors()
                 .forEach(
                         fieldError -> {
-                            String fieldName = fieldError.getField();
-                            String errorMessage;
-                            try {
-                                errorMessage =
-                                        Optional.ofNullable(
-                                                        GlobalBaseErrorCode.valueOf(
-                                                                        fieldError
-                                                                                .getDefaultMessage())
-                                                                .getMessage())
-                                                .orElse("");
-                            } catch (IllegalArgumentException ex) {
-                                errorMessage =
-                                        Optional.ofNullable(fieldError.getDefaultMessage())
-                                                .orElse("");
-                            }
+                            String rawFieldName =
+                                    fieldError.getField(); // ex: content[0].clothImageUrl
+                            String simplifiedFieldName =
+                                    rawFieldName
+                                            .substring(rawFieldName.lastIndexOf('.') + 1)
+                                            .replaceAll(".*\\.", ""); // → clothImageUrl
+
+                            String errorMessage =
+                                    GlobalBaseErrorCode.findByCode(fieldError.getDefaultMessage())
+                                            .map(GlobalBaseErrorCode::getMessage)
+                                            .orElse(fieldError.getDefaultMessage());
+
                             errors.merge(
-                                    fieldName,
+                                    simplifiedFieldName,
                                     errorMessage,
-                                    (existingErrorMessage, newErrorMessage) ->
-                                            existingErrorMessage + ", " + newErrorMessage);
+                                    (existing, replacement) -> existing + ", " + replacement);
                         });
 
-        // 클래스 레벨 에러 처리 (ObjectError)
+        // 클래스 레벨 에러 처리
         e.getBindingResult()
                 .getGlobalErrors()
                 .forEach(
                         objectError -> {
-                            String objectName = objectError.getObjectName();
-                            String errorMessage;
-                            try {
-                                errorMessage =
-                                        Optional.ofNullable(
-                                                        GlobalBaseErrorCode.valueOf(
-                                                                        objectError
-                                                                                .getDefaultMessage())
-                                                                .getMessage())
-                                                .orElse("");
-                            } catch (IllegalArgumentException ex) {
-                                errorMessage =
-                                        Optional.ofNullable(objectError.getDefaultMessage())
-                                                .orElse("");
-                            }
+                            String errorMessage =
+                                    GlobalBaseErrorCode.findByCode(objectError.getDefaultMessage())
+                                            .map(GlobalBaseErrorCode::getMessage)
+                                            .orElse(objectError.getDefaultMessage());
+
                             errors.merge(
-                                    "message :",
+                                    "message",
                                     errorMessage,
-                                    (existingErrorMessage, newErrorMessage) ->
-                                            existingErrorMessage + ", " + newErrorMessage);
+                                    (existing, replacement) -> existing + ", " + replacement);
                         });
 
         return handleExceptionInternalArgs(
-                e, HttpHeaders.EMPTY, GlobalBaseErrorCode.valueOf("BAD_REQUEST"), request, errors);
+                e, headers, GlobalBaseErrorCode.BAD_REQUEST, request, errors);
     }
 
     @ExceptionHandler
     public ResponseEntity<Object> exception(Exception e, WebRequest request) {
         e.printStackTrace();
-
         return handleExceptionInternalFalse(
                 e,
                 GlobalBaseErrorCode.INTERNAL_SERVER_ERROR,
                 HttpHeaders.EMPTY,
-                HttpStatus.valueOf(GlobalBaseErrorCode.INTERNAL_SERVER_ERROR.getCode()),
+                HttpStatus.valueOf(GlobalBaseErrorCode.INTERNAL_SERVER_ERROR.getStatus()),
                 request,
                 e.getMessage());
     }
 
-    @ExceptionHandler(value = BaseCustomException.class)
-    public ResponseEntity onThrowException(
+    @ExceptionHandler(BaseCustomException.class)
+    public ResponseEntity<Object> onThrowException(
             BaseCustomException baseCustomException, HttpServletRequest request) {
         return handleExceptionInternal(
                 baseCustomException, baseCustomException.getCode(), null, request);
@@ -153,8 +134,8 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
             Exception e, BaseErrorCode code, HttpHeaders headers, HttpServletRequest request) {
 
         BaseResponse<Object> body = BaseResponse.onFailure(code, null);
-
         WebRequest webRequest = new ServletWebRequest(request);
+
         return super.handleExceptionInternal(
                 e, body, headers, HttpStatus.valueOf(code.getErrorReason().status()), webRequest);
     }
@@ -166,6 +147,7 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
             HttpStatus status,
             WebRequest request,
             String errorPoint) {
+
         BaseResponse<Object> body = BaseResponse.onFailure(errorCommonStatus, errorPoint);
         return super.handleExceptionInternal(e, body, headers, status, request);
     }
@@ -176,9 +158,10 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
             GlobalBaseErrorCode errorCommonStatus,
             WebRequest request,
             Map<String, String> errorArgs) {
+
         BaseResponse<Object> body = BaseResponse.onFailure(errorCommonStatus, errorArgs);
         return super.handleExceptionInternal(
-                e, body, headers, HttpStatus.valueOf(errorCommonStatus.getCode()), request);
+                e, body, headers, HttpStatus.valueOf(errorCommonStatus.getStatus()), request);
     }
 
     private ResponseEntity<Object> handleExceptionInternalConstraint(
@@ -186,6 +169,7 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
             GlobalBaseErrorCode errorCommonStatus,
             HttpHeaders headers,
             WebRequest request) {
+
         BaseResponse<Object> body = BaseResponse.onFailure(errorCommonStatus, null);
         return super.handleExceptionInternal(
                 e, body, headers, HttpStatus.valueOf(errorCommonStatus.getStatus()), request);
@@ -193,10 +177,11 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
 
     private ResponseEntity<Object> handleExceptionInternalMessage(
             Exception e, HttpHeaders headers, WebRequest request, String errorMessage) {
+
         GlobalBaseErrorCode errorStatus = GlobalBaseErrorCode.BAD_REQUEST;
         BaseResponse<String> body = BaseResponse.onFailure(errorStatus, errorMessage);
 
         return super.handleExceptionInternal(
-                e, body, headers, HttpStatus.valueOf(errorStatus.getCode()), request);
+                e, body, headers, HttpStatus.valueOf(errorStatus.getStatus()), request);
     }
 }

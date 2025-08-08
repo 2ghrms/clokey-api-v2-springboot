@@ -1,5 +1,7 @@
 package org.clokey.exception;
 
+import java.util.Arrays;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.clokey.dto.ErrorReasonDto;
@@ -21,5 +23,9 @@ public enum GlobalBaseErrorCode implements BaseErrorCode {
     @Override
     public ErrorReasonDto getErrorReason() {
         return ErrorReasonDto.of(status, code, message);
+    }
+
+    public static Optional<GlobalBaseErrorCode> findByCode(String code) {
+        return Arrays.stream(values()).filter(e -> e.getCode().equals(code)).findFirst();
     }
 }

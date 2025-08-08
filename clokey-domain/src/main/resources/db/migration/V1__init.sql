@@ -1,12 +1,12 @@
 CREATE TABLE member (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         email VARCHAR(255) NOT NULL,
-                        clokey_id VARCHAR(255) UNIQUE,
-                        nickname VARCHAR(30),
+                        clokey_id VARCHAR(255) UNIQUE NOT NULL ,
+                        nickname VARCHAR(30) NOT NULL,
                         oauth_id VARCHAR(255) NOT NULL ,
 
-                        social_type VARCHAR(255) NOT NULL CHECK (
-                            social_type IN ('KAKAO', 'APPLE')
+                        oauth_provider VARCHAR(255) NOT NULL CHECK (
+                            oauth_provider IN ('KAKAO', 'APPLE')
                             ),
 
                         member_status VARCHAR(255) NOT NULL DEFAULT 'ACTIVE' CHECK (
