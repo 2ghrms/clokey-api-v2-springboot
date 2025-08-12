@@ -32,6 +32,23 @@ public class Comment extends BaseEntity {
     @NotNull
     private History history;
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private Comment(String content, boolean banned, Member member, History history) {
+        this.content = content;
+        this.banned = banned;
+        this.member = member;
+        this.history = history;
+    }
+
+    public static Comment createComment(String content, Member member, History history) {
+        return Comment.builder()
+                .content(content)
+                .banned(false)
+                .member(member)
+                .history(history)
+                .build();
+    }
+
     //    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     //    private List<Reply> replies = new ArrayList<>();
 

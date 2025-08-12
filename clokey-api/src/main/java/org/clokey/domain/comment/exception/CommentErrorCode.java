@@ -1,4 +1,4 @@
-package org.clokey.domain.category.exception;
+package org.clokey.domain.comment.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,10 +7,8 @@ import org.clokey.exception.BaseErrorCode;
 
 @Getter
 @AllArgsConstructor
-public enum CategoryErrorCode implements BaseErrorCode {
-    CATEGORY_NOT_FOUND(404, "CATEGORY_4041", "존재하지 않는 카테고리입니다."),
-    CATEGORY_IN_BULK_NOT_FOUND(404, "CATEGORY_4042", "존재하지 않는 카테고리가 포함되어 있습니다.");
-
+public enum CommentErrorCode implements BaseErrorCode {
+    COMMENT_NOT_FOUND(404, "COMMENT_4041", "존재하지 않는 댓글입니다.");
     private final int status;
     private final String code;
     private final String message;

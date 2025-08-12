@@ -39,4 +39,29 @@ public class History extends BaseEntity {
     @JoinColumn(name = "history_type_id")
     @NotNull
     private HistoryType historyType;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private History(
+            LocalDate historyDate,
+            String content,
+            boolean banned,
+            Member member,
+            HistoryType historyType) {
+        this.historyDate = historyDate;
+        this.content = content;
+        this.banned = banned;
+        this.member = member;
+        this.historyType = historyType;
+    }
+
+    public static History creatHistory(
+            LocalDate historyDate, String content, Member member, HistoryType historyType) {
+        return History.builder()
+                .historyDate(historyDate)
+                .content(content)
+                .banned(false)
+                .member(member)
+                .historyType(historyType)
+                .build();
+    }
 }

@@ -41,7 +41,7 @@ class ClothControllerTest {
     class 옷_생성_요청_시 {
 
         @Test
-        void 유효한_요청이면_생성된_옷_ID를_반환한다() throws Exception {
+        void 유효한_요청이면_옷을_생성하고_ID를_반환한다() throws Exception {
             // given
             ClothCreateRequests request =
                     new ClothCreateRequests(

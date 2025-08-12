@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.clokey.common.model.BaseEntity;
@@ -20,4 +21,13 @@ public class HistoryType extends BaseEntity {
     private Long id;
 
     @NotNull private String name;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private HistoryType(String name) {
+        this.name = name;
+    }
+
+    public static HistoryType createHistoryType(String name) {
+        return HistoryType.builder().name(name).build();
+    }
 }

@@ -3,6 +3,7 @@ package org.clokey.comment.entitiy;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.clokey.common.model.BaseEntity;
@@ -32,4 +33,21 @@ public class Reply extends BaseEntity {
     @JoinColumn(name = "comment_id")
     @NotNull
     private Comment comment;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Reply(String content, boolean banned, Member member, Comment comment) {
+        this.content = content;
+        this.banned = banned;
+        this.member = member;
+        this.comment = comment;
+    }
+
+    public static Reply createReply(String content, Member member, Comment comment) {
+        return Reply.builder()
+                .content(content)
+                .banned(false)
+                .member(member)
+                .comment(comment)
+                .build();
+    }
 }

@@ -1,4 +1,4 @@
-package org.clokey.domain.category.exception;
+package org.clokey.domain.history.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,9 +7,9 @@ import org.clokey.exception.BaseErrorCode;
 
 @Getter
 @AllArgsConstructor
-public enum CategoryErrorCode implements BaseErrorCode {
-    CATEGORY_NOT_FOUND(404, "CATEGORY_4041", "존재하지 않는 카테고리입니다."),
-    CATEGORY_IN_BULK_NOT_FOUND(404, "CATEGORY_4042", "존재하지 않는 카테고리가 포함되어 있습니다.");
+public enum HistoryErrorCode implements BaseErrorCode {
+    HISTORY_NOT_FOUND(404, "HISTORY_4041", "존재하지 않는 기록입니다."),
+    LIMITED_AUTHORITY(403, "HISTORY_4031", "기록에 대한 접근 권한이 없습니다.");
 
     private final int status;
     private final String code;
