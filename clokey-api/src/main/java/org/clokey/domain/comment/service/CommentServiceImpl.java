@@ -6,6 +6,7 @@ import org.clokey.comment.entitiy.Reply;
 import org.clokey.domain.comment.dto.request.CommentCreateRequest;
 import org.clokey.domain.comment.dto.request.ReplyCreateRequest;
 import org.clokey.domain.comment.dto.response.CommentCreateResponse;
+import org.clokey.domain.comment.dto.response.CommentListResponse;
 import org.clokey.domain.comment.dto.response.ReplyCreateResponse;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.repository.CommentRepository;
@@ -14,10 +15,13 @@ import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.FakeAuthContext;
+import org.clokey.global.paging.SortDirection;
 import org.clokey.history.entity.History;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.Visibility;
+import org.clokey.response.SliceResponse;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +49,13 @@ public class CommentServiceImpl implements CommentService {
         try {
             commentRepository.save(comment);
         } catch (DataIntegrityViolationException e) {
-            throw new BaseCustomException(HistoryErrorCode.HISTORY_NOT_FOUND);
+            String message = e.getMostSpecificCause().getMessage();
+
+            if (message != null && message.contains("fk_comment_history")) {
+                throw new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND);
+            }
+
+            throw e;
         }
 
         return CommentCreateResponse.from(comment);
@@ -64,10 +74,29 @@ public class CommentServiceImpl implements CommentService {
         try {
             replyRepository.save(reply);
         } catch (DataIntegrityViolationException e) {
-            throw new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND);
+            String message = e.getMostSpecificCause().getMessage();
+
+            if (message != null && message.contains("fk_reply_comment")) {
+                throw new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND);
+            }
+
+            throw e;
         }
 
         return ReplyCreateResponse.from(reply);
+    }
+
+    @Override
+    public SliceResponse<CommentListResponse> getHistoryComments(
+            Long historyId, Long lastCommentId, int size, SortDirection direction) {
+        final Member currentMember = fakeAuthContext.getCurrentMember();
+        final History history = getHistoryById(historyId);
+
+        validateHistoryAuthority(currentMember, history);
+
+        Slice<CommentListResponse> result =
+                commentRepository.findAllByHistoryId(historyId, lastCommentId, size, direction);
+        return SliceResponse.from(result);
     }
 
     private void validateHistoryAuthority(Member member, History history) {

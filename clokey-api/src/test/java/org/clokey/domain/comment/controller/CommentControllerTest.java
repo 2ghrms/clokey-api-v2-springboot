@@ -2,19 +2,24 @@ package org.clokey.domain.comment.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.clokey.domain.comment.dto.request.CommentCreateRequest;
 import org.clokey.domain.comment.dto.request.ReplyCreateRequest;
 import org.clokey.domain.comment.dto.response.CommentCreateResponse;
+import org.clokey.domain.comment.dto.response.CommentListResponse;
 import org.clokey.domain.comment.dto.response.ReplyCreateResponse;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.service.CommentService;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.exception.BaseCustomException;
+import org.clokey.global.paging.SortDirection;
+import org.clokey.response.SliceResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -178,7 +183,7 @@ class CommentControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/comments/1")
+                            post("/comments/1/replies")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -200,7 +205,7 @@ class CommentControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/comments/1")
+                            post("/comments/1/replies")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -221,7 +226,7 @@ class CommentControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/comments/1")
+                            post("/comments/1/replies")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -241,7 +246,7 @@ class CommentControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/comments/1")
+                            post("/comments/1/replies")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -249,6 +254,180 @@ class CommentControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("HISTORY_4031"))
                     .andExpect(jsonPath("$.message").value("기록에 대한 접근 권한이 없습니다."));
+        }
+    }
+
+    @Nested
+    class 기록의_댓글_목록_조회_요청_시 {
+
+        @Test
+        void 정렬_조건이_ASC이면_commentId를_오름차순으로_응답한다() throws Exception {
+            // given
+            List<CommentListResponse> historyComments =
+                    List.of(
+                            new CommentListResponse(
+                                    1L, 1L, "testNickName", "testProfile", "testContent1", false),
+                            new CommentListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2", false));
+
+            given(commentService.getHistoryComments(1L, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(historyComments, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments")
+                                    .param("historyId", "1")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].commentId").value(1))
+                    .andExpect(jsonPath("$.result.content[1].commentId").value(2))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_commentId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<CommentListResponse> historyComments =
+                    List.of(
+                            new CommentListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2", false),
+                            new CommentListResponse(
+                                    1L, 1L, "testNickName", "testProfile", "testContent1", false));
+
+            given(commentService.getHistoryComments(1L, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(historyComments, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments")
+                                    .param("historyId", "1")
+                                    .param("size", "2")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].commentId").value(2))
+                    .andExpect(jsonPath("$.result.content[1].commentId").value(1))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
+            // given
+            List<CommentListResponse> historyComments =
+                    List.of(
+                            new CommentListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2", false));
+
+            given(commentService.getHistoryComments(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(historyComments, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments")
+                                    .param("historyId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].commentId").value(2))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<CommentListResponse> historyComments =
+                    List.of(
+                            new CommentListResponse(
+                                    1L, 1L, "testNickName", "testProfile", "testContent1", false),
+                            new CommentListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2", false));
+
+            given(commentService.getHistoryComments(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(historyComments, false));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments")
+                                    .param("historyId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].commentId").value(1))
+                    .andExpect(jsonPath("$.result.content[1].commentId").value(2))
+                    .andExpect(jsonPath("$.result.isLast").value(false));
+        }
+
+        @Test
+        void 기록에_댓글이_없는_경우_빈_리스트를_응답한다() throws Exception {
+            // given
+            List<CommentListResponse> historyComments = List.of();
+
+            given(commentService.getHistoryComments(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(historyComments, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments")
+                                    .param("historyId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content").isEmpty())
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments")
+                                    .param("historyId", "1")
+                                    .param("size", pageSize)
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력한_경우_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments")
+                                    .param("historyId", "1")
+                                    .param("size", "1")
+                                    .param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."));
         }
     }
 }
