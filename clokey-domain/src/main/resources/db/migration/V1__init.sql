@@ -23,7 +23,7 @@ CREATE TABLE member (
 
                         profile_image_url VARCHAR(255),
                         profile_back_image_url VARCHAR(255),
-                        bio TEXT,
+                        bio VARCHAR(100),
                         device_token VARCHAR(255),
                         inactive_date DATE,
 

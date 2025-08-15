@@ -47,7 +47,10 @@ public class Member extends BaseEntity {
 
     private String profileImageUrl;
     private String profileBackImageUrl;
+
+    @Column(length = 100)
     private String bio;
+
     private String deviceToken;
 
     private LocalDate inactiveDate;
@@ -88,6 +91,7 @@ public class Member extends BaseEntity {
                 .visibility(visibility)
                 .build();
     }
+
     //
     //    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     //    private List<MemberTerm> memberTermList = new ArrayList<>();
@@ -121,4 +125,23 @@ public class Member extends BaseEntity {
     //
     //    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     //    private List<History> historyList = new ArrayList<>();
+
+    public void updateProfile(
+            String nickname,
+            String clokeyId,
+            String profileImageUrl,
+            String profileBackImageUrl,
+            String bio,
+            Visibility visibility) {
+        this.nickname = nickname;
+        this.clokeyId = clokeyId;
+        this.profileImageUrl = profileImageUrl;
+        this.profileBackImageUrl = profileBackImageUrl;
+        this.bio = bio;
+        this.visibility = visibility;
+    }
+
+    public void updateMemberStatus(MemberStatus memberStatus) {
+        this.memberStatus = memberStatus;
+    }
 }
