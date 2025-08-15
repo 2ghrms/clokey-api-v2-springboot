@@ -50,13 +50,9 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
                 e.getConstraintViolations().stream()
                         .map(constraintViolation -> constraintViolation.getMessage())
                         .findFirst()
-                        .orElse("COMMON400");
+                        .orElse("잘못된 요청입니다");
 
-        GlobalBaseErrorCode errorCode =
-                GlobalBaseErrorCode.findByCode(errorMessage)
-                        .orElse(GlobalBaseErrorCode.BAD_REQUEST);
-
-        return handleExceptionInternalConstraint(e, errorCode, HttpHeaders.EMPTY, request);
+        return handleExceptionInternalConstraint(e, errorMessage, HttpHeaders.EMPTY, request);
     }
 
     @Override
@@ -165,14 +161,17 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
     }
 
     private ResponseEntity<Object> handleExceptionInternalConstraint(
-            Exception e,
-            GlobalBaseErrorCode errorCommonStatus,
-            HttpHeaders headers,
-            WebRequest request) {
+            Exception e, String errorMessage, HttpHeaders headers, WebRequest request) {
 
-        BaseResponse<Object> body = BaseResponse.onFailure(errorCommonStatus, null);
+        BaseResponse<Object> body =
+                BaseResponse.onFailure(
+                        GlobalBaseErrorCode.BAD_REQUEST.getCode(), errorMessage, null);
         return super.handleExceptionInternal(
-                e, body, headers, HttpStatus.valueOf(errorCommonStatus.getStatus()), request);
+                e,
+                body,
+                headers,
+                HttpStatus.valueOf(GlobalBaseErrorCode.BAD_REQUEST.getStatus()),
+                request);
     }
 
     private ResponseEntity<Object> handleExceptionInternalMessage(

@@ -16,6 +16,7 @@ import org.clokey.comment.entitiy.Reply;
 import org.clokey.domain.comment.dto.request.CommentCreateRequest;
 import org.clokey.domain.comment.dto.request.ReplyCreateRequest;
 import org.clokey.domain.comment.dto.response.CommentListResponse;
+import org.clokey.domain.comment.dto.response.ReplyListResponse;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.comment.repository.ReplyRepository;
@@ -370,10 +371,145 @@ class CommentServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 존재하지_않는_기록을_입력하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    commentService.getHistoryComments(
+                                            999L, null, 3, SortDirection.ASC))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_NOT_FOUND.getMessage());
+        }
+
+        @Test
         void 내가_아닌_비공개_계정의_기록의_댓글을_조회하면_예외가_발생한다() {
             // when & then
             assertThatThrownBy(
                             () -> commentService.getHistoryComments(2L, null, 3, SortDirection.ASC))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+    }
+
+    @Nested
+    class 댓글의_대댓글_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO),
+                            MemberStatus.ACTIVE,
+                            RegisterStatus.REGISTERED,
+                            Visibility.PUBLIC);
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO),
+                            MemberStatus.ACTIVE,
+                            RegisterStatus.REGISTERED,
+                            Visibility.PRIVATE);
+
+            memberRepository.saveAll(List.of(member1, member2));
+            given(fakeAuthContext.getCurrentMember()).willReturn(member1);
+
+            HistoryType historyType = HistoryType.createHistoryType("testType");
+            historyTypeRepository.save(historyType);
+
+            History history1 =
+                    History.creatHistory(
+                            LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
+            History history2 =
+                    History.creatHistory(
+                            LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
+            historyRepository.saveAll(List.of(history1, history2));
+
+            Comment comment1 = Comment.createComment("testContent1", member1, history1);
+            Comment comment2 = Comment.createComment("testContent2", member2, history2);
+            Comment comment3 = Comment.createComment("testContent3", member1, history1);
+            commentRepository.saveAll(List.of(comment1, comment2, comment3));
+
+            Reply reply1 = Reply.createReply("testContent1", member1, comment1);
+            Reply reply2 = Reply.createReply("testContent2", member2, comment1);
+            Reply reply3 = Reply.createReply("testContetn3", member2, comment2);
+            replyRepository.saveAll(List.of(reply1, reply2, reply3));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_replyId를_오름차순으로_조회한다() {
+            // when
+            SliceResponse<ReplyListResponse> response =
+                    commentService.getCommentReplies(1L, null, 2, SortDirection.ASC);
+
+            // then
+            assertThat(response.content()).extracting("replyId").containsExactly(1L, 2L);
+        }
+
+        @Test
+        void 정렬_조건이_DESC면_replyId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<ReplyListResponse> response =
+                    commentService.getCommentReplies(1L, null, 2, SortDirection.DESC);
+
+            // then
+            assertThat(response.content()).extracting("replyId").containsExactly(2L, 1L);
+        }
+
+        @Test
+        void lastReplyId를_입력하면_다음_reply_부터_조회한다() {
+            // when
+            SliceResponse<ReplyListResponse> response =
+                    commentService.getCommentReplies(1L, 1L, 2, SortDirection.ASC);
+
+            // then
+            assertThat(response.content()).extracting("replyId").containsExactly(2L);
+        }
+
+        @Test
+        void 댓글에_대댓글이_없는_경우_빈_리스트를_조회한다() {
+            // when
+            SliceResponse<ReplyListResponse> response =
+                    commentService.getCommentReplies(3L, null, 3, SortDirection.ASC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<ReplyListResponse> response =
+                    commentService.getCommentReplies(1L, null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 존재하지_않는_댓글을_입력하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    commentService.getCommentReplies(
+                                            999L, null, 3, SortDirection.ASC))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CommentErrorCode.COMMENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 내가_아닌_비공개_계정의_기록의_대댓글을_조회하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () -> commentService.getCommentReplies(2L, null, 3, SortDirection.ASC))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
         }

@@ -8,6 +8,7 @@ import org.clokey.domain.comment.dto.request.ReplyCreateRequest;
 import org.clokey.domain.comment.dto.response.CommentCreateResponse;
 import org.clokey.domain.comment.dto.response.CommentListResponse;
 import org.clokey.domain.comment.dto.response.ReplyCreateResponse;
+import org.clokey.domain.comment.dto.response.ReplyListResponse;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.comment.repository.ReplyRepository;
@@ -96,6 +97,20 @@ public class CommentServiceImpl implements CommentService {
 
         Slice<CommentListResponse> result =
                 commentRepository.findAllByHistoryId(historyId, lastCommentId, size, direction);
+        return SliceResponse.from(result);
+    }
+
+    @Override
+    public SliceResponse<ReplyListResponse> getCommentReplies(
+            Long commentId, Long lastReplyId, int size, SortDirection direction) {
+        final Member currentMember = fakeAuthContext.getCurrentMember();
+        final Comment comment = getCommentById(commentId);
+
+        validateHistoryAuthority(currentMember, comment.getHistory());
+
+        Slice<ReplyListResponse> result =
+                replyRepository.findAllByCommentId(commentId, lastReplyId, size, direction);
+
         return SliceResponse.from(result);
     }
 

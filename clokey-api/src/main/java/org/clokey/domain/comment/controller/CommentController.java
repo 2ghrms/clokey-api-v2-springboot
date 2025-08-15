@@ -11,6 +11,7 @@ import org.clokey.domain.comment.dto.request.ReplyCreateRequest;
 import org.clokey.domain.comment.dto.response.CommentCreateResponse;
 import org.clokey.domain.comment.dto.response.CommentListResponse;
 import org.clokey.domain.comment.dto.response.ReplyCreateResponse;
+import org.clokey.domain.comment.dto.response.ReplyListResponse;
 import org.clokey.domain.comment.service.CommentService;
 import org.clokey.global.annotation.PageSize;
 import org.clokey.global.paging.SortDirection;
@@ -57,6 +58,22 @@ public class CommentController {
                     SortDirection direction) {
         SliceResponse<CommentListResponse> response =
                 commentService.getHistoryComments(historyId, lastCommentId, size, direction);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @GetMapping("/{commentId}/replies")
+    @Operation(summary = "대댓글 조회", description = "대댓글을 조회합니다")
+    public BaseResponse<SliceResponse<ReplyListResponse>> getReplies(
+            @PathVariable Long commentId,
+            @Parameter(description = "이전 페이지의 마지막 대댓글 ID (첫 요청 시 생략)")
+                    @RequestParam(required = false)
+                    Long lastReplyId,
+            @Parameter(description = "페이지당 조회할 대댓글 수") @RequestParam @PageSize Integer size,
+            @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
+                    @RequestParam(defaultValue = "DESC")
+                    SortDirection direction) {
+        SliceResponse<ReplyListResponse> response =
+                commentService.getCommentReplies(commentId, lastReplyId, size, direction);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 }

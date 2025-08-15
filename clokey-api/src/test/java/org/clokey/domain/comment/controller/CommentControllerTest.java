@@ -14,6 +14,7 @@ import org.clokey.domain.comment.dto.request.ReplyCreateRequest;
 import org.clokey.domain.comment.dto.response.CommentCreateResponse;
 import org.clokey.domain.comment.dto.response.CommentListResponse;
 import org.clokey.domain.comment.dto.response.ReplyCreateResponse;
+import org.clokey.domain.comment.dto.response.ReplyListResponse;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.service.CommentService;
 import org.clokey.domain.history.exception.HistoryErrorCode;
@@ -410,7 +411,7 @@ class CommentControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("COMMON400"))
-                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."));
+                    .andExpect(jsonPath("$.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
         }
 
         @ParameterizedTest
@@ -423,6 +424,171 @@ class CommentControllerTest {
                                     .param("historyId", "1")
                                     .param("size", "1")
                                     .param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."));
+        }
+    }
+
+    @Nested
+    class 댓글의_대댓글_목록_조회_요청_시 {
+
+        @Test
+        void 정렬_조건이_ASC이면_replyId를_오름차순으로_응답한다() throws Exception {
+            // given
+            List<ReplyListResponse> commentReplies =
+                    List.of(
+                            new ReplyListResponse(
+                                    1L, 1L, "testNickName", "testProfile", "testContent1"),
+                            new ReplyListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2"));
+
+            given(commentService.getCommentReplies(1L, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(commentReplies, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments/1/replies")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].replyId").value(1))
+                    .andExpect(jsonPath("$.result.content[1].replyId").value(2))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_replyId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<ReplyListResponse> commentReplies =
+                    List.of(
+                            new ReplyListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2"),
+                            new ReplyListResponse(
+                                    1L, 1L, "testNickName", "testProfile", "testContent1"));
+
+            given(commentService.getCommentReplies(1L, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(commentReplies, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments/1/replies")
+                                    .param("size", "2")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].replyId").value(2))
+                    .andExpect(jsonPath("$.result.content[1].replyId").value(1))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
+            // given
+            List<ReplyListResponse> commentReplies =
+                    List.of(
+                            new ReplyListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2"));
+
+            given(commentService.getCommentReplies(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(commentReplies, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments/1/replies")
+                                    .param("size", "1")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].replyId").value(2))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<ReplyListResponse> commentsReplies =
+                    List.of(
+                            new ReplyListResponse(
+                                    1L, 1L, "testNickName", "testProfile", "testContent1"),
+                            new ReplyListResponse(
+                                    2L, 1L, "testNickName", "testProfile", "testContent2"));
+
+            given(commentService.getCommentReplies(1L, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(commentsReplies, false));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments/1/replies")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content[0].replyId").value(1))
+                    .andExpect(jsonPath("$.result.content[1].replyId").value(2))
+                    .andExpect(jsonPath("$.result.isLast").value(false));
+        }
+
+        @Test
+        void 댓글에_대댓글이_없는_경우_빈_리스트를_응답한다() throws Exception {
+            // given
+            List<ReplyListResponse> commentReplies = List.of();
+
+            given(commentService.getCommentReplies(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(commentReplies, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments/1/replies")
+                                    .param("size", "1")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.content").isEmpty())
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments/1/replies")
+                                    .param("size", pageSize)
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력한_경우_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/comments/1/replies").param("size", "1").param("direction", sort));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.isSuccess").value(false))
