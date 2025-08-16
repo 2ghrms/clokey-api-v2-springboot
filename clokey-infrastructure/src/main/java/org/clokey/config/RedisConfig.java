@@ -1,7 +1,8 @@
-package org.clokey.redis;
+package org.clokey.config;
 
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.clokey.properties.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

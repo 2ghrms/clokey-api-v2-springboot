@@ -14,7 +14,7 @@ import org.clokey.domain.cloth.dto.request.ClothCreateRequests;
 import org.clokey.domain.cloth.dto.response.ClothCreateResponse;
 import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.exception.BaseCustomException;
-import org.clokey.global.FakeAuthContext;
+import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ClothServiceImpl implements ClothService {
 
-    private final FakeAuthContext fakeAuthContext;
+    private final MemberUtil memberUtil;
 
     private final ClothRepository clothRepository;
     private final CategoryRepository categoryRepository;
@@ -32,7 +32,7 @@ public class ClothServiceImpl implements ClothService {
     @Override
     @Transactional
     public ClothCreateResponse createCloths(ClothCreateRequests request) {
-        final Member currentMember = fakeAuthContext.getCurrentMember();
+        final Member currentMember = memberUtil.getCurrentMember();
 
         Map<Long, Category> categoryMap =
                 getCategoryMapByIds(

@@ -9,12 +9,11 @@ import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
-import org.clokey.global.FakeAuthContext;
+import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.OauthProvider;
-import org.clokey.member.enums.RegisterStatus;
 import org.clokey.member.enums.Visibility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -27,25 +26,20 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
 
-    @MockitoBean FakeAuthContext fakeAuthContext;
+    @MockitoBean MemberUtil memberUtil;
 
     @Nested
     class 프로필을_수정할_때 {
 
         @BeforeEach
         void setUp() {
-            // 기본 멤버 생성
             Member member =
                     Member.createMember(
                             "testEmail",
                             "oldClokeyId",
                             "oldNickname",
-                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO),
-                            MemberStatus.ACTIVE,
-                            RegisterStatus.REGISTERED,
-                            Visibility.PRIVATE);
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
-            // 기존 프로필 값 세팅
             member.updateProfile(
                     "oldNickname",
                     "oldClokeyId",
@@ -55,7 +49,7 @@ class MemberServiceTest extends IntegrationTest {
                     Visibility.PRIVATE);
 
             memberRepository.save(member);
-            given(fakeAuthContext.getCurrentMember()).willReturn(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
         }
 
         @Test
@@ -101,9 +95,8 @@ class MemberServiceTest extends IntegrationTest {
                             "testClokeyId",
                             "testBio",
                             Visibility.PRIVATE,
-                            null, // profileImageUrl 삭제
-                            " " // profileBackImageUrl 삭제
-                            );
+                            null,
+                            " ");
 
             // when
             memberService.updateProfile(request);
@@ -130,7 +123,7 @@ class MemberServiceTest extends IntegrationTest {
         @Test
         void 밴된_회원이_PUBLIC으로_변경하려면_예외가_발생한다() {
             // given
-            Member current = fakeAuthContext.getCurrentMember();
+            Member current = memberUtil.getCurrentMember();
             current.updateMemberStatus(MemberStatus.BANNED);
             memberRepository.save(current);
 

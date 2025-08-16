@@ -1,4 +1,4 @@
-package org.clokey.util;
+package org.clokey;
 
 import java.util.function.Supplier;
 import org.springframework.stereotype.Component;

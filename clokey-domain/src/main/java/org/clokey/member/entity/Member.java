@@ -8,8 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.clokey.common.model.BaseEntity;
+import org.clokey.member.enums.MemberRole;
 import org.clokey.member.enums.MemberStatus;
-import org.clokey.member.enums.RegisterStatus;
 import org.clokey.member.enums.Visibility;
 
 @Getter
@@ -39,7 +39,7 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    private RegisterStatus registerStatus;
+    private MemberRole memberRole;
 
     @Enumerated(EnumType.STRING)
     @NotNull
@@ -54,43 +54,6 @@ public class Member extends BaseEntity {
     private String deviceToken;
 
     private LocalDate inactiveDate;
-
-    @Builder(access = AccessLevel.PRIVATE)
-    private Member(
-            String email,
-            String clokeyId,
-            String nickname,
-            OauthInfo oauthInfo,
-            MemberStatus memberStatus,
-            RegisterStatus registerStatus,
-            Visibility visibility) {
-        this.email = email;
-        this.clokeyId = clokeyId;
-        this.nickname = nickname;
-        this.oauthInfo = oauthInfo;
-        this.memberStatus = memberStatus;
-        this.registerStatus = registerStatus;
-        this.visibility = visibility;
-    }
-
-    public static Member createMember(
-            String email,
-            String clokeyId,
-            String nickname,
-            OauthInfo oauthInfo,
-            MemberStatus memberStatus,
-            RegisterStatus registerStatus,
-            Visibility visibility) {
-        return Member.builder()
-                .email(email)
-                .clokeyId(clokeyId)
-                .nickname(nickname)
-                .oauthInfo(oauthInfo)
-                .memberStatus(memberStatus)
-                .registerStatus(registerStatus)
-                .visibility(visibility)
-                .build();
-    }
 
     //
     //    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
@@ -126,6 +89,37 @@ public class Member extends BaseEntity {
     //    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     //    private List<History> historyList = new ArrayList<>();
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private Member(
+            String email,
+            String clokeyId,
+            String nickname,
+            OauthInfo oauthInfo,
+            MemberStatus memberStatus,
+            MemberRole memberRole,
+            Visibility visibility) {
+        this.email = email;
+        this.clokeyId = clokeyId;
+        this.nickname = nickname;
+        this.oauthInfo = oauthInfo;
+        this.memberStatus = memberStatus;
+        this.memberRole = memberRole;
+        this.visibility = visibility;
+    }
+
+    public static Member createMember(
+            String email, String clokeyId, String nickname, OauthInfo oauthInfo) {
+        return Member.builder()
+                .email(email)
+                .clokeyId(clokeyId)
+                .nickname(nickname)
+                .oauthInfo(oauthInfo)
+                .memberStatus(MemberStatus.ACTIVE)
+                .memberRole(MemberRole.USER)
+                .visibility(Visibility.PUBLIC)
+                .build();
+    }
+
     public void updateProfile(
             String nickname,
             String clokeyId,
@@ -143,5 +137,10 @@ public class Member extends BaseEntity {
 
     public void updateMemberStatus(MemberStatus memberStatus) {
         this.memberStatus = memberStatus;
+    }
+
+    public void changeVisibility() {
+        this.visibility =
+                (this.visibility == Visibility.PUBLIC) ? Visibility.PRIVATE : Visibility.PUBLIC;
     }
 }

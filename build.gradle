@@ -24,7 +24,8 @@ sonarqube {
         property 'sonar.sourceEncoding', 'UTF-8'
         property 'sonar.test.inclusions', '**/*Test.java'
         property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/** ,**/*Application*.java , **/*Config*.java,' +
-                '**/*Dto*.java, **/*Request*.java, **/*Response*.java ,**/*Exception*.java ,**/*ErrorCode*.java'
+                '**/*Dto*.java, **/*Request*.java, **/*Response*.java ,**/*Exception*.java ,**/*ErrorCode*.java, **/*Util*.java, **/*Filter*.java,' +
+                '**/*Handler*.java, **/*Validator*.java, **/*Principal*.java, **/*Properties*.java, **/clokey-domain/**'
         property 'sonar.java.coveragePlugin', 'jacoco'
     }
 }

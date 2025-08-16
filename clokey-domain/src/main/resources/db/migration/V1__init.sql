@@ -13,8 +13,8 @@ CREATE TABLE member (
                             member_status IN ('ACTIVE', 'INACTIVE','BANNED')
                             ),
 
-                        register_status VARCHAR(255) NOT NULL DEFAULT 'NOT_AGREED' CHECK (
-                            register_status IN ('NOT_AGREED', 'AGREED_PROFILE_NOT_SET', 'REGISTERED')
+                        member_role VARCHAR(255) NOT NULL DEFAULT 'USER' CHECK (
+                            member_role IN ('ADMIN', 'USER')
                             ),
 
                         visibility VARCHAR(255) NOT NULL DEFAULT 'PUBLIC' CHECK (

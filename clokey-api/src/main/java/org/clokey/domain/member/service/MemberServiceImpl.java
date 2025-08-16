@@ -5,7 +5,7 @@ import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
-import org.clokey.global.FakeAuthContext;
+import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.Visibility;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class MemberServiceImpl implements MemberService {
 
-    private final FakeAuthContext fakeAuthContext;
+    private final MemberUtil memberUtil;
 
     private final MemberRepository memberRepository;
 
@@ -25,7 +25,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public void updateProfile(ProfileUpdateRequest request) {
         // 사용자 확인
-        Long memberId = fakeAuthContext.getCurrentMember().getId();
+        Long memberId = memberUtil.getCurrentMember().getId();
         final Member member =
                 memberRepository
                         .findById(memberId)

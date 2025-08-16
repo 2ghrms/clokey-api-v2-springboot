@@ -3,6 +3,7 @@ package org.clokey.term.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.clokey.common.model.BaseEntity;
@@ -27,13 +28,13 @@ public class MemberTerm extends BaseEntity {
     @NotNull
     private Term term;
 
-    //    @Builder(access = AccessLevel.PRIVATE)
-    //    private MemberTerm(Member member, Term term) {
-    //        this.member = member;
-    //        this.term = term;
-    //    }
-    //
-    //    public static MemberTerm createMemberTerm(Member member, Term term) {
-    //        return MemberTerm.builder().member(member).term(term).build();
-    //    }
+    @Builder(access = AccessLevel.PRIVATE)
+    private MemberTerm(Member member, Term term) {
+        this.member = member;
+        this.term = term;
+    }
+
+    public static MemberTerm createMemberTerm(Member member, Term term) {
+        return MemberTerm.builder().member(member).term(term).build();
+    }
 }

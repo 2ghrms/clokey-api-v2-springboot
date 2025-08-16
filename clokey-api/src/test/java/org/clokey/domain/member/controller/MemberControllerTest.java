@@ -127,7 +127,7 @@ class MemberControllerTest {
         @Test
         void 바이오가_100자를_초과하면_예외가_발생한다() throws Exception {
             // given
-            String longBio = "a".repeat(101); // 101자
+            String longBio = "a".repeat(101);
             ProfileUpdateRequest request =
                     new ProfileUpdateRequest(
                             "testNickname",

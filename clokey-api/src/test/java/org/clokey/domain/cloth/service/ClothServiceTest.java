@@ -14,13 +14,10 @@ import org.clokey.domain.cloth.dto.request.ClothCreateRequests;
 import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
-import org.clokey.global.FakeAuthContext;
+import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
-import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.OauthProvider;
-import org.clokey.member.enums.RegisterStatus;
-import org.clokey.member.enums.Visibility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -35,7 +32,7 @@ class ClothServiceTest extends IntegrationTest {
     @Autowired private ClothRepository clothRepository;
     @Autowired private CategoryRepository categoryRepository;
 
-    @MockitoBean FakeAuthContext fakeAuthContext;
+    @MockitoBean MemberUtil memberUtil;
 
     @Nested
     class 옷을_생성할_때 {
@@ -47,13 +44,10 @@ class ClothServiceTest extends IntegrationTest {
                             "testEmail",
                             "testClokeyId",
                             "testNickName",
-                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO),
-                            MemberStatus.ACTIVE,
-                            RegisterStatus.REGISTERED,
-                            Visibility.PUBLIC);
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
             memberRepository.save(member);
-            given(fakeAuthContext.getCurrentMember()).willReturn(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
 
             Category category = Category.createCategory("testCategory", null);
             categoryRepository.save(category);

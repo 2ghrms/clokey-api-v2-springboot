@@ -7,15 +7,73 @@ spring:
     hikari:
       minimum-idle: 10
       maximum-pool-size: 20
+
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+
   flyway:
     enabled: true
     baseline-on-migrate: true
+
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope:
+              - openid
+            provider: kakao
+          apple:
+            client-id: ${APPLE_CLIENT_ID}
+            client-secret: ${APPLE_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            scope:
+              - openid
+            provider: apple
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: sub
+            jwk-set-uri: https://kauth.kakao.com/.well-known/jwks.json
+          apple:
+            authorization-uri: https://appleid.apple.com/auth/authorize
+            token-uri: https://appleid.apple.com/auth/token
+            jwk-set-uri: https://appleid.apple.com/auth/keys
+            user-name-attribute: sub
+
+jwt:
+  access-token-secret: ${JWT_ACCESS_TOKEN_SECRET}
+  refresh-token-secret: ${JWT_REFRESH_TOKEN_SECRET}
+  access-token-expiration-time: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+  refresh-token-expiration-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+  issuer: ${JWT_ISSUER}
+
+spring-doc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter : method
+    path: /swagger-ui
+    doc-expansion : none
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
