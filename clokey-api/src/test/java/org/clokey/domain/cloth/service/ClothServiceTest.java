@@ -32,7 +32,7 @@ class ClothServiceTest extends IntegrationTest {
     @Autowired private ClothRepository clothRepository;
     @Autowired private CategoryRepository categoryRepository;
 
-    @MockitoBean MemberUtil memberUtil;
+    @MockitoBean private MemberUtil memberUtil;
 
     @Nested
     class 옷을_생성할_때 {

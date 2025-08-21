@@ -53,7 +53,7 @@ class CommentServiceTest extends IntegrationTest {
     @Autowired MemberRepository memberRepository;
     @Autowired HistoryTypeRepository historyTypeRepository;
 
-    @MockitoBean MemberUtil memberUtil;
+    @MockitoBean private MemberUtil memberUtil;
 
     @Nested
     class 댓글을_작성할_때 {

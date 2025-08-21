@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class OidcLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenService jwtTokenService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void onAuthenticationSuccess(
@@ -36,9 +37,8 @@ public class OidcLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        new ObjectMapper()
-                .writeValue(
-                        response.getWriter(),
-                        BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, tokenResponse));
+        objectMapper.writeValue(
+                response.getWriter(),
+                BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, tokenResponse));
     }
 }

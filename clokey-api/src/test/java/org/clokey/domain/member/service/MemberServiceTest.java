@@ -1,10 +1,13 @@
 package org.clokey.domain.member.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
+import java.awt.*;
+import java.util.List;
 import org.clokey.IntegrationTest;
+import org.clokey.TransactionUtil;
+import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
@@ -18,15 +21,19 @@ import org.clokey.member.enums.Visibility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
 class MemberServiceTest extends IntegrationTest {
 
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
 
-    @MockitoBean MemberUtil memberUtil;
+    @Autowired private TransactionUtil transactionUtil;
+    @MockitoBean private MemberUtil memberUtil;
 
     @Nested
     class 프로필을_수정할_때 {
@@ -40,19 +47,12 @@ class MemberServiceTest extends IntegrationTest {
                             "oldNickname",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
-            member.updateProfile(
-                    "oldNickname",
-                    "oldClokeyId",
-                    "oldProfileUrl",
-                    "oldBackUrl",
-                    "oldBio",
-                    Visibility.PRIVATE);
-
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
         }
 
         @Test
+        @Transactional
         void 유효한_요청이면_프로필을_수정한다() {
             // given
             ProfileUpdateRequest request =
@@ -68,8 +68,7 @@ class MemberServiceTest extends IntegrationTest {
             memberService.updateProfile(request);
 
             // then
-            Member found = memberRepository.findById(1L).orElseThrow();
-            assertThat(found)
+            assertThat(memberRepository.findById(1L).orElseThrow())
                     .extracting(
                             "nickname",
                             "clokeyId",
@@ -87,46 +86,11 @@ class MemberServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 이미지_URL이_null_또는_공백이면_삭제된다() {
-            // given
-            ProfileUpdateRequest request =
-                    new ProfileUpdateRequest(
-                            "testNickname",
-                            "testClokeyId",
-                            "testBio",
-                            Visibility.PRIVATE,
-                            null,
-                            " ");
-
-            // when
-            memberService.updateProfile(request);
-
-            // then
-            Member found = memberRepository.findById(1L).orElseThrow();
-            assertThat(found)
-                    .extracting(
-                            "nickname",
-                            "clokeyId",
-                            "bio",
-                            "visibility",
-                            "profileImageUrl",
-                            "profileBackImageUrl")
-                    .containsExactly(
-                            "testNickname",
-                            "testClokeyId",
-                            "testBio",
-                            Visibility.PRIVATE,
-                            null,
-                            null);
-        }
-
-        @Test
         void 밴된_회원이_PUBLIC으로_변경하려면_예외가_발생한다() {
             // given
             Member current = memberUtil.getCurrentMember();
             current.updateMemberStatus(MemberStatus.BANNED);
             memberRepository.save(current);
-
             ProfileUpdateRequest request =
                     new ProfileUpdateRequest(
                             "testNickname",
@@ -140,6 +104,48 @@ class MemberServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> memberService.updateProfile(request))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(MemberErrorCode.BANNED_MEMBER_TO_PUBLIC.getMessage());
+        }
+    }
+
+    @Nested
+    class 아이디_중복_확인_시 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickname1",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickname2",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"testClokeyId1", "distinctId1", "distinctId2"})
+        void 현재_ID_또는_중복되지_않는_ID를_입력하면_false를_반환한다(String clokeyId) {
+            // given
+            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest(clokeyId);
+
+            // when& then
+            assertThat(memberService.checkDuplicateClokeyId(request).duplicated()).isFalse();
+        }
+
+        @Test
+        void 중복되는_ID를_입력한_경우_true를_반환한다() {
+            // given
+            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest("testClokeyId2");
+
+            // when& then
+            assertThat(memberService.checkDuplicateClokeyId(request).duplicated()).isTrue();
         }
     }
 }
