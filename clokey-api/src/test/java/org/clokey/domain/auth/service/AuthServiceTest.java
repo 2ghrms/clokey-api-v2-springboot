@@ -1,17 +1,29 @@
 package org.clokey.domain.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.clokey.IntegrationTest;
+import org.clokey.domain.auth.dto.AccessTokenDto;
+import org.clokey.domain.auth.dto.RefreshTokenDto;
+import org.clokey.domain.auth.dto.request.TokenReissueRequest;
+import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
 import org.clokey.domain.auth.enums.RegisterStatus;
+import org.clokey.domain.auth.exception.AuthErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.term.repository.MemberTermRepository;
 import org.clokey.domain.term.repository.TermRepository;
+import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
+import org.clokey.member.enums.MemberRole;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.term.entity.MemberTerm;
 import org.clokey.term.entity.Term;
@@ -28,6 +40,7 @@ class AuthServiceTest extends IntegrationTest {
     @Autowired TermRepository termRepository;
     @Autowired MemberTermRepository memberTermRepository;
 
+    @MockitoBean JwtTokenService jwtTokenService;
     @MockitoBean MemberUtil memberUtil;
 
     @Nested
@@ -72,6 +85,58 @@ class AuthServiceTest extends IntegrationTest {
 
             // then
             assertThat(response.registerStatus()).isEqualTo(RegisterStatus.NOT_AGREED);
+        }
+    }
+
+    @Nested
+    class 토큰_재발급을_요청할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            "testEmail",
+                            "testClokeyId",
+                            "testNickName",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+            memberRepository.save(member);
+        }
+
+        @Test
+        void 유효한_리프레시_토큰이면_새로운_엑세스_토큰과_리프레시_토큰을_반환한다() {
+            // given
+            RefreshTokenDto oldRefreshTokenDto =
+                    RefreshTokenDto.of(1L, "fake-old-register-token", 604800L);
+            RefreshTokenDto newRefreshTokenDto =
+                    RefreshTokenDto.of(1L, "fake-new-refresh-token", 604800L);
+            AccessTokenDto newAccessTokenDto =
+                    AccessTokenDto.of(1L, MemberRole.USER, "fake-new-access-token");
+
+            given(jwtTokenService.retrieveRefreshToken(anyString())).willReturn(oldRefreshTokenDto);
+            given(jwtTokenService.reissueRefreshToken(oldRefreshTokenDto))
+                    .willReturn(newRefreshTokenDto);
+            given(jwtTokenService.reissueAccessToken(any())).willReturn(newAccessTokenDto);
+
+            // when
+            TokenResponse response =
+                    authService.reissueTokens(new TokenReissueRequest("testRefreshToken"));
+
+            // then
+            assertThat(response)
+                    .extracting("accessToken", "refreshToken")
+                    .containsExactly("fake-new-access-token", "fake-new-refresh-token");
+        }
+
+        @Test
+        void 만료된_리프레시_토큰이면_예외가_발생한다() {
+            // given
+            assertThatThrownBy(
+                            () ->
+                                    authService.reissueTokens(
+                                            new TokenReissueRequest("testRefreshToken")))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
+            verify(jwtTokenService, times(1)).retrieveRefreshToken(anyString());
         }
     }
 }

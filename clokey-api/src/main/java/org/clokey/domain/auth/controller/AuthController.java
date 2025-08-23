@@ -2,9 +2,12 @@ package org.clokey.domain.auth.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.clokey.code.GlobalBaseSuccessCode;
+import org.clokey.domain.auth.dto.request.TokenReissueRequest;
+import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
 import org.clokey.domain.auth.service.AuthService;
 import org.clokey.response.BaseResponse;
@@ -24,5 +27,15 @@ public class AuthController {
     public BaseResponse<UserStatusResponse> getUserStatus() {
         UserStatusResponse response = authService.getUserStatus();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @PostMapping("/reissue-token")
+    @Operation(
+            summary = "토큰 재발급",
+            description = "리프레시 토큰을 바탕으로 Access Token과 Refresh Token을 재발급합니다.")
+    public BaseResponse<TokenResponse> reissueTokens(
+            @Valid @RequestBody TokenReissueRequest request) {
+        TokenResponse response = authService.reissueTokens(request);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, response);
     }
 }

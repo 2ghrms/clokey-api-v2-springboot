@@ -218,6 +218,25 @@ class CommentControllerTest {
         }
 
         @Test
+        void 대댓글_내용이_100를_넘어가면_예외가_발생한다() throws Exception {
+            // given
+            ReplyCreateRequest request = new ReplyCreateRequest("t".repeat(101));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/comments/1/replies")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.content").value("대댓글의 내용은 최대 100자까지 가능합니다."));
+        }
+
+        @Test
         void 댓글이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             ReplyCreateRequest request = new ReplyCreateRequest("testContent");

@@ -8,8 +8,10 @@ import org.clokey.exception.BaseErrorCode;
 @Getter
 @AllArgsConstructor
 public enum AuthErrorCode implements BaseErrorCode {
-    AUTH_NOT_EXIST(401, "AUTH_4011", "인증 정보가 존재하지 않습니다."),
     AUTH_NOT_PARSABLE(500, "AUTO_5001", "인증 정보 파싱에 실패했습니다."),
+
+    AUTH_NOT_EXIST(401, "AUTH_4011", "인증 정보가 존재하지 않습니다."),
+    INVALID_REFRESH_TOKEN(401, "AUTH_4012", "유효하지 않은 리프레시 토큰입니다. 재로그인 해주세요."),
 
     REFRESH_TOKEN_NOT_FOUND(404, "AUTH_4041", "리프레시 토큰을 찾지 못했습니다.");
 
