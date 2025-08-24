@@ -9,4 +9,6 @@ public interface AuthService {
     UserStatusResponse getUserStatus();
 
     TokenResponse reissueTokens(TokenReissueRequest request);
+
+    void logoutUser();
 }

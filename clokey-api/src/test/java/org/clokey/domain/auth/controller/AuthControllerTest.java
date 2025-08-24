@@ -2,10 +2,10 @@ package org.clokey.domain.auth.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.clokey.domain.auth.dto.request.TokenReissueRequest;
@@ -119,6 +119,24 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
                     .andExpect(jsonPath("$.result.refreshToken").value("리프레시 토큰은 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 로그아웃_요청_시 {
+
+        @Test
+        void 리프레시_토큰을_만료_처리하고_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            willDoNothing().given(authService).logoutUser();
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/auth/logout"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
         }
     }
 }

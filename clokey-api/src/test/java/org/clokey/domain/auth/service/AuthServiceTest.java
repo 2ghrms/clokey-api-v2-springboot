@@ -9,6 +9,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.clokey.IntegrationTest;
+import org.clokey.RedisCleaner;
+import org.clokey.auth.entity.RefreshToken;
 import org.clokey.domain.auth.dto.AccessTokenDto;
 import org.clokey.domain.auth.dto.RefreshTokenDto;
 import org.clokey.domain.auth.dto.request.TokenReissueRequest;
@@ -16,6 +18,7 @@ import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
 import org.clokey.domain.auth.enums.RegisterStatus;
 import org.clokey.domain.auth.exception.AuthErrorCode;
+import org.clokey.domain.auth.repository.RefreshTokenRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.term.repository.MemberTermRepository;
 import org.clokey.domain.term.repository.TermRepository;
@@ -35,13 +38,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class AuthServiceTest extends IntegrationTest {
 
-    @Autowired AuthService authService;
-    @Autowired MemberRepository memberRepository;
-    @Autowired TermRepository termRepository;
-    @Autowired MemberTermRepository memberTermRepository;
+    @Autowired private RedisCleaner redisCleaner;
 
-    @MockitoBean JwtTokenService jwtTokenService;
-    @MockitoBean MemberUtil memberUtil;
+    @Autowired private AuthService authService;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private TermRepository termRepository;
+    @Autowired private MemberTermRepository memberTermRepository;
+    @Autowired private RefreshTokenRepository refreshTokenRepository;
+
+    @MockitoBean private JwtTokenService jwtTokenService;
+    @MockitoBean private MemberUtil memberUtil;
 
     @Nested
     class 유저의_상태를_확인할_때 {
@@ -137,6 +143,37 @@ class AuthServiceTest extends IntegrationTest {
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
             verify(jwtTokenService, times(1)).retrieveRefreshToken(anyString());
+        }
+    }
+
+    @Nested
+    class 로그아웃할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            "testEmail",
+                            "testClokeyId",
+                            "testNickName",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
+
+        @Test
+        void Redis에_저장된_리프레시_토큰이_삭제된다() {
+            // given
+            RefreshToken refreshToken =
+                    RefreshToken.builder().memberId(1L).token("testRefreshToken").build();
+            refreshTokenRepository.save(refreshToken);
+
+            // when
+            authService.logoutUser();
+
+            // then
+            assertThat(refreshTokenRepository.findById(1L).isEmpty()).isTrue();
         }
     }
 }

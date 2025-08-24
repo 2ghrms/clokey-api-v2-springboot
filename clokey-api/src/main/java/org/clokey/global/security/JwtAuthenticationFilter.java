@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.auth.dto.AccessTokenDto;
-import org.clokey.domain.auth.util.JwtUtil;
+import org.clokey.domain.auth.service.JwtTokenService;
 import org.clokey.member.enums.MemberRole;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtTokenService jwtTokenService;
 
     @Override
     protected void doFilterInternal(
@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String accessTokenValue = resolveToken(request);
 
         if (accessTokenValue != null) {
-            AccessTokenDto accessTokenDto = jwtUtil.parseAccessToken(accessTokenValue);
+            AccessTokenDto accessTokenDto = jwtTokenService.retrieveAccessToken(accessTokenValue);
 
             // 유효한 Access Token
             if (accessTokenDto != null) {

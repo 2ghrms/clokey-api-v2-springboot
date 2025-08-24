@@ -38,4 +38,11 @@ public class AuthController {
         TokenResponse response = authService.reissueTokens(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, response);
     }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그 아웃", description = "Redis에 저장된 사용자의 리프레시 토큰을 삭제합니다.")
+    public BaseResponse<Void> logoutUser() {
+        authService.logoutUser();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
 }

@@ -8,6 +8,7 @@ import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
 import org.clokey.domain.auth.enums.RegisterStatus;
 import org.clokey.domain.auth.exception.AuthErrorCode;
+import org.clokey.domain.auth.repository.RefreshTokenRepository;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.term.repository.MemberTermRepository;
@@ -27,6 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private final MemberTermRepository memberTermRepository;
     private final MemberRepository memberRepository;
     private final JwtTokenService jwtTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public UserStatusResponse getUserStatus() {
@@ -52,6 +54,15 @@ public class AuthServiceImpl implements AuthService {
                 jwtTokenService.reissueAccessToken(getMember(newRefreshTokenDto));
 
         return TokenResponse.of(newAccessTokenDto.tokenValue(), newRefreshTokenDto.tokenValue());
+    }
+
+    @Override
+    public void logoutUser() {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        refreshTokenRepository
+                .findById(currentMember.getId())
+                .ifPresent(refreshTokenRepository::delete);
     }
 
     private Member getMember(RefreshTokenDto refreshTokenDto) {

@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.auth.handler.OidcLoginSuccessHandler;
 import org.clokey.domain.auth.service.CustomOAuth2UserService;
-import org.clokey.domain.auth.util.JwtUtil;
+import org.clokey.domain.auth.service.JwtTokenService;
 import org.clokey.global.security.JwtAuthenticationFilter;
 import org.clokey.helper.SpringEnvironmentHelper;
 import org.springframework.beans.factory.annotation.Value;
@@ -133,7 +133,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtUtil jwtUtil) {
-        return new JwtAuthenticationFilter(jwtUtil);
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenService jwtTokenService) {
+        return new JwtAuthenticationFilter(jwtTokenService);
     }
 }
