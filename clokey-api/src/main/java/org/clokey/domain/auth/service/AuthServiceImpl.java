@@ -3,6 +3,7 @@ package org.clokey.domain.auth.service;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.auth.dto.AccessTokenDto;
 import org.clokey.domain.auth.dto.RefreshTokenDto;
+import org.clokey.domain.auth.dto.request.DeviceTokenRenewRequest;
 import org.clokey.domain.auth.dto.request.TokenReissueRequest;
 import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
@@ -41,6 +42,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
+    public void renewDeviceToken(DeviceTokenRenewRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        currentMember.updateDeviceToken(request.deviceToken());
+    }
+
+    @Override
+    @Transactional
     public TokenResponse reissueTokens(TokenReissueRequest request) {
         RefreshTokenDto oldRefreshToken =
                 jwtTokenService.retrieveRefreshToken(request.refreshToken());
@@ -57,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void logoutUser() {
         final Member currentMember = memberUtil.getCurrentMember();
 

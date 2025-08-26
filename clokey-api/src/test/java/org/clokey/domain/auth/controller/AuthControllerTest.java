@@ -3,11 +3,11 @@ package org.clokey.domain.auth.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.clokey.domain.auth.dto.request.DeviceTokenRenewRequest;
 import org.clokey.domain.auth.dto.request.TokenReissueRequest;
 import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
@@ -71,6 +71,51 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.registerStatus").value("NOT_AGREED"));
+        }
+    }
+
+    @Nested
+    class 디바이스_토큰_갱신_요청_시 {
+
+        @Test
+        void 유효한_요청이면_디바이스_토큰을_갱신하고_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            DeviceTokenRenewRequest request = new DeviceTokenRenewRequest("testDeviceToken");
+            willDoNothing().given(authService).renewDeviceToken(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/auth/device-token")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void Device_Token을_비워두면_예외가_발생한다(String deviceToken) throws Exception {
+            // given
+            DeviceTokenRenewRequest request = new DeviceTokenRenewRequest(deviceToken);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/auth/device-token")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.deviceToken").value("Device Token은 비워둘 수 없습니다."));
         }
     }
 

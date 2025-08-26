@@ -13,6 +13,7 @@ import org.clokey.RedisCleaner;
 import org.clokey.auth.entity.RefreshToken;
 import org.clokey.domain.auth.dto.AccessTokenDto;
 import org.clokey.domain.auth.dto.RefreshTokenDto;
+import org.clokey.domain.auth.dto.request.DeviceTokenRenewRequest;
 import org.clokey.domain.auth.dto.request.TokenReissueRequest;
 import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
 class AuthServiceTest extends IntegrationTest {
 
@@ -91,6 +93,38 @@ class AuthServiceTest extends IntegrationTest {
 
             // then
             assertThat(response.registerStatus()).isEqualTo(RegisterStatus.NOT_AGREED);
+        }
+    }
+
+    @Nested
+    class 디바이스_토큰을_갱신할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            "testEmail",
+                            "testClokeyId",
+                            "testNickName",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+            member.updateDeviceToken("testDeviceToken");
+
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
+
+        @Test
+        @Transactional
+        void 유효한_요청이면_Device_Token을_갱신한다() {
+            // given
+            DeviceTokenRenewRequest request = new DeviceTokenRenewRequest("newDeviceToken");
+
+            // when
+            authService.renewDeviceToken(request);
+
+            // then
+            assertThat(memberRepository.findById(1L).orElseThrow().getDeviceToken())
+                    .isEqualTo("newDeviceToken");
         }
     }
 

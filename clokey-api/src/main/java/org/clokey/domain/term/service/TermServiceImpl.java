@@ -35,8 +35,6 @@ public class TermServiceImpl implements TermService {
         validateAllTermContained(request);
         validateAgreedNonOptionalTerms(request);
 
-        currentMember.updateDeviceToken(request.deviceToken());
-
         List<MemberTerm> memberTerms =
                 request.payloads().stream()
                         .map(

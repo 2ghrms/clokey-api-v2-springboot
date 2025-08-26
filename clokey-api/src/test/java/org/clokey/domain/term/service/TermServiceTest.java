@@ -20,7 +20,6 @@ import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.term.entity.MemberTerm;
 import org.clokey.term.entity.Term;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -65,7 +64,6 @@ class TermServiceTest extends IntegrationTest {
             // given
             TermAgreeRequest request =
                     new TermAgreeRequest(
-                            "testDeviceToken",
                             List.of(
                                     new TermAgreeRequest.Payload(1L, true),
                                     new TermAgreeRequest.Payload(2L, true),
@@ -80,17 +78,15 @@ class TermServiceTest extends IntegrationTest {
             Member member = memberRepository.findById(1L).orElseThrow();
             List<MemberTerm> memberTerms =
                     memberTermRepository.findAllById(List.of(1L, 2L, 3L, 4L, 5L));
-            Assertions.assertAll(
-                    () -> assertThat(member.getDeviceToken()).isEqualTo("testDeviceToken"),
-                    () ->
-                            assertThat(memberTerms)
-                                    .extracting("member.id", "term.id", "agreed")
-                                    .containsExactly(
-                                            tuple(1L, 1L, true),
-                                            tuple(1L, 2L, true),
-                                            tuple(1L, 3L, true),
-                                            tuple(1L, 4L, false),
-                                            tuple(1L, 5L, true)));
+
+            assertThat(memberTerms)
+                    .extracting("member.id", "term.id", "agreed")
+                    .containsExactly(
+                            tuple(1L, 1L, true),
+                            tuple(1L, 2L, true),
+                            tuple(1L, 3L, true),
+                            tuple(1L, 4L, false),
+                            tuple(1L, 5L, true));
         }
 
         @Test
@@ -98,7 +94,6 @@ class TermServiceTest extends IntegrationTest {
             // given
             TermAgreeRequest request =
                     new TermAgreeRequest(
-                            "testDeviceToken",
                             List.of(
                                     new TermAgreeRequest.Payload(1L, true),
                                     new TermAgreeRequest.Payload(2L, true),
@@ -116,7 +111,6 @@ class TermServiceTest extends IntegrationTest {
             // given
             TermAgreeRequest request =
                     new TermAgreeRequest(
-                            "testDeviceToken",
                             List.of(
                                     new TermAgreeRequest.Payload(1L, true),
                                     new TermAgreeRequest.Payload(2L, true),

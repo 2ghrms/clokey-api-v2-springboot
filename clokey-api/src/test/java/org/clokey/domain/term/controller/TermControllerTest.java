@@ -12,10 +12,6 @@ import org.clokey.domain.term.dto.TermAgreeRequest;
 import org.clokey.domain.term.service.TermService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EmptySource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -41,7 +37,6 @@ class TermControllerTest {
             // given
             TermAgreeRequest request =
                     new TermAgreeRequest(
-                            "testDeviceToken",
                             List.of(
                                     new TermAgreeRequest.Payload(1L, true),
                                     new TermAgreeRequest.Payload(2L, true)));
@@ -60,37 +55,10 @@ class TermControllerTest {
                     .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
         }
 
-        @ParameterizedTest
-        @NullSource
-        @EmptySource
-        @ValueSource(strings = {" "})
-        void Device_Token을_비워두면_예외가_발생한다(String deviceToken) throws Exception {
-            // given
-            TermAgreeRequest request =
-                    new TermAgreeRequest(
-                            deviceToken,
-                            List.of(
-                                    new TermAgreeRequest.Payload(1L, true),
-                                    new TermAgreeRequest.Payload(2L, true)));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/terms")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.isSuccess").value(false))
-                    .andExpect(jsonPath("$.code").value("COMMON400"))
-                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                    .andExpect(jsonPath("$.result.deviceToken").value("Device Token은 비워둘 수 없습니다."));
-        }
-
         @Test
         void 약관_동의_정보를_비워두면_예외가_발생한다() throws Exception {
             // given
-            TermAgreeRequest request = new TermAgreeRequest("testDeviceToken", List.of());
+            TermAgreeRequest request = new TermAgreeRequest(List.of());
 
             // when & then
             ResultActions perform =
@@ -110,8 +78,7 @@ class TermControllerTest {
         void 약관_ID를_비워두면_예외가_발생한다() throws Exception {
             // given
             TermAgreeRequest request =
-                    new TermAgreeRequest(
-                            "testDeviceToken", List.of(new TermAgreeRequest.Payload(null, true)));
+                    new TermAgreeRequest(List.of(new TermAgreeRequest.Payload(null, true)));
 
             // when & then
             ResultActions perform =
@@ -131,8 +98,7 @@ class TermControllerTest {
         void 약관_동의_여부를_비워두면_예외가_발생한다() throws Exception {
             // given
             TermAgreeRequest request =
-                    new TermAgreeRequest(
-                            "testDeviceToken", List.of(new TermAgreeRequest.Payload(1L, null)));
+                    new TermAgreeRequest(List.of(new TermAgreeRequest.Payload(1L, null)));
 
             // when & then
             ResultActions perform =

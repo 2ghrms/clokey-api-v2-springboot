@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.clokey.code.GlobalBaseSuccessCode;
+import org.clokey.domain.auth.dto.request.DeviceTokenRenewRequest;
 import org.clokey.domain.auth.dto.request.TokenReissueRequest;
 import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
@@ -27,6 +28,14 @@ public class AuthController {
     public BaseResponse<UserStatusResponse> getUserStatus() {
         UserStatusResponse response = authService.getUserStatus();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @PatchMapping("/device-token")
+    @Operation(summary = "Device Token 갱신", description = "디바이스 토큰을 갱신합니다.")
+    public BaseResponse<Void> renewDeviceToken(
+            @Valid @RequestBody DeviceTokenRenewRequest request) {
+        authService.renewDeviceToken(request);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
     @PostMapping("/reissue-token")
