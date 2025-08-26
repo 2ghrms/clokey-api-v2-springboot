@@ -345,6 +345,7 @@ CREATE TABLE member_term (
 
                              member_id BIGINT NOT NULL,
                              term_id BIGINT NOT NULL,
+                             agreed BOOLEAN NOT NULL,
 
                              created_at DATETIME(6) NOT NULL,
                              updated_at DATETIME(6) NOT NULL,

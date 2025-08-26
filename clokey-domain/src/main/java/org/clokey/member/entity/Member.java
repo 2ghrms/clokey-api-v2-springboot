@@ -143,4 +143,8 @@ public class Member extends BaseEntity {
         this.visibility =
                 (this.visibility == Visibility.PUBLIC) ? Visibility.PRIVATE : Visibility.PUBLIC;
     }
+
+    public void updateDeviceToken(String deviceToken) {
+        this.deviceToken = deviceToken;
+    }
 }

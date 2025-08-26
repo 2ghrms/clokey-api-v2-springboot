@@ -28,13 +28,16 @@ public class MemberTerm extends BaseEntity {
     @NotNull
     private Term term;
 
+    @NotNull private boolean agreed;
+
     @Builder(access = AccessLevel.PRIVATE)
-    private MemberTerm(Member member, Term term) {
+    private MemberTerm(Member member, Term term, boolean agreed) {
         this.member = member;
         this.term = term;
+        this.agreed = agreed;
     }
 
-    public static MemberTerm createMemberTerm(Member member, Term term) {
-        return MemberTerm.builder().member(member).term(term).build();
+    public static MemberTerm createMemberTerm(Member member, Term term, boolean agreed) {
+        return MemberTerm.builder().member(member).term(term).agreed(agreed).build();
     }
 }

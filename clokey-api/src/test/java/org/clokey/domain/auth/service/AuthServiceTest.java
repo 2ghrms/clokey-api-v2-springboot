@@ -74,7 +74,7 @@ class AuthServiceTest extends IntegrationTest {
             Member member = memberRepository.findById(1L).orElseThrow();
             Term term = termRepository.findById(1L).orElseThrow();
 
-            MemberTerm memberTerm = MemberTerm.createMemberTerm(member, term);
+            MemberTerm memberTerm = MemberTerm.createMemberTerm(member, term, true);
             memberTermRepository.save(memberTerm);
 
             // when
