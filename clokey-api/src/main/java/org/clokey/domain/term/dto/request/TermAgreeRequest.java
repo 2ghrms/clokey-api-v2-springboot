@@ -1,4 +1,4 @@
-package org.clokey.domain.term.dto;
+package org.clokey.domain.term.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;

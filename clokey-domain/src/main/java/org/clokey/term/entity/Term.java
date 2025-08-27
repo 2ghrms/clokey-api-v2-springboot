@@ -24,16 +24,16 @@ public class Term extends BaseEntity {
 
     @NotNull private String body;
 
-    @NotNull private Boolean optional;
+    @NotNull private boolean optional;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Term(String title, String body, Boolean optional) {
+    private Term(String title, String body, boolean optional) {
         this.title = title;
         this.body = body;
         this.optional = optional;
     }
 
-    public static Term createTerm(String title, String body, Boolean optional) {
+    public static Term createTerm(String title, String body, boolean optional) {
         return Term.builder().title(title).body(body).optional(optional).build();
     }
 }

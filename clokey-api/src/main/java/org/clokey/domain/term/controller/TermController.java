@@ -5,13 +5,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
-import org.clokey.domain.term.dto.TermAgreeRequest;
+import org.clokey.domain.term.dto.request.TermAgreeRequest;
+import org.clokey.domain.term.dto.response.TermListResponse;
 import org.clokey.domain.term.service.TermService;
 import org.clokey.response.BaseResponse;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/terms")
@@ -20,6 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class TermController {
 
     private final TermService termService;
+
+    @GetMapping
+    @Operation(summary = "전체 약관 조회", description = "전체 약관 조회 API")
+    public BaseResponse<TermListResponse> getTerms() {
+        TermListResponse response = termService.getTerms();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
 
     @PostMapping
     @Operation(summary = "약관 동의", description = "약관 동의 정보를 설정합니다.")

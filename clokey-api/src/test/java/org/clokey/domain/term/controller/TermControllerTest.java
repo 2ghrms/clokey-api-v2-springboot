@@ -1,14 +1,16 @@
 package org.clokey.domain.term.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.contains;
 import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import org.clokey.domain.term.dto.TermAgreeRequest;
+import org.clokey.domain.term.dto.request.TermAgreeRequest;
+import org.clokey.domain.term.dto.response.TermListResponse;
 import org.clokey.domain.term.service.TermService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,62 @@ class TermControllerTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private TermService termService;
+
+    @Nested
+    class 전체_약관_조회_요청_시 {
+
+        @Test
+        void 유효한_요청이면_전체_약관을_반환한다() throws Exception {
+            // given
+            TermListResponse response =
+                    new TermListResponse(
+                            List.of(
+                                    new TermListResponse.Payload(
+                                            1L, "testTerm1", "testBody1", false),
+                                    new TermListResponse.Payload(
+                                            2L, "testTerm2", "testBody2", false),
+                                    new TermListResponse.Payload(
+                                            3L, "testTerm3", "testBody3", false),
+                                    new TermListResponse.Payload(
+                                            4L, "testTerm4", "testBody4", true),
+                                    new TermListResponse.Payload(
+                                            5L, "testTerm5", "testBody5", true)));
+
+            given(termService.getTerms()).willReturn(response);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(get("/terms").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(
+                            jsonPath("$.result.payloads[*].termId").value(contains(1, 2, 3, 4, 5)))
+                    .andExpect(
+                            jsonPath("$.result.payloads[*].title")
+                                    .value(
+                                            contains(
+                                                    "testTerm1",
+                                                    "testTerm2",
+                                                    "testTerm3",
+                                                    "testTerm4",
+                                                    "testTerm5")))
+                    .andExpect(
+                            jsonPath("$.result.payloads[*].body")
+                                    .value(
+                                            contains(
+                                                    "testBody1",
+                                                    "testBody2",
+                                                    "testBody3",
+                                                    "testBody4",
+                                                    "testBody5")))
+                    .andExpect(
+                            jsonPath("$.result.payloads[*].optional")
+                                    .value(contains(false, false, false, true, true)));
+        }
+    }
 
     @Nested
     class 약관_동의_요청_시 {

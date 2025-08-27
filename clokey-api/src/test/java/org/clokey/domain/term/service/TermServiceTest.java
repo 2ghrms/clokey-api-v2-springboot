@@ -3,13 +3,13 @@ package org.clokey.domain.term.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
 import java.util.List;
 import org.clokey.IntegrationTest;
 import org.clokey.domain.member.repository.MemberRepository;
-import org.clokey.domain.term.dto.TermAgreeRequest;
+import org.clokey.domain.term.dto.request.TermAgreeRequest;
+import org.clokey.domain.term.dto.response.TermListResponse;
 import org.clokey.domain.term.exception.TermErrorCode;
 import org.clokey.domain.term.repository.MemberTermRepository;
 import org.clokey.domain.term.repository.TermRepository;
@@ -35,6 +35,45 @@ class TermServiceTest extends IntegrationTest {
     @Autowired TermService termService;
 
     @MockitoBean private MemberUtil memberUtil;
+
+    @Nested
+    class 전체_약관_조회_요청_시 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            "testEmail",
+                            "testClokeyId",
+                            "testNickName",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+            Member savedMember = memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(savedMember);
+
+            Term term1 = Term.createTerm("testTerm1", "testContent1", false);
+            Term term2 = Term.createTerm("testTerm2", "testContent2", false);
+            Term term3 = Term.createTerm("testTerm3", "testContent3", false);
+            Term term4 = Term.createTerm("testTerm4", "testContent4", true);
+            Term term5 = Term.createTerm("testTerm5", "testContent5", true);
+            termRepository.saveAll(List.of(term1, term2, term3, term4, term5));
+        }
+
+        @Test
+        void 유효한_요청이면_전체_약관을_반환한다() {
+            // when
+            TermListResponse response = termService.getTerms();
+
+            // then
+            assertThat(response.payloads())
+                    .extracting("termId", "title", "body", "optional")
+                    .containsExactly(
+                            tuple(1L, "testTerm1", "testContent1", false),
+                            tuple(2L, "testTerm2", "testContent2", false),
+                            tuple(3L, "testTerm3", "testContent3", false),
+                            tuple(4L, "testTerm4", "testContent4", true),
+                            tuple(5L, "testTerm5", "testContent5", true));
+        }
+    }
 
     @Nested
     class 약관에_동의할_때 {
