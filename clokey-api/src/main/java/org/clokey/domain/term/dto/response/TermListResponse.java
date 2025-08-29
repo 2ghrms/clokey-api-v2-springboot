@@ -12,7 +12,7 @@ public record TermListResponse(
             @Schema(description = "약관 내용") String body,
             @Schema(description = "필수 동의 여부") boolean optional) {}
 
-    public static TermListResponse of(List<Term> terms) {
+    public static TermListResponse from(List<Term> terms) {
         List<TermListResponse.Payload> payloads =
                 terms.stream()
                         .map(

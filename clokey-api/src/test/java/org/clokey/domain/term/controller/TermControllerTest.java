@@ -2,14 +2,14 @@ package org.clokey.domain.term.controller;
 
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.BDDMockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.clokey.domain.term.dto.request.TermAgreeRequest;
+import org.clokey.domain.term.dto.response.MyOptionalTermResponse;
 import org.clokey.domain.term.dto.response.TermListResponse;
 import org.clokey.domain.term.service.TermService;
 import org.junit.jupiter.api.Nested;
@@ -170,6 +170,57 @@ class TermControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
                     .andExpect(jsonPath("$.result.agreed").value("약관 동의 여부는 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 나의_선택_약관_정보_조회_요청_시 {
+
+        @Test
+        void 유효한_요청이면_나의_선택_약관_정보를_반환한다() throws Exception {
+            // given
+            MyOptionalTermResponse response =
+                    new MyOptionalTermResponse(
+                            List.of(
+                                    new MyOptionalTermResponse.Payload(4L, true),
+                                    new MyOptionalTermResponse.Payload(5L, true)));
+            given(termService.getMyOptionalTerms()).willReturn(response);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/terms/my-optional").contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.payloads[*].termId").value(contains(4, 5)))
+                    .andExpect(jsonPath("$.result.payloads[*].agreed").value(contains(true, true)));
+        }
+    }
+
+    @Nested
+    class 나의_선택_약관_수정_요청_시 {
+
+        @Test
+        void 유효한_요청이면_나의_선택_약관_정보를_수정하고_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            willDoNothing().given(termService).toggleMyOptionalTerms(4L);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/terms/my-optional-toggle")
+                                    .param("termId", "4")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."));
         }
     }
 }

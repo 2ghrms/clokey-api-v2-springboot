@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.term.dto.request.TermAgreeRequest;
+import org.clokey.domain.term.dto.response.MyOptionalTermResponse;
 import org.clokey.domain.term.dto.response.TermListResponse;
 import org.clokey.domain.term.service.TermService;
 import org.clokey.response.BaseResponse;
@@ -31,5 +32,19 @@ public class TermController {
     public BaseResponse<Void> agreeTerm(@Valid @RequestBody TermAgreeRequest request) {
         termService.agreeTerm(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @GetMapping("/my-optional")
+    @Operation(summary = "나의 선택 약관 조회", description = "나의 선택 약관 정보 조회 API")
+    public BaseResponse<MyOptionalTermResponse> getMyOptionalTerms() {
+        MyOptionalTermResponse response = termService.getMyOptionalTerms();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @PatchMapping("/my-optional-toggle")
+    @Operation(summary = "나의 선택 약관 수정", description = "나의 선택 약관 수정 API")
+    public BaseResponse<Void> toggleMyOptionalTerms(@RequestParam Long termId) {
+        termService.toggleMyOptionalTerms(termId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, null);
     }
 }

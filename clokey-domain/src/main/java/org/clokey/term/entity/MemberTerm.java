@@ -40,4 +40,8 @@ public class MemberTerm extends BaseEntity {
     public static MemberTerm createMemberTerm(Member member, Term term, boolean agreed) {
         return MemberTerm.builder().member(member).term(term).agreed(agreed).build();
     }
+
+    public void toggleAgreed() {
+        this.agreed = !this.agreed;
+    }
 }

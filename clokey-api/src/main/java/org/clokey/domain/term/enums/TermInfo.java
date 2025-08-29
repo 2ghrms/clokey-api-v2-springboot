@@ -24,6 +24,10 @@ public enum TermInfo {
                 .toList();
     }
 
+    public static List<Long> getOptionalIds() {
+        return Arrays.stream(values()).filter(TermInfo::isOptional).map(TermInfo::getId).toList();
+    }
+
     public static List<Long> getAllIds() {
         return Arrays.stream(values()).map(TermInfo::getId).toList();
     }

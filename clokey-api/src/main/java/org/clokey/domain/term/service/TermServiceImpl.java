@@ -2,9 +2,11 @@ package org.clokey.domain.term.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.term.dto.request.TermAgreeRequest;
+import org.clokey.domain.term.dto.response.MyOptionalTermResponse;
 import org.clokey.domain.term.dto.response.TermListResponse;
 import org.clokey.domain.term.enums.TermInfo;
 import org.clokey.domain.term.exception.TermErrorCode;
@@ -32,7 +34,7 @@ public class TermServiceImpl implements TermService {
     public TermListResponse getTerms() {
         final List<Term> terms = termRepository.findAll();
 
-        return TermListResponse.of(terms);
+        return TermListResponse.from(terms);
     }
 
     @Override
@@ -64,6 +66,33 @@ public class TermServiceImpl implements TermService {
         memberTermRepository.saveAll(memberTerms);
     }
 
+    @Override
+    public MyOptionalTermResponse getMyOptionalTerms() {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        final List<MemberTerm> memberTerms =
+                getByMemberIdAndTermIdIn(currentMember.getId(), TermInfo.getOptionalIds());
+
+        return MyOptionalTermResponse.from(memberTerms);
+    }
+
+    @Override
+    @Transactional
+    public void toggleMyOptionalTerms(Long termId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        validateIsOptionalTerm(termId);
+
+        MemberTerm memberTerm = getByMemberIdAndTermId(currentMember.getId(), termId);
+        memberTerm.toggleAgreed();
+    }
+
+    private void validateIsOptionalTerm(Long termId) {
+        if (!TermInfo.getOptionalIds().contains(termId)) {
+            throw new BaseCustomException(TermErrorCode.NOT_OPTIONAL_TERM);
+        }
+    }
+
     private void validateAllTermContained(TermAgreeRequest request) {
         List<Long> allTermIds = TermInfo.getAllIds();
 
@@ -90,5 +119,22 @@ public class TermServiceImpl implements TermService {
         if (!agreedIds.containsAll(requiredIds)) {
             throw new BaseCustomException(TermErrorCode.NON_OPTIONAL_NOT_AGREED);
         }
+    }
+
+    /** 선택 약관만을 DB에서 확인하지만, 선택 약관 동의가 되어 있지 않는 경우 약관 동의 절차를 생략했다고 판단. */
+    private List<MemberTerm> getByMemberIdAndTermIdIn(Long memberId, List<Long> termIds) {
+        List<MemberTerm> memberTerms =
+                memberTermRepository.findByMemberIdAndTermIdIn(memberId, termIds);
+        return Optional.of(memberTerms)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(
+                        () -> new BaseCustomException(TermErrorCode.MEMBER_SKIPPED_TERM_AGREEMENT));
+    }
+
+    private MemberTerm getByMemberIdAndTermId(Long memberId, Long termId) {
+        return memberTermRepository
+                .findByMemberIdAndTermId(memberId, termId)
+                .orElseThrow(
+                        () -> new BaseCustomException(TermErrorCode.MEMBER_SKIPPED_TERM_AGREEMENT));
     }
 }
