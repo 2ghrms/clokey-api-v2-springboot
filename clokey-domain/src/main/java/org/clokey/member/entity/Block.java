@@ -30,13 +30,13 @@ public class Block {
     @NotNull
     private Member blocked; // 차단된 회원
 
-    //    @Builder(access = AccessLevel.PRIVATE)
-    //    private Block(Member blocker, Member blocked) {
-    //        this.blocker = blocker;
-    //        this.blocked = blocked;
-    //    }
-    //
-    //    public static Block createBlock(Member blocker, Member blocked) {
-    //        return Block.builder().blocker(blocker).blocked(blocked).build();
-    //    }
+    @Builder(access = AccessLevel.PRIVATE)
+    private Block(Member blocker, Member blocked) {
+        this.blocker = blocker;
+        this.blocked = blocked;
+    }
+
+    public static Block createBlock(Member blocker, Member blocked) {
+        return Block.builder().blocker(blocker).blocked(blocked).build();
+    }
 }

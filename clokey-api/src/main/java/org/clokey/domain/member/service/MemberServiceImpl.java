@@ -1,13 +1,16 @@
 package org.clokey.domain.member.service;
 
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
+import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
+import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.Visibility;
@@ -22,6 +25,7 @@ public class MemberServiceImpl implements MemberService {
     private final MemberUtil memberUtil;
 
     private final MemberRepository memberRepository;
+    private final BlockRepository blockRepository;
 
     @Override
     @Transactional
@@ -53,11 +57,42 @@ public class MemberServiceImpl implements MemberService {
         return DuplicatedIdCheckResponse.of(duplicated);
     }
 
+    @Override
+    @Transactional
+    public void toggleBlockStatus(Long memberId) {
+        final Member blocker = memberUtil.getCurrentMember();
+        final Member blocked = getMemberById(memberId);
+
+        validateSelfBlock(blocker.getId(), blocked.getId());
+
+        Optional<Block> existingBlock =
+                blockRepository.findByBlockerIdAndBlockedId(blocker.getId(), blocked.getId());
+
+        if (existingBlock.isPresent()) {
+            blockRepository.delete(existingBlock.get());
+        } else {
+            Block block = Block.createBlock(blocker, blocked);
+            blockRepository.save(block);
+        }
+    }
+
     private void validateVisualizeBannedMember(Member member, ProfileUpdateRequest request) {
         boolean banned = member.getMemberStatus().equals(MemberStatus.BANNED);
         boolean changeToPublic = request.visibility().equals(Visibility.PUBLIC);
         if (banned && changeToPublic) {
             throw new BaseCustomException(MemberErrorCode.BANNED_MEMBER_TO_PUBLIC);
         }
+    }
+
+    private void validateSelfBlock(Long blockerId, Long blockedId) {
+        if (blockerId.equals(blockedId)) {
+            throw new BaseCustomException(MemberErrorCode.SELF_BLOCK_UNAVAILABLE);
+        }
+    }
+
+    private Member getMemberById(Long memberId) {
+        return memberRepository
+                .findById(memberId)
+                .orElseThrow(() -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 }

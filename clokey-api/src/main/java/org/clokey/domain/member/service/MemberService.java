@@ -9,4 +9,6 @@ public interface MemberService {
     void updateProfile(ProfileUpdateRequest request);
 
     DuplicatedIdCheckResponse checkDuplicateClokeyId(DuplicatedIdCheckRequest request);
+
+    void toggleBlockStatus(Long memberId);
 }

@@ -226,4 +226,24 @@ class MemberControllerTest {
                                     .value("Clokey ID는 영어 소문자, 숫자, 언더바(_), 점(.)만 허용됩니다."));
         }
     }
+
+    @Nested
+    class 차단_토글_요청_시 {
+
+        @Test
+        void 유효한_요청이면_차단을_토글하고_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            willDoNothing().given(memberService).toggleBlockStatus(1L);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(post("/users/block/1").contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
 }
