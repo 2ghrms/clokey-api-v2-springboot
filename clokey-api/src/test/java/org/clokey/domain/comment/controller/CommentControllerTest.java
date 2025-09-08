@@ -2,8 +2,8 @@ package org.clokey.domain.comment.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -613,6 +613,44 @@ class CommentControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."));
+        }
+    }
+
+    @Nested
+    class 댓글_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_댓글을_삭제하고_NO_CONTENT를_반환한다() throws Exception {
+            willDoNothing().given(commentService).deleteComment(1L);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(delete("/comments/1").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
+
+    @Nested
+    class 대댓글_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_대댓글을_삭제하고_NO_CONTENT를_반환한다() throws Exception {
+            willDoNothing().given(commentService).deleteReply(1L, 1L);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/comments/1/replies/1")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
         }
     }
 }

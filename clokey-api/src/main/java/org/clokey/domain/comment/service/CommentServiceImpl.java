@@ -1,5 +1,6 @@
 package org.clokey.domain.comment.service;
 
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.clokey.comment.entitiy.Comment;
 import org.clokey.comment.entitiy.Reply;
@@ -114,6 +115,29 @@ public class CommentServiceImpl implements CommentService {
         return SliceResponse.from(result);
     }
 
+    @Override
+    @Transactional
+    public void deleteComment(Long commentId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Comment comment = getCommentById(commentId);
+
+        validateCommentOwner(currentMember, comment);
+
+        commentRepository.delete(comment);
+    }
+
+    @Override
+    @Transactional
+    public void deleteReply(Long commentId, Long replyId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Reply reply = getReplyById(replyId);
+
+        validateReplyOwner(currentMember, reply);
+        validateReplyFromComment(reply, commentId);
+
+        replyRepository.delete(reply);
+    }
+
     private void validateHistoryAuthority(Member member, History history) {
         if (history.getMember().getVisibility() == Visibility.PRIVATE
                 && !history.getMember().getId().equals(member.getId())) {
@@ -131,5 +155,29 @@ public class CommentServiceImpl implements CommentService {
         return commentRepository
                 .findById(commentId)
                 .orElseThrow(() -> new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND));
+    }
+
+    private Reply getReplyById(Long replyId) {
+        return replyRepository
+                .findById(replyId)
+                .orElseThrow(() -> new BaseCustomException(CommentErrorCode.REPLY_NOT_FOUND));
+    }
+
+    private void validateCommentOwner(Member member, Comment comment) {
+        if (!Objects.equals(comment.getMember().getId(), member.getId())) {
+            throw new BaseCustomException(CommentErrorCode.NOT_MY_COMMENT);
+        }
+    }
+
+    private void validateReplyOwner(Member member, Reply reply) {
+        if (!Objects.equals(reply.getMember().getId(), member.getId())) {
+            throw new BaseCustomException(CommentErrorCode.NOT_MY_REPLY);
+        }
+    }
+
+    private void validateReplyFromComment(Reply reply, Long commentId) {
+        if (!Objects.equals(reply.getComment().getId(), commentId)) {
+            throw new BaseCustomException(CommentErrorCode.REPLY_NOT_FROM_COMMENT);
+        }
     }
 }

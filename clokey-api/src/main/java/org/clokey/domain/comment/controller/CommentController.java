@@ -76,4 +76,19 @@ public class CommentController {
                 commentService.getCommentReplies(commentId, lastReplyId, size, direction);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
+
+    @DeleteMapping("/{commentId}")
+    @Operation(summary = "댓글 삭제 API", description = "댓글을 삭제합니다.")
+    public BaseResponse<Void> deleteComment(@PathVariable Long commentId) {
+        commentService.deleteComment(commentId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @DeleteMapping("/{commentId}/replies/{replyId}")
+    @Operation(summary = "대댓글 삭제 API", description = "대댓글을 삭제합니다.")
+    public BaseResponse<Void> deleteReply(
+            @PathVariable Long commentId, @PathVariable Long replyId) {
+        commentService.deleteReply(commentId, replyId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
 }

@@ -2,6 +2,8 @@ package org.clokey.comment.entitiy;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 import org.clokey.common.model.BaseEntity;
 import org.clokey.history.entity.History;
@@ -32,6 +34,9 @@ public class Comment extends BaseEntity {
     @NotNull
     private History history;
 
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reply> replies = new ArrayList<>();
+
     @Builder(access = AccessLevel.PRIVATE)
     private Comment(String content, boolean banned, Member member, History history) {
         this.content = content;
@@ -48,26 +53,4 @@ public class Comment extends BaseEntity {
                 .history(history)
                 .build();
     }
-
-    //    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
-    //    private List<Reply> replies = new ArrayList<>();
-
-    //    @Builder(access = AccessLevel.PRIVATE)
-    //    private Comment(
-    //            String content, Member member, History history, boolean banned) {
-    //        this.content = content;
-    //        this.member = member;
-    //        this.history = history;
-    //        this.banned = banned;
-    //    }
-    //
-    //    public static Comment createComment(
-    //            String content, Member member, History history) {
-    //        return Comment.builder()
-    //                .content(content)
-    //                .member(member)
-    //                .history(history)
-    //                .banned(false)
-    //                .build();
-    //    }
 }

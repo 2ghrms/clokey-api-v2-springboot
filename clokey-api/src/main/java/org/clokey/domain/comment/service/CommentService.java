@@ -20,4 +20,8 @@ public interface CommentService {
 
     SliceResponse<ReplyListResponse> getCommentReplies(
             Long commentId, Long lastReplyId, int size, SortDirection direction);
+
+    void deleteComment(Long commentId);
+
+    void deleteReply(Long commentId, Long replyId);
 }

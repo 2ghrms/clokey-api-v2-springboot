@@ -514,4 +514,148 @@ class CommentServiceTest extends IntegrationTest {
                     .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
+
+    @Nested
+    class 댓글을_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            HistoryType historyType = HistoryType.createHistoryType("testType");
+            historyTypeRepository.save(historyType);
+
+            History history =
+                    History.creatHistory(
+                            LocalDate.of(2025, 1, 1), "testContent", member1, historyType);
+            historyRepository.save(history);
+
+            Comment comment1 = Comment.createComment("testContent1", member1, history);
+            Comment comment2 = Comment.createComment("testContent2", member1, history);
+            commentRepository.saveAll(List.of(comment1, comment2));
+
+            Reply reply1 = Reply.createReply("testContent1", member1, comment1);
+            Reply reply2 = Reply.createReply("testContent2", member1, comment1);
+            Reply reply3 = Reply.createReply("testContetn3", member1, comment2);
+            replyRepository.saveAll(List.of(reply1, reply2, reply3));
+        }
+
+        @Test
+        void 유효한_요청이면_댓글을_삭제하고_대댓글도_모두_삭제한다() {
+            // when
+            commentService.deleteComment(1L);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(commentRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(replyRepository.findAllById(List.of(1L, 2L))).isEmpty());
+        }
+
+        @Test
+        void 댓글이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> commentService.deleteComment(999L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CommentErrorCode.COMMENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 댓글_작성자가_아닌_경우_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            // when & then
+            assertThatThrownBy(() -> commentService.deleteComment(1L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CommentErrorCode.NOT_MY_COMMENT.getMessage());
+        }
+    }
+
+    @Nested
+    class 대댓글을_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            HistoryType historyType = HistoryType.createHistoryType("testType");
+            historyTypeRepository.save(historyType);
+
+            History history =
+                    History.creatHistory(
+                            LocalDate.of(2025, 1, 1), "testContent", member1, historyType);
+            historyRepository.save(history);
+
+            Comment comment1 = Comment.createComment("testContent1", member1, history);
+            Comment comment2 = Comment.createComment("testContent2", member1, history);
+            commentRepository.saveAll(List.of(comment1, comment2));
+
+            Reply reply1 = Reply.createReply("testContent1", member1, comment1);
+            Reply reply2 = Reply.createReply("testContent2", member2, comment1);
+            Reply reply3 = Reply.createReply("testContetn3", member1, comment2);
+            replyRepository.saveAll(List.of(reply1, reply2, reply3));
+        }
+
+        @Test
+        void 유효한_요청이면_대댓글을_삭제한다() {
+            // when
+            commentService.deleteReply(1L, 1L);
+
+            // then
+            assertThat(replyRepository.findById(1L).isPresent()).isFalse();
+        }
+
+        @Test
+        void 대댓글이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> commentService.deleteReply(1L, 999L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CommentErrorCode.REPLY_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 대댓글_작성자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> commentService.deleteReply(1L, 2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CommentErrorCode.NOT_MY_REPLY.getMessage());
+        }
+
+        @Test
+        void 댓글에_속한_대댓글이_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> commentService.deleteReply(1L, 3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CommentErrorCode.REPLY_NOT_FROM_COMMENT.getMessage());
+        }
+    }
 }
