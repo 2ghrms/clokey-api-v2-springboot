@@ -89,9 +89,7 @@ public class Album extends BaseTimeEntity {
 
 ## 📌 Flyway Convention
 ### ✅ 명명규칙
-
-<img width="" height="140" alt="flyway 명명규칙" src="https://img.notionusercontent.com/s3/prod-files-secure%2F91e6ef36-6446-81ad-8489-00030261db85%2F2ae00cde-e0a8-4e2f-8ffc-00981bcd852c%2Fimage.png/size/w=2000?exp=1756459521&sig=joNPFenDZHIy8HazgFc-2ZVXJFTr4jr-EY9QCQPcmU4&id=24c6ef36-6446-815b-bea2-d1a7ca920762&table=block&userId=b28206d6-9d3c-434f-990c-aac1556e033e" />
-
+<img width="873" height="167" alt="flyway-naming" src="https://github.com/user-attachments/assets/05dcec64-02a9-431f-bf51-1c2d9cabdde8" />
 
 네이밍순서 : Prefix → Version → Separator(__) → Description → Suffix
 
