@@ -63,7 +63,7 @@ class ClothServiceTest extends IntegrationTest {
                                     new ClothCreateRequest("testClothImageUrl2", 1L)));
 
             // when
-            clothService.createCloths(request);
+            clothService.createClothes(request);
 
             // then
             Assertions.assertAll(
@@ -87,7 +87,7 @@ class ClothServiceTest extends IntegrationTest {
                                     new ClothCreateRequest("testClothImageUrl2", 999L)));
 
             // when & then
-            assertThatThrownBy(() -> clothService.createCloths(request))
+            assertThatThrownBy(() -> clothService.createClothes(request))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(CategoryErrorCode.CATEGORY_IN_BULK_NOT_FOUND.getMessage());
         }

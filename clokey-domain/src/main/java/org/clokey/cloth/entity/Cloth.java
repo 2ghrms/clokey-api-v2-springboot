@@ -53,7 +53,7 @@ public class Cloth extends BaseEntity {
     }
 
     //    @OneToMany(mappedBy = "cloth", cascade = CascadeType.ALL, orphanRemoval = true)
-    //    private List<HistoryCloth> historyCloths = new ArrayList<>();
+    //    private List<HistoryCloth> historyClothes = new ArrayList<>();
     //
     //    @OneToMany(mappedBy = "cloth", cascade = CascadeType.ALL, orphanRemoval = true)
     //    private List<ClothFolder> clothFolders = new ArrayList<>();

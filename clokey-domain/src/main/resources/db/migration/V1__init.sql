@@ -174,8 +174,8 @@ CREATE TABLE history_cloth_tag (
                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                history_image_id BIGINT NOT NULL,
                                history_cloth_id BIGINT NOT NULL,
-                               coordinate_x DOUBLE NOT NULL,
-                               coordinate_y DOUBLE NOT NULL,
+                               location_x DOUBLE NOT NULL,
+                               location_y DOUBLE NOT NULL,
                                created_at DATETIME(6) NOT NULL,
                                updated_at DATETIME(6) NOT NULL,
 
@@ -353,4 +353,54 @@ CREATE TABLE member_term (
                              CONSTRAINT fk_member_term_member FOREIGN KEY (member_id) REFERENCES member(id),
                              CONSTRAINT fk_member_term_term FOREIGN KEY (term_id) REFERENCES term(id)
 );
+
+CREATE TABLE look_book (
+                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+                             name VARCHAR(50) NOT NULL,
+                             member_id BIGINT NOT NULL,
+
+                             created_at DATETIME(6) NOT NULL,
+                             updated_at DATETIME(6) NOT NULL,
+
+                             CONSTRAINT fk_look_book_member FOREIGN KEY (member_id) REFERENCES member(id)
+);
+
+CREATE TABLE coordinate (
+                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+                           name VARCHAR(50),
+                           memo VARCHAR(100),
+                           liked BOOLEAN NOT NULL,
+                           image_url VARCHAR(255),
+                           member_id BIGINT NOT NULL,
+                           look_book_id BIGINT,
+
+                           created_at DATETIME(6) NOT NULL,
+                           updated_at DATETIME(6) NOT NULL,
+
+
+                           CONSTRAINT fk_coordinate_member FOREIGN KEY (member_id) REFERENCES member(id),
+                           CONSTRAINT fk_coordinate_look_book FOREIGN KEY (look_book_id) REFERENCES look_book(id)
+);
+
+CREATE TABLE coordinate_cloth (
+                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+                                  location_x DOUBLE NOT NULL,
+                                  location_y DOUBLE NOT NULL,
+
+                                  ratio DOUBLE NOT NULL CHECK (ratio > 0),
+                                  `order` INT NOT NULL,
+
+                                  coordinate_id BIGINT NOT NULL,
+                                  cloth_id BIGINT NOT NULL,
+
+                                  created_at DATETIME(6) NOT NULL,
+                                  updated_at DATETIME(6) NOT NULL,
+
+                                  CONSTRAINT fk_coordinate_cloth_coordinate FOREIGN KEY (coordinate_id) REFERENCES coordinate(id),
+                                  CONSTRAINT fk_coordinate_cloth_cloth FOREIGN KEY (cloth_id) REFERENCES cloth(id)
+);
+
 

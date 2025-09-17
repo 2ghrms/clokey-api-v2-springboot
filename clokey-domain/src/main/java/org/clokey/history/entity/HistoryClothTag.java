@@ -3,9 +3,11 @@ package org.clokey.history.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.clokey.common.model.BaseEntity;
+import org.clokey.common.model.Location;
 
 @Entity
 @Getter
@@ -26,11 +28,25 @@ public class HistoryClothTag extends BaseEntity {
     @NotNull
     private HistoryCloth historyCloth;
 
-    @NotNull
-    @Column(name = "coordinate_x")
-    private Double coordinateX;
+    @Embedded @NotNull private Location location;
 
-    @NotNull
-    @Column(name = "coordinate_y")
-    private Double coordinateY;
+    @Builder(access = AccessLevel.PRIVATE)
+    private HistoryClothTag(
+            HistoryImage historyImage, HistoryCloth historyCloth, Location location) {
+        this.historyImage = historyImage;
+        this.historyCloth = historyCloth;
+        this.location = location;
+    }
+
+    public static HistoryClothTag createHistoryClothTag(
+            HistoryImage historyImage,
+            HistoryCloth historyCloth,
+            Double locationX,
+            Double locationY) {
+        return HistoryClothTag.builder()
+                .historyImage(historyImage)
+                .historyCloth(historyCloth)
+                .location(Location.createLocation(locationX, locationY))
+                .build();
+    }
 }

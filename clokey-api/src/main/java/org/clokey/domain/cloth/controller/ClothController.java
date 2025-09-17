@@ -23,9 +23,9 @@ public class ClothController {
 
     @PostMapping
     @Operation(summary = "옷 생성", description = "새로운 옷을 생성합니다.")
-    public BaseResponse<ClothCreateResponse> createCloths(
+    public BaseResponse<ClothCreateResponse> createClothes(
             @Valid @RequestBody ClothCreateRequests request) {
-        ClothCreateResponse response = clothService.createCloths(request);
+        ClothCreateResponse response = clothService.createClothes(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, response);
     }
 }

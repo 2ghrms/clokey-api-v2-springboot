@@ -1,6 +1,5 @@
 package org.clokey.domain.cloth.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,7 +50,7 @@ class ClothControllerTest {
 
             ClothCreateResponse response = new ClothCreateResponse(List.of(1L, 2L));
 
-            given(clothService.createCloths(request)).willReturn(response);
+            given(clothService.createClothes(request)).willReturn(response);
 
             // when & then
             ResultActions perform =
@@ -137,7 +136,7 @@ class ClothControllerTest {
             ClothCreateRequests request =
                     new ClothCreateRequests(
                             List.of(new ClothCreateRequest("testClothImageUrl1", 999L)));
-            given(clothService.createCloths(request))
+            given(clothService.createClothes(request))
                     .willThrow(
                             new BaseCustomException(CategoryErrorCode.CATEGORY_IN_BULK_NOT_FOUND));
 

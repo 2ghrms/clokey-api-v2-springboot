@@ -5,5 +5,5 @@ import org.clokey.domain.cloth.dto.response.ClothCreateResponse;
 
 public interface ClothService {
 
-    ClothCreateResponse createCloths(ClothCreateRequests list);
+    ClothCreateResponse createClothes(ClothCreateRequests list);
 }

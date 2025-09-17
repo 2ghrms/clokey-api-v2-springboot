@@ -31,7 +31,7 @@ public class ClothServiceImpl implements ClothService {
 
     @Override
     @Transactional
-    public ClothCreateResponse createCloths(ClothCreateRequests request) {
+    public ClothCreateResponse createClothes(ClothCreateRequests request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         Map<Long, Category> categoryMap =
@@ -40,7 +40,7 @@ public class ClothServiceImpl implements ClothService {
                                 .map(ClothCreateRequest::categoryId)
                                 .collect(Collectors.toSet()));
 
-        List<Cloth> cloths =
+        List<Cloth> clothes =
                 request.content().stream()
                         .map(
                                 cr -> {
@@ -50,9 +50,9 @@ public class ClothServiceImpl implements ClothService {
                                 })
                         .toList();
 
-        clothRepository.saveAll(cloths);
+        clothRepository.saveAll(clothes);
 
-        return ClothCreateResponse.from(cloths);
+        return ClothCreateResponse.from(clothes);
     }
 
     private Map<Long, Category> getCategoryMapByIds(Set<Long> ids) {
