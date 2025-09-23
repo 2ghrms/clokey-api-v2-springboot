@@ -81,10 +81,10 @@ class CommentServiceTest extends IntegrationTest {
             historyTypeRepository.save(historyType);
 
             History history1 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
             History history2 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
             historyRepository.saveAll(List.of(history1, history2));
         }
@@ -179,10 +179,10 @@ class CommentServiceTest extends IntegrationTest {
             historyTypeRepository.save(historyType);
 
             History history1 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
             History history2 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
             historyRepository.saveAll(List.of(history1, history2));
 
@@ -281,13 +281,13 @@ class CommentServiceTest extends IntegrationTest {
             historyTypeRepository.save(historyType);
 
             History history1 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
             History history2 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
             History history3 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 2), "testContent3", member1, historyType);
             historyRepository.saveAll(List.of(history1, history2, history3));
 
@@ -410,10 +410,10 @@ class CommentServiceTest extends IntegrationTest {
             historyTypeRepository.save(historyType);
 
             History history1 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
             History history2 =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
             historyRepository.saveAll(List.of(history1, history2));
 
@@ -540,7 +540,7 @@ class CommentServiceTest extends IntegrationTest {
             historyTypeRepository.save(historyType);
 
             History history =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent", member1, historyType);
             historyRepository.save(history);
 
@@ -611,7 +611,7 @@ class CommentServiceTest extends IntegrationTest {
             historyTypeRepository.save(historyType);
 
             History history =
-                    History.creatHistory(
+                    History.createHistory(
                             LocalDate.of(2025, 1, 1), "testContent", member1, historyType);
             historyRepository.save(history);
 

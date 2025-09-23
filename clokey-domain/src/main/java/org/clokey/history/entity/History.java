@@ -54,7 +54,7 @@ public class History extends BaseEntity {
         this.historyType = historyType;
     }
 
-    public static History creatHistory(
+    public static History createHistory(
             LocalDate historyDate, String content, Member member, HistoryType historyType) {
         return History.builder()
                 .historyDate(historyDate)

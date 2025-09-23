@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/terms")
 @RequiredArgsConstructor
-@Tag(name = "2. 약관 API", description = "약관 관련 API입니다.")
+@Tag(name = "15. 약관 API", description = "약관 관련 API입니다.")
 public class TermController {
 
     private final TermService termService;

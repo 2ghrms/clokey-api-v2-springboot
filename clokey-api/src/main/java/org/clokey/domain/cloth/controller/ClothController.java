@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/clothes")
 @RequiredArgsConstructor
-@Tag(name = "4. 옷 API", description = "옷 관련 API입니다.")
+@Tag(name = "3. 옷 API", description = "옷 관련 API입니다.")
 @Validated
 public class ClothController {
 
