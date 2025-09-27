@@ -30,13 +30,13 @@ public class HashtagHistory extends BaseEntity {
     @NotNull
     private History history;
 
-    //    @Builder(access = AccessLevel.PRIVATE)
-    //    private HashtagHistory(Hashtag hashtag, History history) {
-    //        this.hashtag = hashtag;
-    //        this.history = history;
-    //    }
-    //
-    //    public static HashtagHistory createHashtagHistory(Hashtag hashtag, History history) {
-    //        return HashtagHistory.builder().hashtag(hashtag).history(history).build();
-    //    }
+    @Builder(access = AccessLevel.PRIVATE)
+    private HashtagHistory(Hashtag hashtag, History history) {
+        this.hashtag = hashtag;
+        this.history = history;
+    }
+
+    public static HashtagHistory createHashtagHistory(Hashtag hashtag, History history) {
+        return HashtagHistory.builder().hashtag(hashtag).history(history).build();
+    }
 }

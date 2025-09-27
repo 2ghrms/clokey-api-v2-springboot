@@ -18,12 +18,12 @@ public class Hashtag extends BaseEntity {
     @NotNull
     private String name;
 
-    //    @Builder(access = AccessLevel.PRIVATE)
-    //    private Hashtag(String name) {
-    //        this.name = name;
-    //    }
-    //
-    //    public static Hashtag createHashtag(String name) {
-    //        return Hashtag.builder().name(name).build();
-    //    }
+    @Builder(access = AccessLevel.PRIVATE)
+    private Hashtag(String name) {
+        this.name = name;
+    }
+
+    public static Hashtag createHashtag(String name) {
+        return Hashtag.builder().name(name).build();
+    }
 }

@@ -34,7 +34,7 @@ public class Comment extends BaseEntity {
     @NotNull
     private History history;
 
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "comment")
     private List<Reply> replies = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)

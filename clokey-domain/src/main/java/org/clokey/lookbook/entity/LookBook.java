@@ -28,7 +28,7 @@ public class LookBook extends BaseEntity {
     @NotNull
     private Member member;
 
-    @OneToMany(mappedBy = "lookBook", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "lookBook")
     private List<Coordinate> codies = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)

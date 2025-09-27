@@ -33,13 +33,13 @@ public class MemberLike extends BaseEntity {
     @NotNull
     private History history;
 
-    //    @Builder(access = AccessLevel.PRIVATE)
-    //    private MemberLike(Member member, History history) {
-    //        this.member = member;
-    //        this.history = history;
-    //    }
-    //
-    //    public static MemberLike createMemberLike(Member member, History history) {
-    //        return MemberLike.builder().member(member).history(history).build();
-    //    }
+    @Builder(access = AccessLevel.PRIVATE)
+    private MemberLike(Member member, History history) {
+        this.member = member;
+        this.history = history;
+    }
+
+    public static MemberLike createMemberLike(Member member, History history) {
+        return MemberLike.builder().member(member).history(history).build();
+    }
 }

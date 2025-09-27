@@ -123,6 +123,7 @@ public class CommentServiceImpl implements CommentService {
 
         validateCommentOwner(currentMember, comment);
 
+        replyRepository.deleteByCommentId(comment.getId());
         commentRepository.delete(comment);
     }
 

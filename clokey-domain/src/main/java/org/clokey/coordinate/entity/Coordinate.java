@@ -39,7 +39,7 @@ public class Coordinate extends BaseEntity {
     @NotNull
     private Member member;
 
-    @OneToMany(mappedBy = "coordinate", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "coordinate")
     private List<CoordinateCloth> coordinateClothes = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)

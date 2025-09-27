@@ -11,7 +11,7 @@
 - key값
 - 필드
 - 단방향 매핑
-- 양방향 매핑 (양방향도 싹다 달아주세요)
+- 양방향 매핑 (양방향도 싹다 달아주세요. 단, Cascade 삭제는 사용하지 않습니다! -> JPQL 삭제와 deletAllInBatch만 사용할 것.)
 
 ### ✅코드 예시 → 생성 방법
 
@@ -32,22 +32,22 @@ public class Album extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private AlbumPlan plan;
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "album")
     private List<Payment> payments = new ArrayList<>();
 
-    @OneToOne(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "album")
     private Subscription subscription;
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "album")
     private List<Event> events = new ArrayList<>();
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "album")
     private List<Participant> participants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "album")
     private List<Favorites> favorites = new ArrayList<>();
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "album")
     private List<Image> images = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)

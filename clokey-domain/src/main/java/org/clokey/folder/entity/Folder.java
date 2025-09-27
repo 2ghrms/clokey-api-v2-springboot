@@ -2,6 +2,8 @@ package org.clokey.folder.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 import org.clokey.common.model.BaseEntity;
 import org.clokey.member.entity.Member;
@@ -24,6 +26,6 @@ public class Folder extends BaseEntity {
     @NotNull
     private Member member;
 
-    //    @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, orphanRemoval = true)
-    //    private List<ClothFolder> clothFolders = new ArrayList<>();
+    @OneToMany(mappedBy = "folder")
+    private List<ClothFolder> clothFolders = new ArrayList<>();
 }
