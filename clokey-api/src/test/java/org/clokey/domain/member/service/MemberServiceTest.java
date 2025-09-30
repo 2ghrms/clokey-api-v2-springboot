@@ -9,6 +9,7 @@ import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
+import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
@@ -217,6 +218,43 @@ class MemberServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> memberService.toggleBlockStatus(999L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 본인인지_확인할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickname1",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+            memberRepository.save(member1);
+
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+        }
+
+        @Test
+        void 유효한_요청이면_본인_여부를_반환한다() {
+            // given
+            String clokeyId = "testClokeyId1";
+
+            // when
+            MyselfCheckResponse response = memberService.checkIsMyself(clokeyId);
+
+            // then
+            assertThat(response.isMyself()).isEqualTo(true);
+        }
+
+        @Test
+        void 클로키_아이디가_존재하지_않으면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> memberService.checkIsMyself("WrongId"))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage("해당 클로키 아이디를 찾을 수 없습니다.");
         }
     }
 }

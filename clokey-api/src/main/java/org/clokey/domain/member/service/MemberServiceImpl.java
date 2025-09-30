@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
+import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
@@ -76,6 +77,16 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
+    @Override
+    public MyselfCheckResponse checkIsMyself(String clokeyId) {
+        validateExistsClokeyId(clokeyId);
+        Member currentMember = memberUtil.getCurrentMember();
+
+        boolean isMyself = currentMember.getClokeyId().equals(clokeyId);
+
+        return MyselfCheckResponse.of(isMyself);
+    }
+
     private void validateVisualizeBannedMember(Member member, ProfileUpdateRequest request) {
         boolean banned = member.getMemberStatus().equals(MemberStatus.BANNED);
         boolean changeToPublic = request.visibility().equals(Visibility.PUBLIC);
@@ -87,6 +98,12 @@ public class MemberServiceImpl implements MemberService {
     private void validateSelfBlock(Long blockerId, Long blockedId) {
         if (blockerId.equals(blockedId)) {
             throw new BaseCustomException(MemberErrorCode.SELF_BLOCK_UNAVAILABLE);
+        }
+    }
+
+    private void validateExistsClokeyId(String clokeyId) {
+        if (!memberRepository.existsByClokeyId(clokeyId)) {
+            throw new BaseCustomException(MemberErrorCode.CLOKEY_ID_NOT_FOUND);
         }
     }
 

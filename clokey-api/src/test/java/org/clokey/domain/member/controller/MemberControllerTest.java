@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
+import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.service.MemberService;
 import org.clokey.member.enums.Visibility;
 import org.junit.jupiter.api.Nested;
@@ -244,6 +245,29 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON204"))
                     .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
+
+    @Nested
+    class 본인_확인_요청_시 {
+
+        @Test
+        void 유효한_요청이면_본인인지_여부를_반환한다() throws Exception {
+            // given
+            String clokeyId = "test123";
+            MyselfCheckResponse response = new MyselfCheckResponse(true);
+
+            given(memberService.checkIsMyself(clokeyId)).willReturn(response);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(get("/users/check-myself").param("clokeyId", clokeyId));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.isMyself").value(true));
         }
     }
 }

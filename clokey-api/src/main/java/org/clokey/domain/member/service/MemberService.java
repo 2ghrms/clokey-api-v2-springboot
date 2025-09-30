@@ -3,6 +3,7 @@ package org.clokey.domain.member.service;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
+import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 
 public interface MemberService {
 
@@ -11,4 +12,6 @@ public interface MemberService {
     DuplicatedIdCheckResponse checkDuplicateClokeyId(DuplicatedIdCheckRequest request);
 
     void toggleBlockStatus(Long memberId);
+
+    MyselfCheckResponse checkIsMyself(String clokeyId);
 }
