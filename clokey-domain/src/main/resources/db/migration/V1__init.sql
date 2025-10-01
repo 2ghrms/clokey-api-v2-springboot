@@ -340,6 +340,7 @@ CREATE TABLE coordinate_cloth (
                                   location_y DOUBLE NOT NULL,
 
                                   ratio DOUBLE NOT NULL CHECK (ratio > 0),
+                                  degree DOUBLE NOT NULL,
                                   `order` INT NOT NULL,
 
                                   coordinate_id BIGINT NOT NULL,

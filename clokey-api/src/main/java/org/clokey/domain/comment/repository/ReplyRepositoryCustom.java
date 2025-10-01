@@ -6,5 +6,9 @@ import org.springframework.data.domain.Slice;
 
 public interface ReplyRepositoryCustom {
     Slice<ReplyListResponse> findAllByCommentId(
-            Long commentId, Long lastReplyId, int size, SortDirection direction);
+            Long commentId,
+            Long currentMemberId,
+            Long lastReplyId,
+            int size,
+            SortDirection direction);
 }

@@ -2,10 +2,7 @@ package org.clokey.domain.coordinate.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import java.util.List;
 
 public record DailyCoordinateCreateRequest(
@@ -30,6 +27,11 @@ public record DailyCoordinateCreateRequest(
                     @Positive(message = "옷의 비율은 음수일 수 없습니다.")
                     @Schema(description = "오늘의 코디 옷의 크기 비율")
                     Double ratio,
+            @NotNull(message = "옷의 각도는 비워둘 수 없습니다.")
+                    @Min(value = 0, message = "각도는 0도 이상이어야 합니다.")
+                    @Max(value = 360, message = "각도는 360도 이하여야 합니다.")
+                    @Schema(description = "오늘의 코디 옷의 각도")
+                    Double degree,
             @NotNull(message = "옷의 순서는 비워둘 수 없습니다.") @Schema(description = "오늘의 코디 옷의 순서")
                     Integer order) {}
 }

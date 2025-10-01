@@ -78,6 +78,7 @@ public class CoordinateServiceImpl implements CoordinateService {
                                                 payload.locationX(),
                                                 payload.locationY(),
                                                 payload.ratio(),
+                                                payload.degree(),
                                                 payload.order(),
                                                 coordinate,
                                                 clothMap.get(payload.clothId())))

@@ -22,7 +22,7 @@ public class CoordinateController {
 
     private final CoordinateService coordinateService;
 
-    @PostMapping
+    @PostMapping("/daily")
     @Operation(summary = "오늘의 코디 생성", description = "홈화면에서 오늘의 코디를 생성하는 API입니다.")
     public BaseResponse<DailyCoordinateCreateResponse> createDailyCoordinate(
             @Valid @RequestBody DailyCoordinateCreateRequest request) {

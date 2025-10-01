@@ -23,7 +23,11 @@ public class ReplyRepositoryImpl implements ReplyRepositoryCustom {
 
     @Override
     public Slice<ReplyListResponse> findAllByCommentId(
-            Long commentId, Long lastReplyId, int size, SortDirection direction) {
+            Long commentId,
+            Long currentMemberId,
+            Long lastReplyId,
+            int size,
+            SortDirection direction) {
         List<ReplyListResponse> results =
                 queryFactory
                         .select(
@@ -33,7 +37,8 @@ public class ReplyRepositoryImpl implements ReplyRepositoryCustom {
                                         member.id,
                                         member.nickname,
                                         member.profileImageUrl,
-                                        reply.content))
+                                        reply.content,
+                                        member.id.eq(currentMemberId)))
                         .from(reply)
                         .join(reply.member, member)
                         .where(

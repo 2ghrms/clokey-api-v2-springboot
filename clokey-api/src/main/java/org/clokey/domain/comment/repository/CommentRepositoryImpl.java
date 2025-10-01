@@ -27,7 +27,11 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
 
     @Override
     public Slice<CommentListResponse> findAllByHistoryId(
-            Long historyId, Long lastCommentId, int size, SortDirection direction) {
+            Long historyId,
+            Long currentMemberId,
+            Long lastCommentId,
+            int size,
+            SortDirection direction) {
 
         // 삼중 조인을 피하기 위해 댓글 존재 여부는 처음에는 false로 가져옵니다.
         List<CommentListResponse> results =
@@ -40,7 +44,8 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                         member.nickname,
                                         member.profileImageUrl,
                                         comment.content,
-                                        Expressions.constant(false)))
+                                        Expressions.constant(false),
+                                        member.id.eq(currentMemberId)))
                         .from(comment)
                         .join(comment.member, member)
                         .where(
@@ -84,7 +89,8 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                                 c.nickName(),
                                                 c.profileImageUrl(),
                                                 c.content(),
-                                                repliedMap.getOrDefault(c.commentId(), false)))
+                                                repliedMap.getOrDefault(c.commentId(), false),
+                                                c.isMine()))
                         .toList();
 
         return new SliceImpl<>(finalResults, PageRequest.of(0, size), hasNext);

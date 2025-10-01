@@ -8,4 +8,5 @@ public record ReplyListResponse(
         @Schema(description = "대댓글 작성자 닉네임", example = "포테토남") String nickName,
         @Schema(description = "대댓글 작성자 이미지 주소", example = "https://s3.amazonaws.com/example.jpg")
                 String profileImageUrl,
-        @Schema(description = "대댓글 내용", example = "이 옷 정보 알려주세요!") String content) {}
+        @Schema(description = "대댓글 내용", example = "이 옷 정보 알려주세요!") String content,
+        @Schema(description = "내가 작성한 대댓글인가?", example = "false") boolean isMine) {}

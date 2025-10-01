@@ -108,9 +108,9 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             "testUrl",
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 1),
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            2L, 100.5, 200.25, 1.0, 2)));
+                                            2L, 100.5, 200.25, 1.0, 50.0, 2)));
 
             // when
             coordinateService.createDailyCoordinate(request);
@@ -161,9 +161,9 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             "testUrl",
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 1),
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            2L, 100.5, 200.25, 1.0, 3)));
+                                            2L, 100.5, 200.25, 1.0, 50.0, 3)));
 
             // when & then
             assertThatThrownBy(() -> coordinateService.createDailyCoordinate(request))
@@ -179,27 +179,27 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             "testUrl",
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 1),
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            2L, 100.5, 200.25, 1.0, 2),
+                                            2L, 100.5, 200.25, 1.0, 50.0, 2),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            3L, 100.5, 200.25, 1.0, 3),
+                                            3L, 100.5, 200.25, 1.0, 50.0, 3),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            4L, 100.5, 200.25, 1.0, 4),
+                                            4L, 100.5, 200.25, 1.0, 50.0, 4),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            5L, 100.5, 200.25, 1.0, 5),
+                                            5L, 100.5, 200.25, 1.0, 50.0, 5),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            6L, 100.5, 200.25, 1.0, 6),
+                                            6L, 100.5, 200.25, 1.0, 50.0, 6),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            7L, 100.5, 200.25, 1.0, 7),
+                                            7L, 100.5, 200.25, 1.0, 50.0, 7),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            8L, 100.5, 200.25, 1.0, 8),
+                                            8L, 100.5, 200.25, 1.0, 50.0, 8),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            9L, 100.5, 200.25, 1.0, 9),
+                                            9L, 100.5, 200.25, 1.0, 50.0, 9),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            10L, 100.5, 200.25, 1.0, 10),
+                                            10L, 100.5, 200.25, 1.0, 50.0, 10),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            11L, 100.5, 200.25, 1.0, 11)));
+                                            11L, 100.5, 200.25, 1.0, 50.0, 11)));
 
             // when & then
             assertThatThrownBy(() -> coordinateService.createDailyCoordinate(request))
@@ -215,9 +215,9 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             "testUrl",
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 1),
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 2)));
+                                            1L, 100.5, 200.25, 1.0, 50.0, 2)));
 
             // when & then
             assertThatThrownBy(() -> coordinateService.createDailyCoordinate(request))
@@ -233,9 +233,9 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             "testUrl",
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 1),
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            999L, 100.5, 200.25, 1.0, 2)));
+                                            999L, 100.5, 200.25, 1.0, 50.0, 2)));
 
             // when & then
             assertThatThrownBy(() -> coordinateService.createDailyCoordinate(request))
@@ -251,9 +251,9 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             "testUrl",
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 1),
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            3L, 100.5, 200.25, 1.0, 2)));
+                                            3L, 100.5, 200.25, 1.0, 50.0, 2)));
 
             // when & then
             assertThatThrownBy(() -> coordinateService.createDailyCoordinate(request))
@@ -269,9 +269,9 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             "testUrl",
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
-                                            1L, 100.5, 200.25, 1.0, 1),
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1),
                                     new DailyCoordinateCreateRequest.Payload(
-                                            2L, 100.5, 200.25, 1.0, 2)));
+                                            2L, 100.5, 200.25, 1.0, 50.0, 2)));
 
             String key = String.format("dailyCoordinate:%d:%s", 1L, LocalDate.now());
             LocalDateTime now = LocalDateTime.now();

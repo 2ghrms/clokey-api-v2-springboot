@@ -24,6 +24,9 @@ public class CoordinateCloth extends BaseEntity {
 
     @Positive @NotNull private Double ratio;
 
+    // 옷의 각도 (시계 방향)
+    @NotNull private Double degree;
+
     @NotNull
     @Column(name = "`order`")
     private int order;
@@ -40,9 +43,15 @@ public class CoordinateCloth extends BaseEntity {
 
     @Builder(access = AccessLevel.PRIVATE)
     private CoordinateCloth(
-            Location location, Double ratio, int order, Coordinate coordinate, Cloth cloth) {
+            Location location,
+            Double ratio,
+            Double degree,
+            int order,
+            Coordinate coordinate,
+            Cloth cloth) {
         this.location = location;
         this.ratio = ratio;
+        this.degree = degree;
         this.order = order;
         this.coordinate = coordinate;
         this.cloth = cloth;
@@ -52,12 +61,14 @@ public class CoordinateCloth extends BaseEntity {
             Double locationX,
             Double locationY,
             Double ratio,
+            Double degree,
             int order,
             Coordinate coordinate,
             Cloth cloth) {
         return CoordinateCloth.builder()
                 .location(Location.createLocation(locationX, locationY))
                 .ratio(ratio)
+                .degree(degree)
                 .order(order)
                 .coordinate(coordinate)
                 .cloth(cloth)
