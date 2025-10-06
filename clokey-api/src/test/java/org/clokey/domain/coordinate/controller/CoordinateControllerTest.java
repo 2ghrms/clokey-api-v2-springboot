@@ -1,6 +1,5 @@
 package org.clokey.domain.coordinate.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -8,8 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
+import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
-import org.clokey.domain.coordinate.dto.response.DailyCoordinateCreateResponse;
+import org.clokey.domain.coordinate.dto.response.CoordinateCreateResponse;
 import org.clokey.domain.coordinate.service.CoordinateService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ class CoordinateControllerTest {
                             List.of(
                                     new DailyCoordinateCreateRequest.Payload(
                                             1L, 100.5, 200.25, 1.0, 50.0, 1)));
-            DailyCoordinateCreateResponse response = new DailyCoordinateCreateResponse(1L);
+            CoordinateCreateResponse response = new CoordinateCreateResponse(1L);
             given(coordinateService.createDailyCoordinate(request)).willReturn(response);
 
             // when & then
@@ -60,7 +61,7 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON201"))
                     .andExpect(jsonPath("$.message").value("요청 성공 및 리소스 생성됨"))
-                    .andExpect(jsonPath("$.result.dailyCoordinateId").value(1));
+                    .andExpect(jsonPath("$.result.coordinateId").value(1));
         }
 
         @ParameterizedTest
@@ -355,6 +356,559 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
                     .andExpect(jsonPath("$.result.degree").value("각도는 360도 이하여야 합니다."));
+        }
+    }
+
+    @Nested
+    class 코디_수동_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_코디를_생성하고_ID를_반환한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1)));
+            CoordinateCreateResponse response = new CoordinateCreateResponse(1L);
+            given(coordinateService.createCoordinateManual(request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON201"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 리소스 생성됨"))
+                    .andExpect(jsonPath("$.result.coordinateId").value(1));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 코디의_이미지_url이_null_또는_공백이면_예외가_발생한다(String coordinateImageUrl) throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            coordinateImageUrl,
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(
+                            jsonPath("$.result.coordinateImageUrl").value("코디의 사진은 비워둘 수 없습니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 코디의_이름이_null_또는_공백이면_예외가_발생한다(String name) throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            name,
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.name").value("코디의 이름은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 코디의_메모가_100자를_넘어가면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "t".repeat(101),
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.memo").value("메모는 최대 100자까지 입력할 수 있습니다."));
+        }
+
+        @Test
+        void 룩북IO를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            null,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.lookBookId").value("룩북 ID는 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 코디의_Payload를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl", "testName", "testMemo", 1L, List.of());
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.payloads").value("옷들의 정보를 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 옷의_X_좌표를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, null, 200.25, 1.0, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.locationX").value("옷의 x좌표는 비워둘 수 없습니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {-1.5, -2.0})
+        void 옷의_X_좌표를_음수로_입력하면_예외가_발생한다(Double locationX) throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, locationX, 200.25, 1.0, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.locationX").value("옷의 x좌표는 음수일 수 없습니다."));
+        }
+
+        @Test
+        void 옷의_Y_좌표를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, null, 1.0, 50.0, 1)));
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.locationY").value("옷의 y좌표는 비워둘 수 없습니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {-1.5, -2.0})
+        void 옷의_Y_좌표를_음수로_입력하면_예외가_발생한다(Double locationY) throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, locationY, 1.0, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.locationY").value("옷의 y좌표는 음수일 수 없습니다."));
+        }
+
+        @Test
+        void 옷의_비율을_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.24, null, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.ratio").value("옷의 비율은 비워둘 수 없습니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {-1.5, -2.0})
+        void 옷의_비율을_음수로_입력하면_예외가_발생한다(Double ratio) throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, ratio, 50.0, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.ratio").value("옷의 비율은 음수일 수 없습니다."));
+        }
+
+        @Test
+        void 옷의_순서를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, 50.0, null)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.order").value("옷의 순서는 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 옷의_각도를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, null, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.degree").value("옷의 각도는 비워둘 수 없습니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {-1.5, -2.0})
+        void 옷의_각도가_음수면_예외가_발생한다(Double degree) throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, degree, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.degree").value("각도는 0도 이상이어야 합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {360.1, 1000.1})
+        void 옷의_각도가_360도를_넘어가면_예외가_발생한다(Double degree) throws Exception {
+            // given
+            CoordinateManualCreateRequest request =
+                    new CoordinateManualCreateRequest(
+                            "testUrl",
+                            "testName",
+                            "testMemo",
+                            1L,
+                            List.of(
+                                    new CoordinateManualCreateRequest.Payload(
+                                            1L, 100.5, 200.25, 1.0, degree, 1)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/manual")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.degree").value("각도는 360도 이하여야 합니다."));
+        }
+    }
+
+    @Nested
+    class 코디_자동_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_코디를_자동으로_생성하고_ID를_반환한다() throws Exception {
+            // given
+            CoordinateAutoCreateRequest request =
+                    new CoordinateAutoCreateRequest("testName", "testMemo", 1L, 1L);
+
+            CoordinateCreateResponse response = new CoordinateCreateResponse(1L);
+            given(coordinateService.createCoordinateAuto(request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/auto")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON201"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 리소스 생성됨"))
+                    .andExpect(jsonPath("$.result.coordinateId").value(1));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 코디의_이름이_null_또는_공백이면_예외가_발생한다(String name) throws Exception {
+            // given
+            CoordinateAutoCreateRequest request =
+                    new CoordinateAutoCreateRequest(name, "testMemo", 1L, 1L);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/auto")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.name").value("코디의 이름은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 코디의_메모가_100자를_넘어가면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateAutoCreateRequest request =
+                    new CoordinateAutoCreateRequest("testName", "t".repeat(101), 1L, 1L);
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/auto")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.memo").value("메모는 최대 100자까지 입력할 수 있습니다."));
+        }
+
+        @Test
+        void 일일_코디_IO를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateAutoCreateRequest request =
+                    new CoordinateAutoCreateRequest("testName", "testMemo", null, 1L);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/auto")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(
+                            jsonPath("$.result.dailyCoordinateId").value("일일 코디 ID는 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 룩북IO를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            CoordinateAutoCreateRequest request =
+                    new CoordinateAutoCreateRequest("testName", "testMemo", 1L, null);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/coordinate/auto")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.lookBookId").value("룩북 ID는 비워둘 수 없습니다."));
         }
     }
 }

@@ -55,4 +55,21 @@ public class Coordinate extends BaseEntity {
     public static Coordinate createDailyCoordinate(String imageUrl, Member member) {
         return Coordinate.builder().name(null).memo(null).imageUrl(imageUrl).member(member).build();
     }
+
+    public static Coordinate createCoordinateManual(
+            String name, String memo, String imageUrl, Member member, LookBook lookBook) {
+        return Coordinate.builder()
+                .name(name)
+                .memo(memo)
+                .imageUrl(imageUrl)
+                .member(member)
+                .lookBook(lookBook)
+                .build();
+    }
+
+    public void addToDailyCoordinateToLookBook(String name, String memo, LookBook lookBook) {
+        this.name = name;
+        this.memo = memo;
+        this.lookBook = lookBook;
+    }
 }
