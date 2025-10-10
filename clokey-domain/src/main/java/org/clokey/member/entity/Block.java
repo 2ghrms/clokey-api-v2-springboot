@@ -3,6 +3,7 @@ package org.clokey.member.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.clokey.common.model.BaseEntity;
 
 @Entity
 @Getter
@@ -14,7 +15,7 @@ import lombok.*;
                     name = "uk_block+blocker_id_blocked_id",
                     columnNames = {"blocker_id", "blocked_id"})
         })
-public class Block {
+public class Block extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

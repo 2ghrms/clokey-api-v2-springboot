@@ -3,6 +3,7 @@ package org.clokey.member.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.clokey.common.model.BaseEntity;
 
 @Entity
 @Getter
@@ -14,7 +15,7 @@ import lombok.*;
                     name = "uk_follow_follow_to_id_follow_from_id",
                     columnNames = {"follow_to_id", "follow_from_id"})
         })
-public class Follow {
+public class Follow extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

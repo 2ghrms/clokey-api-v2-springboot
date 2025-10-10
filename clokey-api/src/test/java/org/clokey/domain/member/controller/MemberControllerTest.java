@@ -8,12 +8,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
+import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.service.MemberService;
+import org.clokey.global.paging.SortDirection;
 import org.clokey.member.enums.Visibility;
+import org.clokey.response.SliceResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -268,6 +272,96 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.isMyself").value(true));
+        }
+    }
+
+    @Nested
+    class 차단_회원_조회_요청_시 {
+
+        @Test
+        void 정렬_조건이_DESC이면_blockId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<BlockedMemberResponse> blockedMembers =
+                    List.of(
+                            new BlockedMemberResponse(2L, 2L, "testId2", "testUrl2"),
+                            new BlockedMemberResponse(1L, 1L, "testId1", "testUrl1"));
+
+            given(memberService.getBlockedMembers(null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<BlockedMemberResponse>(blockedMembers, true));
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/users/blocks").param("size", "2").param("direction", "DESC"));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.content[0].blockId").value(2L))
+                    .andExpect(jsonPath("$.result.content[1].blockId").value(1L))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_createdAt을_오름차순으로_응답한다() throws Exception {
+            // given
+            List<BlockedMemberResponse> blockedMembers =
+                    List.of(
+                            new BlockedMemberResponse(1L, 1L, "testId1", "testUrl1"),
+                            new BlockedMemberResponse(2L, 2L, "testId2", "testUrl2"));
+
+            given(memberService.getBlockedMembers(null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<BlockedMemberResponse>(blockedMembers, true));
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/users/blocks").param("size", "2").param("direction", "ASC"));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.content[0].blockId").value(1L))
+                    .andExpect(jsonPath("$.result.content[1].blockId").value(2L))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<BlockedMemberResponse> blockedMembers =
+                    List.of(new BlockedMemberResponse(1L, 1L, "testId1", "testUrl1"));
+
+            given(memberService.getBlockedMembers(null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<BlockedMemberResponse>(blockedMembers, false));
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/users/blocks").param("size", "1").param("direction", "DESC"));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.content[0].blockId").value(1L))
+                    .andExpect(jsonPath("$.result.isLast").value(false));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/users/blocks").param("size", pageSize).param("direction", "ASC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
         }
     }
 }

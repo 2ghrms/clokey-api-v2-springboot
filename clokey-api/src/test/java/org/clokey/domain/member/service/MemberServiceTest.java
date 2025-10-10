@@ -9,11 +9,13 @@ import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
+import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
+import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Member;
@@ -21,12 +23,17 @@ import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.member.enums.Visibility;
+import org.clokey.response.SliceResponse;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -255,6 +262,114 @@ class MemberServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> memberService.checkIsMyself("WrongId"))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage("해당 클로키 아이디를 찾을 수 없습니다.");
+        }
+    }
+
+    @Nested
+    class 차단_멤버를_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testCodiveId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testCodiveId3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2, member3));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Block block1 = Block.createBlock(member1, member2);
+            Block block2 = Block.createBlock(member1, member3);
+            Block block3 = Block.createBlock(member2, member3);
+
+            blockRepository.saveAll(List.of(block1, block2, block3));
+        }
+
+        @Test
+        void 유효한_요청이면_차단_멤버_목록을_반환한다() {
+            // when
+            SliceResponse<BlockedMemberResponse> response =
+                    memberService.getBlockedMembers(null, 5, SortDirection.DESC);
+
+            // then
+            assertThat(response.content())
+                    .extracting("codiveId")
+                    .containsExactly("testCodiveId3", "testCodiveId2");
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_BlockId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<BlockedMemberResponse> response =
+                    memberService.getBlockedMembers(null, 5, SortDirection.DESC);
+
+            // then
+            assertThat(response.content()).extracting("blockId").containsExactly(2L, 1L);
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_BlockId를_오름차순으로_조회한다() {
+            // when
+            SliceResponse<BlockedMemberResponse> response =
+                    memberService.getBlockedMembers(null, 5, SortDirection.ASC);
+
+            // then
+            assertThat(response.content()).extracting("blockId").containsExactly(1L, 2L);
+        }
+
+        @Test
+        void 차단한_멤버가_없으면_빈_리스트를_반환한다() {
+            // given
+            Member member = memberRepository.findById(3L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+            // when
+            SliceResponse<BlockedMemberResponse> response =
+                    memberService.getBlockedMembers(null, 5, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<BlockedMemberResponse> response =
+                    memberService.getBlockedMembers(null, 5, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<BlockedMemberResponse> response =
+                    memberService.getBlockedMembers(null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
         }
     }
 }
