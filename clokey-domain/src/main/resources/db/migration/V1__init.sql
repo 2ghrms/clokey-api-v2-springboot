@@ -321,6 +321,11 @@ CREATE TABLE coordinate (
                            name VARCHAR(50),
                            memo VARCHAR(100),
                            liked BOOLEAN NOT NULL,
+
+                           coordinate_type VARCHAR(255) NOT NULL CHECK (
+                               coordinate_type IN ('DEFAULT', 'DAILY')
+                               ),
+
                            image_url VARCHAR(255),
                            member_id BIGINT NOT NULL,
                            look_book_id BIGINT,

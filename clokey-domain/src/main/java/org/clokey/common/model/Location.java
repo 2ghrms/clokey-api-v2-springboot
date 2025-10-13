@@ -28,4 +28,9 @@ public class Location {
     public static Location createLocation(Double locationX, Double locationY) {
         return Location.builder().locationX(locationX).locationY(locationY).build();
     }
+
+    public void updateLocation(Double locationX, Double locationY) {
+        this.locationX = locationX;
+        this.locationY = locationY;
+    }
 }

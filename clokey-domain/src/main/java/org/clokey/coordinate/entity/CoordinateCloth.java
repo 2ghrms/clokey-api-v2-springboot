@@ -74,4 +74,12 @@ public class CoordinateCloth extends BaseEntity {
                 .cloth(cloth)
                 .build();
     }
+
+    public void updateCoordinateCloth(
+            Double locationX, Double locationY, Double ratio, Double degree, int order) {
+        location.updateLocation(locationX, locationY);
+        this.ratio = ratio;
+        this.degree = degree;
+        this.order = order;
+    }
 }

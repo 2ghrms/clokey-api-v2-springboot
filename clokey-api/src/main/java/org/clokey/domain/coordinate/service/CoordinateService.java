@@ -2,6 +2,7 @@ package org.clokey.domain.coordinate.service;
 
 import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
+import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
 import org.clokey.domain.coordinate.dto.response.CoordinateCreateResponse;
 
@@ -12,4 +13,8 @@ public interface CoordinateService {
     CoordinateCreateResponse createCoordinateManual(CoordinateManualCreateRequest request);
 
     CoordinateCreateResponse createCoordinateAuto(CoordinateAutoCreateRequest request);
+
+    void updateCoordinate(Long coordinateId, CoordinateUpdateRequest request);
+
+    void deleteCoordinate(Long coordinateId);
 }
