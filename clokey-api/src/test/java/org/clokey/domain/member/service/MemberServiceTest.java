@@ -3,8 +3,8 @@ package org.clokey.domain.member.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
-import java.awt.*;
 import java.util.List;
+import java.util.Optional;
 import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
@@ -13,13 +13,17 @@ import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.domain.member.repository.MemberRepository;
+import org.clokey.domain.member.repository.PendingFollowRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Block;
+import org.clokey.member.entity.Follow;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
+import org.clokey.member.entity.PendingFollow;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.member.enums.Visibility;
@@ -41,6 +45,8 @@ class MemberServiceTest extends IntegrationTest {
 
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
+    @Autowired private FollowRepository followRepository;
+    @Autowired private PendingFollowRepository pendingFollowRepository;
     @Autowired private BlockRepository blockRepository;
 
     @Autowired private TransactionUtil transactionUtil;
@@ -157,6 +163,225 @@ class MemberServiceTest extends IntegrationTest {
 
             // when& then
             assertThat(memberService.checkDuplicateClokeyId(request).duplicated()).isTrue();
+        }
+    }
+
+    @Nested
+    class 공개계정_팔로우_언팔로우_할_때 {
+        @BeforeEach
+        void setUp() {
+            Member me =
+                    Member.createMember(
+                            "me@test.com",
+                            "meId",
+                            "me",
+                            OauthInfo.createOauthInfo("meOauth", OauthProvider.KAKAO));
+            Member publicUser =
+                    Member.createMember(
+                            "public@test.com",
+                            "publicId",
+                            "pub",
+                            OauthInfo.createOauthInfo("pubOauth", OauthProvider.KAKAO));
+            Member privateUser =
+                    Member.createMember(
+                            "private@test.com",
+                            "privateId",
+                            "pri",
+                            OauthInfo.createOauthInfo("priOauth", OauthProvider.KAKAO));
+            privateUser.changeVisibility();
+
+            memberRepository.saveAll(List.of(me, publicUser, privateUser));
+            given(memberUtil.getCurrentMember()).willReturn(me);
+        }
+
+        @Test
+        void 공개계정을_팔로우하면_팔로우를_추가한다() {
+            // when
+            memberService.toggleFollow(2L);
+
+            // then
+            assertThat(followRepository.existsByFollowFrom_IdAndFollowTo_Id(1L, 2L)).isTrue();
+        }
+
+        @Test
+        void 공개계정을_이미팔로우중이면_취소한다() {
+            // given
+            followRepository.save(
+                    Follow.createFollow(
+                            memberRepository.findById(1L).orElseThrow(),
+                            memberRepository.findById(2L).orElseThrow()));
+
+            // when
+            memberService.toggleFollow(2L);
+
+            // then
+            assertThat(followRepository.existsByFollowFrom_IdAndFollowTo_Id(1L, 2L)).isFalse();
+        }
+
+        @Test
+        void 자기자신을_팔로우하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> memberService.toggleFollow(1L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.CANNOT_FOLLOW_MYSELF.getMessage());
+        }
+
+        @Test
+        void 차단한_사용자를_팔로우하면_예외가_발생한다() {
+            // given
+            blockRepository.save(
+                    Block.createBlock(
+                            memberRepository.findById(1L).orElseThrow(),
+                            memberRepository.findById(2L).orElseThrow()));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.toggleFollow(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.CANNOT_FOLLOW_BLOCKED.getMessage());
+        }
+
+        @Test
+        void 차단된_사용자가_팔로우하면_예외가_발생한다() {
+            // given
+            blockRepository.save(
+                    Block.createBlock(
+                            memberRepository.findById(2L).orElseThrow(),
+                            memberRepository.findById(1L).orElseThrow()));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.toggleFollow(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.CANNOT_FOLLOW_BLOCKED.getMessage());
+        }
+
+        @Test
+        void 비공개계정을_팔로우하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> memberService.toggleFollow(3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.MUST_REQUEST_FOLLOW.getMessage());
+        }
+    }
+
+    @Nested
+    class 비공개계정_팔로우_언팔로우_할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member me =
+                    Member.createMember(
+                            "me@test.com",
+                            "meId",
+                            "me",
+                            OauthInfo.createOauthInfo("meOauth", OauthProvider.KAKAO));
+            Member publicUser =
+                    Member.createMember(
+                            "public@test.com",
+                            "publicId",
+                            "pub",
+                            OauthInfo.createOauthInfo("pubOauth", OauthProvider.KAKAO));
+            Member privateUser =
+                    Member.createMember(
+                            "private@test.com",
+                            "privateId",
+                            "pri",
+                            OauthInfo.createOauthInfo("priOauth", OauthProvider.KAKAO));
+            privateUser.changeVisibility();
+
+            memberRepository.saveAll(List.of(me, publicUser, privateUser));
+            given(memberUtil.getCurrentMember()).willReturn(me);
+        }
+
+        @Test
+        void 비공개계정을_팔로우하면_팔로우요청을_추가한다() {
+            // when
+            memberService.togglePendingFollow(3L);
+
+            // then
+            Optional<PendingFollow> pendingFollow =
+                    pendingFollowRepository.findByFollowFrom_IdAndFollowTo_Id(1L, 3L);
+
+            assertThat(pendingFollow).isPresent(); // 존재 여부 확인
+        }
+
+        @Test
+        void 비공개계정을_이미요청중이면_취소한다() {
+            // given
+            pendingFollowRepository.save(
+                    PendingFollow.createPendingFollow(
+                            memberRepository.findById(1L).orElseThrow(),
+                            memberRepository.findById(3L).orElseThrow()));
+
+            // when
+            memberService.togglePendingFollow(3L);
+
+            // then
+            Optional<PendingFollow> pendingFollow =
+                    pendingFollowRepository.findByFollowFrom_IdAndFollowTo_Id(1L, 3L);
+
+            assertThat(pendingFollow).isEmpty(); // 존재 여부 확인
+        }
+
+        @Test
+        void 비공개계정을_이미팔로우중이면_취소한다() {
+            // given
+            followRepository.save(
+                    Follow.createFollow(
+                            memberRepository.findById(1L).orElseThrow(),
+                            memberRepository.findById(3L).orElseThrow()));
+
+            // when
+            memberService.togglePendingFollow(3L);
+
+            // then
+            assertThat(followRepository.existsByFollowFrom_IdAndFollowTo_Id(1L, 3L)).isFalse();
+        }
+
+        @Test
+        void 자기자신을_팔로우하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> memberService.togglePendingFollow(1L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.CANNOT_FOLLOW_MYSELF.getMessage());
+        }
+
+        @Test
+        void 차단한_사용자를_팔로우요청하면_예외가_발생한다() {
+            // given
+            blockRepository.save(
+                    Block.createBlock(
+                            memberRepository.findById(1L).orElseThrow(),
+                            memberRepository.findById(3L).orElseThrow()));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.togglePendingFollow(3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.CANNOT_FOLLOW_BLOCKED.getMessage());
+        }
+
+        @Test
+        void 차단된_사용자가_팔로우요청하면_예외가_발생한다() {
+            // given
+            blockRepository.save(
+                    Block.createBlock(
+                            memberRepository.findById(3L).orElseThrow(),
+                            memberRepository.findById(1L).orElseThrow()));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.togglePendingFollow(3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.CANNOT_FOLLOW_BLOCKED.getMessage());
+        }
+
+        @Test
+        void 공개계정을_팔로우요청하면_예외가_발생한다() {
+            // given
+            memberRepository.findById(2L).orElseThrow().changeVisibility();
+
+            // when & then
+            assertThatThrownBy(() -> memberService.togglePendingFollow(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.MUST_FOLLOW.getMessage());
         }
     }
 

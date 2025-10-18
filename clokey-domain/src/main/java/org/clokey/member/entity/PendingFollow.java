@@ -3,19 +3,18 @@ package org.clokey.member.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.clokey.common.model.BaseEntity;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        name = "follow",
+        name = "pending_follow",
         uniqueConstraints = {
             @UniqueConstraint(
-                    name = "uk_follow_follow_to_id_follow_from_id",
+                    name = "uk_pending_follow_to_id_from_id",
                     columnNames = {"follow_to_id", "follow_from_id"})
         })
-public class Follow extends BaseEntity {
+public class PendingFollow {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,12 +31,12 @@ public class Follow extends BaseEntity {
     private Member followFrom;
 
     @Builder(access = AccessLevel.PRIVATE)
-    public Follow(Member followTo, Member followFrom) {
+    public PendingFollow(Member followTo, Member followFrom) {
         this.followTo = followTo;
         this.followFrom = followFrom;
     }
 
-    public static Follow createFollow(Member followFrom, Member followTo) {
-        return Follow.builder().followFrom(followFrom).followTo(followTo).build();
+    public static PendingFollow createPendingFollow(Member followFrom, Member followTo) {
+        return PendingFollow.builder().followFrom(followFrom).followTo(followTo).build();
     }
 }

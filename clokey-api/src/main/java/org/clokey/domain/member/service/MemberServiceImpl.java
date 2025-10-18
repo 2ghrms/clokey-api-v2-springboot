@@ -9,12 +9,16 @@ import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.domain.member.repository.MemberRepository;
+import org.clokey.domain.member.repository.PendingFollowRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Block;
+import org.clokey.member.entity.Follow;
 import org.clokey.member.entity.Member;
+import org.clokey.member.entity.PendingFollow;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.Visibility;
 import org.clokey.response.SliceResponse;
@@ -29,6 +33,8 @@ public class MemberServiceImpl implements MemberService {
     private final MemberUtil memberUtil;
 
     private final MemberRepository memberRepository;
+    private final FollowRepository followRepository;
+    private final PendingFollowRepository pendingFollowRepository;
     private final BlockRepository blockRepository;
 
     @Override
@@ -108,6 +114,59 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
+    @Override
+    @Transactional
+    public void toggleFollow(Long userId) {
+        final Member followFrom = memberUtil.getCurrentMember();
+        final Member followTo = getMemberById(userId);
+
+        validateFollowMyself(followFrom, followTo);
+        validateNotBlocked(followFrom.getId(), followTo.getId());
+        validatePrivate(followTo);
+
+        Optional<Follow> existing =
+                followRepository.findByFollowFrom_IdAndFollowTo_Id(
+                        followFrom.getId(), followTo.getId());
+
+        if (existing.isPresent()) {
+            followRepository.delete(existing.get());
+        } else {
+            followRepository.save(Follow.createFollow(followFrom, followTo));
+        }
+    }
+
+    @Override
+    @Transactional
+    public void togglePendingFollow(Long userId) {
+        final Member followFrom = memberUtil.getCurrentMember();
+        final Member followTo = getMemberById(userId);
+
+        validateFollowMyself(followFrom, followTo);
+        validateNotBlocked(followFrom.getId(), followTo.getId());
+        validatePublic(followTo);
+
+        Optional<PendingFollow> pending =
+                pendingFollowRepository.findByFollowFrom_IdAndFollowTo_Id(
+                        followFrom.getId(), followTo.getId());
+
+        if (pending.isPresent()) {
+            pendingFollowRepository.delete(pending.get());
+            return;
+        }
+
+        Optional<Follow> follow =
+                followRepository.findByFollowFrom_IdAndFollowTo_Id(
+                        followFrom.getId(), followTo.getId());
+
+        if (follow.isPresent()) {
+            followRepository.delete(follow.get());
+            return;
+        }
+
+        PendingFollow newPending = PendingFollow.createPendingFollow(followFrom, followTo);
+        pendingFollowRepository.save(newPending);
+    }
+
     private void validateSelfBlock(Long blockerId, Long blockedId) {
         if (blockerId.equals(blockedId)) {
             throw new BaseCustomException(MemberErrorCode.SELF_BLOCK_UNAVAILABLE);
@@ -124,5 +183,30 @@ public class MemberServiceImpl implements MemberService {
         return memberRepository
                 .findById(memberId)
                 .orElseThrow(() -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private void validateFollowMyself(Member followFrom, Member followTo) {
+        if (followFrom.getId().equals(followTo.getId())) {
+            throw new BaseCustomException(MemberErrorCode.CANNOT_FOLLOW_MYSELF);
+        }
+    }
+
+    private void validateNotBlocked(Long fromId, Long toId) {
+        if (blockRepository.existsByBlockerIdAndBlockedId(fromId, toId)
+                || blockRepository.existsByBlockerIdAndBlockedId(toId, fromId)) {
+            throw new BaseCustomException(MemberErrorCode.CANNOT_FOLLOW_BLOCKED);
+        }
+    }
+
+    private void validatePrivate(Member member) {
+        if (member.getVisibility().equals(Visibility.PRIVATE)) {
+            throw new BaseCustomException(MemberErrorCode.MUST_REQUEST_FOLLOW);
+        }
+    }
+
+    private void validatePublic(Member member) {
+        if (member.getVisibility().equals(Visibility.PUBLIC)) {
+            throw new BaseCustomException(MemberErrorCode.MUST_FOLLOW);
+        }
     }
 }

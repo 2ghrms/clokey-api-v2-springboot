@@ -239,6 +239,20 @@ CREATE TABLE follow (
 );
 
 
+CREATE TABLE pending_follow (
+                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                follow_to_id BIGINT NOT NULL,
+                                follow_from_id BIGINT NOT NULL,
+                                created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+                                updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+
+                                CONSTRAINT fk_pending_follow_to FOREIGN KEY (follow_to_id) REFERENCES member(id),
+                                CONSTRAINT fk_pending_follow_from FOREIGN KEY (follow_from_id) REFERENCES member(id),
+
+                                CONSTRAINT uk_pending_follow_to_id_from_id UNIQUE (follow_to_id, follow_from_id)
+);
+
+
 CREATE TABLE clokey_notification (
                                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                      content VARCHAR(50) NOT NULL,

@@ -10,4 +10,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByClokeyId(String clokeyId);
 
     Optional<Member> findByOauthInfo(OauthInfo oauthInfo);
+
+    Optional<Member> findByClokeyId(String clokeyId);
 }

@@ -44,6 +44,25 @@ public class MemberController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
+    @PostMapping("/follow")
+    @Operation(summary = "팔로우 API", description = "다른 사용자를 팔로우/취소하는 API입니다. 공개 계정에 팔로우시 팔로우 됩니다.")
+    public BaseResponse<Void> toggleFollow(@RequestParam("userId") Long userId) {
+
+        memberService.toggleFollow(userId);
+
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @PostMapping("/pending-follow")
+    @Operation(
+            summary = "팔로우 API",
+            description = "다른 사용자를 팔로우/취소하는 API입니다. 비공개 계정에 팔로우시 요청이 들어갑니다.")
+    public BaseResponse<Void> togglePendingFollow(@RequestParam("userId") Long userId) {
+
+        memberService.togglePendingFollow(userId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
     @PostMapping("/block/{memberId}")
     @Operation(summary = "차단 토글 API", description = "차단 상태를 변경합니다.")
     public BaseResponse<Void> toggleBlockStatus(@PathVariable Long memberId) {

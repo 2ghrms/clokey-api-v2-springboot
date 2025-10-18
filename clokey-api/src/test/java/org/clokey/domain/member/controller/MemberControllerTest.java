@@ -233,6 +233,55 @@ class MemberControllerTest {
     }
 
     @Nested
+    class 공개계정_팔로우_요청_시 {
+
+        @Test
+        void 유효한_요청이면_성공코드를_반환한다() throws Exception {
+            // given
+            long targetId = 1L;
+
+            willDoNothing().given(memberService).toggleFollow(targetId);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/users/follow")
+                                    .param("userId", String.valueOf(targetId))
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
+
+    @Nested
+    class 비공개계정_팔로우_요청_시 {
+
+        @Test
+        void 유효한_요청이면_성공코드를_반환한다() throws Exception {
+            // given
+            long targetId = 1L;
+
+            willDoNothing().given(memberService).togglePendingFollow(targetId);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/users/pending-follow")
+                                    .param("userId", String.valueOf(targetId))
+                                    .contentType(MediaType.APPLICATION_JSON));
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
+
+    @Nested
     class 차단_토글_요청_시 {
 
         @Test
