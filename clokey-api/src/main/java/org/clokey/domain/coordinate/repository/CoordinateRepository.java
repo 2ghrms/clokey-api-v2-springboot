@@ -6,7 +6,8 @@ import org.clokey.coordinate.entity.Coordinate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface CoordinateRepository extends JpaRepository<Coordinate, Long> {
+public interface CoordinateRepository
+        extends JpaRepository<Coordinate, Long>, CoordinateRepositoryCustom {
 
     @Query(
             """

@@ -17,6 +17,9 @@ import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
 import org.clokey.domain.coordinate.dto.response.CoordinateCreateResponse;
+import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
+import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
+import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
 import org.clokey.domain.coordinate.exception.CoordinateErrorCode;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateRepository;
@@ -24,10 +27,13 @@ import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.lookbook.exception.LookBookErrorCode;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
 import org.clokey.exception.BaseCustomException;
+import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.lookbook.entity.LookBook;
 import org.clokey.member.entity.Member;
+import org.clokey.response.SliceResponse;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -293,6 +299,40 @@ public class CoordinateServiceImpl implements CoordinateService {
         coordinateClothRepository.deleteAllByCoordinateId(coordinate.getId());
         eventPublisher.publishEvent(ImageDeleteEvent.of(coordinate.getImageUrl()));
         coordinateRepository.delete(coordinate);
+    }
+
+    @Override
+    public SliceResponse<DailyCoordinateListResponse> getDailyCoordinates(
+            Long lastCoordinateId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        Slice<DailyCoordinateListResponse> result =
+                coordinateRepository.findAllDailyCoordinateByMemberId(
+                        currentMember.getId(), lastCoordinateId, size, direction);
+
+        return SliceResponse.from(result);
+    }
+
+    @Override
+    public CoordinatePreviewResponse getCoordinatePreview(Long coordinateId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Coordinate coordinate = getCoordinateById(coordinateId);
+
+        validateCoordinateOwner(coordinate, currentMember.getId());
+        validateCoordinateInLookBook(coordinate);
+
+        return CoordinatePreviewResponse.from(coordinate);
+    }
+
+    @Override
+    public List<CoordinateDetailsListResponse> getCoordinateDetails(Long coordinateId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Coordinate coordinate = getCoordinateById(coordinateId);
+
+        validateCoordinateOwner(coordinate, currentMember.getId());
+        validateCoordinateInLookBook(coordinate);
+
+        return coordinateRepository.findAllCoordinateDetailsByCoordinateId(coordinate.getId());
     }
 
     private void validateAllClothesExist(List<Long> clothIds, Map<Long, Cloth> clothMap) {

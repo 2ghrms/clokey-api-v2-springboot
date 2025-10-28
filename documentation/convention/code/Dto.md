@@ -75,6 +75,7 @@ json 변환 오류가 발생할 수 있습니다.
 public record TermAgreeRequest(
         @NotEmpty(message = "약관 동의 정보는 비워둘 수 없습니다.") @Valid @Schema(description = "약관 동의 정보 리스트")
                 List<Payload> payloads) {
+    @Schema(name = "TermAgreeRequestPayload")
     public record Payload(
             @NotNull(message = "약관 ID는 비워둘 수 없습니다.") @Schema(description = "약관 ID") Long termId,
             @NotNull(message = "약관 동의 여부는 비워둘 수 없습니다.")
@@ -85,3 +86,4 @@ public record TermAgreeRequest(
 ```
 - 다음과 같이 내부 내용들의 이름은 ```Payload```로 사용하겠습니다.
 - ```@Valid```를 한 번 더 붙여야 내부 검증 로직이 작동합니다.
+- @Schema로 Distinct한 이름을 붙여줘야 스웨거에서 잘 보입니다!
