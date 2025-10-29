@@ -30,4 +30,6 @@ public interface CoordinateService {
     CoordinatePreviewResponse getCoordinatePreview(Long coordinateId);
 
     List<CoordinateDetailsListResponse> getCoordinateDetails(Long coordinateId);
+
+    void toggleCoordinateLike(Long coordinateId);
 }

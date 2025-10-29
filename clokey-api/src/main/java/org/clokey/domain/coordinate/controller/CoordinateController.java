@@ -102,4 +102,11 @@ public class CoordinateController {
                 coordinateService.getCoordinateDetails(coordinateId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
+
+    @PatchMapping("/{coordinateId}/like")
+    @Operation(summary = "코디 좋아요 토글", description = "룩북에 존재하는 코디에 좋아요를 토글하는 API입니다.")
+    public BaseResponse<Void> toggleCoordinateLike(@PathVariable Long coordinateId) {
+        coordinateService.toggleCoordinateLike(coordinateId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
 }

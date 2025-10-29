@@ -1614,4 +1614,24 @@ class CoordinateControllerTest {
                                     .value("testParentCategoryName2"));
         }
     }
+
+    @Nested
+    class 코디_좋아요_토글_요청_시 {
+
+        @Test
+        void 유효한_요청이면_코디_좋아요를_토글한다() throws Exception {
+            // given
+            willDoNothing().given(coordinateService).toggleCoordinateLike(1L);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/coordinate/1/like").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
 }

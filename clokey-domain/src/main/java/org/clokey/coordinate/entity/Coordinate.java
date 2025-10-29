@@ -31,6 +31,7 @@ public class Coordinate extends BaseEntity {
 
     @NotNull private String imageUrl;
 
+    /** DEFAULT : 룩북에서 만들어진 코디 DAILY : 오늘의 코디에서 만들어진 코디 CoordinateType을 통해 코디를 구분합니다. */
     @Enumerated(EnumType.STRING)
     @NotNull
     private CoordinateType coordinateType;
@@ -64,6 +65,7 @@ public class Coordinate extends BaseEntity {
         this.member = member;
     }
 
+    /** 오늘의 코디는 LookBook에 속하지 않으며, 이름과 메모가 없습니다. */
     public static Coordinate createDailyCoordinate(String imageUrl, Member member) {
         return Coordinate.builder()
                 .name(null)
@@ -74,6 +76,7 @@ public class Coordinate extends BaseEntity {
                 .build();
     }
 
+    /** 룩북에서 직접 코디를 만드는 생성자 */
     public static Coordinate createCoordinateManual(
             String name, String memo, String imageUrl, Member member, LookBook lookBook) {
         return Coordinate.builder()
@@ -86,6 +89,7 @@ public class Coordinate extends BaseEntity {
                 .build();
     }
 
+    /** 오늘의 코디 -> 룩북 추가 시 필요 정보를 입력합니다. */
     public void addToDailyCoordinateToLookBook(String name, String memo, LookBook lookBook) {
         this.name = name;
         this.memo = memo;
@@ -98,10 +102,15 @@ public class Coordinate extends BaseEntity {
         this.imageUrl = imageUrl;
     }
 
+    /** 룩북에서 오늘의 코디를 분리해도 데이터 집계용으로 삭제하지 않습니다. 반면, DEFAULT로 만들어진 코디는 삭제해도 무방합니다. */
     public void detachDailyCoordinate() {
         this.name = null;
         this.memo = null;
         this.liked = false;
         this.lookBook = null;
+    }
+
+    public void toggleLike() {
+        this.liked = !liked;
     }
 }

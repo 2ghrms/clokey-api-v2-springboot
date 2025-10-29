@@ -1402,4 +1402,115 @@ class CoordinateServiceImplTest extends IntegrationTest {
                     .hasMessage(CoordinateErrorCode.COORDINATE_NOT_IN_LOOK_BOOK.getMessage());
         }
     }
+
+    @Nested
+    class 코디_좋아요를_토글할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            LookBook lookBook = LookBook.createLookBook("testName1", member1);
+            lookBookRepository.save(lookBook);
+
+            Category category = Category.createCategory("testCategory", null);
+            categoryRepository.save(category);
+
+            Coordinate coordinate1 =
+                    Coordinate.createCoordinateManual(
+                            "testName", "testMemo", "testUrl", member1, lookBook);
+            Coordinate coordinate2 =
+                    Coordinate.createCoordinateManual(
+                            "testName", "testMemo", "testUrl", member1, lookBook);
+            Coordinate coordinate3 =
+                    Coordinate.createCoordinateManual(
+                            "testName", "testMemo", "testUrl", member1, lookBook);
+            Coordinate coordinate4 =
+                    Coordinate.createCoordinateManual(
+                            "testName", "testMemo", "testUrl", member1, lookBook);
+            Coordinate coordinate5 =
+                    Coordinate.createCoordinateManual(
+                            "testName", "testMemo", "testUrl", member1, lookBook);
+            Coordinate coordinate6 =
+                    Coordinate.createCoordinateManual(
+                            "testName", "testMemo", "testUrl", member1, lookBook);
+            coordinate1.toggleLike();
+            coordinate2.toggleLike();
+            coordinate3.toggleLike();
+            coordinate4.toggleLike();
+
+            Coordinate coordinate7 = Coordinate.createDailyCoordinate("testImageUrl", member1);
+            Coordinate coordinate8 = Coordinate.createDailyCoordinate("testImageUrl", member2);
+
+            coordinateRepository.saveAll(
+                    List.of(
+                            coordinate1,
+                            coordinate2,
+                            coordinate3,
+                            coordinate4,
+                            coordinate5,
+                            coordinate6,
+                            coordinate7,
+                            coordinate8));
+        }
+
+        @Test
+        void 이미_좋아요_상태면_좋아요를_취소한다() {
+            // when
+            coordinateService.toggleCoordinateLike(1L);
+
+            // then
+            assertThat(coordinateRepository.findById(1L).get().getLiked()).isFalse();
+        }
+
+        @Test
+        void 좋아요_상태가_아니면_좋아요로_전환한다() {
+            // when
+            coordinateService.toggleCoordinateLike(5L);
+
+            // then
+            assertThat(coordinateRepository.findById(5L).get().getLiked()).isTrue();
+        }
+
+        @Test
+        void 나의_코디가_아니면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> coordinateService.toggleCoordinateLike(8L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CoordinateErrorCode.NOT_COORDINATE_OWNER.getMessage());
+        }
+
+        @Test
+        void 룩북에_속하지_않는_코디에_대해서_요청하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> coordinateService.toggleCoordinateLike(7L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CoordinateErrorCode.COORDINATE_NOT_IN_LOOK_BOOK.getMessage());
+        }
+
+        @Test
+        void 다섯개_이상의_코디에_좋아요를_누를_경우_예외가_발생한다() {
+            // given
+            coordinateService.toggleCoordinateLike(5L);
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.toggleCoordinateLike(6L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CoordinateErrorCode.COORDINATE_LIKE_LIMIT.getMessage());
+        }
+    }
 }

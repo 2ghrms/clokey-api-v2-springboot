@@ -22,4 +22,6 @@ public interface CoordinateRepository
     default boolean existsDailyCoordinateByDateAndMemberId(LocalDate date, Long memberId) {
         return findDailyCoordinateByDateAndMemberId(date, memberId).isPresent();
     }
+
+    long countByMemberIdAndLikedTrue(Long memberId);
 }

@@ -335,6 +335,19 @@ public class CoordinateServiceImpl implements CoordinateService {
         return coordinateRepository.findAllCoordinateDetailsByCoordinateId(coordinate.getId());
     }
 
+    @Override
+    @Transactional
+    public void toggleCoordinateLike(Long coordinateId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Coordinate coordinate = getCoordinateById(coordinateId);
+
+        validateCoordinateOwner(coordinate, currentMember.getId());
+        validateCoordinateInLookBook(coordinate);
+        validateCoordinateLikeLimit(currentMember.getId(), coordinate);
+
+        coordinate.toggleLike();
+    }
+
     private void validateAllClothesExist(List<Long> clothIds, Map<Long, Cloth> clothMap) {
         boolean hasMissing = clothIds.stream().anyMatch(clothId -> !clothMap.containsKey(clothId));
 
@@ -407,6 +420,14 @@ public class CoordinateServiceImpl implements CoordinateService {
     private void validateCoordinateInLookBook(Coordinate coordinate) {
         if (coordinate.getLookBook() == null) {
             throw new BaseCustomException(CoordinateErrorCode.COORDINATE_NOT_IN_LOOK_BOOK);
+        }
+    }
+
+    private void validateCoordinateLikeLimit(Long memberId, Coordinate coordinate) {
+
+        if (coordinate.getLiked().equals(false)
+                && coordinateRepository.countByMemberIdAndLikedTrue(memberId) >= 5) {
+            throw new BaseCustomException(CoordinateErrorCode.COORDINATE_LIKE_LIMIT);
         }
     }
 
