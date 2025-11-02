@@ -40,4 +40,8 @@ public class LookBook extends BaseEntity {
     public static LookBook createLookBook(String name, Member member) {
         return LookBook.builder().name(name).member(member).build();
     }
+
+    public void updateLookBook(String name) {
+        this.name = name;
+    }
 }

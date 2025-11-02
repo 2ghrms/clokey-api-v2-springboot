@@ -1,6 +1,7 @@
 package org.clokey.domain.coordinate.repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.clokey.coordinate.entity.Coordinate;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,4 +25,6 @@ public interface CoordinateRepository
     }
 
     long countByMemberIdAndLikedTrue(Long memberId);
+
+    List<Coordinate> findAllByLookBookId(Long lookBookId);
 }

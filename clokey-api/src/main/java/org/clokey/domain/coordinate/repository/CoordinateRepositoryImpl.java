@@ -15,6 +15,7 @@ import org.clokey.category.entity.QCategory;
 import org.clokey.coordinate.enums.CoordinateType;
 import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
 import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
+import org.clokey.domain.lookbook.dto.response.CoordinateListResponse;
 import org.clokey.global.paging.SortDirection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -84,6 +85,32 @@ public class CoordinateRepositoryImpl implements CoordinateRepositoryCustom {
                 .where(coordinateCloth.coordinate.id.eq(coordinateId))
                 .orderBy(coordinateCloth.id.asc())
                 .fetch();
+    }
+
+    @Override
+    public Slice<CoordinateListResponse> findAllCoordinateByLookBookId(
+            Long lookBookId, Long lastCoordinateId, int size, SortDirection direction) {
+        List<CoordinateListResponse> results =
+                queryFactory
+                        .select(
+                                Projections.constructor(
+                                        CoordinateListResponse.class,
+                                        coordinate.id,
+                                        coordinate.name,
+                                        coordinate.liked,
+                                        coordinate.imageUrl))
+                        .from(coordinate)
+                        .where(
+                                coordinate.lookBook.id.eq(lookBookId),
+                                lastCoordinateIdCondition(lastCoordinateId, direction))
+                        .orderBy(
+                                direction == SortDirection.DESC
+                                        ? coordinate.id.desc()
+                                        : coordinate.id.asc())
+                        .limit(size + 1)
+                        .fetch();
+
+        return checkLastPage(size, results);
     }
 
     private BooleanExpression lastCoordinateIdCondition(
