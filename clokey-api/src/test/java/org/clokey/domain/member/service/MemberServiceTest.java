@@ -10,6 +10,7 @@ import org.clokey.TransactionUtil;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
+import org.clokey.domain.member.dto.response.FollowMemberResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
@@ -590,6 +591,115 @@ class MemberServiceTest extends IntegrationTest {
             // when
             SliceResponse<BlockedMemberResponse> response =
                     memberService.getBlockedMembers(null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+    }
+
+    @Nested
+    class 팔로잉_팔로우_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testCodiveId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testCodiveId3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+            Member member4 =
+                    Member.createMember(
+                            "testEmail4",
+                            "testCodiveId4",
+                            "testNickName4",
+                            OauthInfo.createOauthInfo("testOauthId4", OauthProvider.KAKAO));
+
+            member1.changeVisibility();
+            member4.changeVisibility();
+            memberRepository.saveAll(List.of(member1, member2, member3, member4));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Follow follow12 = Follow.createFollow(member1, member2);
+            Follow follow13 = Follow.createFollow(member1, member3);
+            Follow follow23 = Follow.createFollow(member2, member3);
+            Follow follow31 = Follow.createFollow(member3, member1);
+            Follow follow32 = Follow.createFollow(member3, member2);
+            Block block = Block.createBlock(member3, member1);
+
+            followRepository.saveAll(List.of(follow12, follow13, follow23, follow31, follow32));
+            blockRepository.save(block);
+        }
+
+        @Test
+        void 유효한_요청이면_팔로잉_목록을_반환한다() {
+            // when
+            SliceResponse<FollowMemberResponse> response =
+                    memberService.getFollows(1L, null, true, 10);
+            // then
+            assertThat(response.content())
+                    .extracting("codiveId", "isMe")
+                    .containsExactly(tuple("testCodiveId3", false), tuple("testCodiveId2", false));
+        }
+
+        @Test
+        void 유효한_요청이면_팔로워_목록을_반환한다() {
+            // when
+            SliceResponse<FollowMemberResponse> response =
+                    memberService.getFollows(2L, null, false, 10);
+            // then
+            assertThat(response.content())
+                    .extracting("codiveId")
+                    .containsExactly("testCodiveId3", "testCodiveId1");
+        }
+
+        @Test
+        void 조회된_멤버가_요청자일_경우_isMe에_true를_반환한다() {
+            // when
+            SliceResponse<FollowMemberResponse> response =
+                    memberService.getFollows(2L, null, false, 10);
+
+            // then
+            assertThat(response.content())
+                    .extracting("codiveId", "isMe")
+                    .containsExactly(tuple("testCodiveId3", false), tuple("testCodiveId1", true));
+        }
+
+        @Test
+        void 비공개_계정의_팔로잉_또는_팔로우_목록을_요청할_경우_예외가_발생한다() {
+            // then
+            assertThatThrownBy(() -> memberService.getFollows(4L, null, true, 10))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 차단_당한_계정의_팔로잉_또는_팔로우_목록을_요청할_경우_예외가_발생한다() {
+            // then
+            assertThatThrownBy(() -> memberService.getFollows(3L, null, true, 10))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<FollowMemberResponse> response =
+                    memberService.getFollows(2L, null, false, 1);
 
             // then
             Assertions.assertAll(

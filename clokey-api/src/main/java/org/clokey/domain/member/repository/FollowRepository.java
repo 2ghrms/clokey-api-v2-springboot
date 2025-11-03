@@ -4,7 +4,7 @@ import java.util.Optional;
 import org.clokey.member.entity.Follow;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface FollowRepository extends JpaRepository<Follow, Long> {
+public interface FollowRepository extends JpaRepository<Follow, Long>, FollowRepositoryCustom {
 
     boolean existsByFollowFrom_IdAndFollowTo_Id(Long fromMemberId, Long toMemberId);
 

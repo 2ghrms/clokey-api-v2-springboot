@@ -4,6 +4,7 @@ import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
+import org.clokey.domain.member.dto.response.FollowMemberResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.response.SliceResponse;
@@ -24,4 +25,7 @@ public interface MemberService {
 
     SliceResponse<BlockedMemberResponse> getBlockedMembers(
             Long lastBlockedId, Integer size, SortDirection direction);
+
+    SliceResponse<FollowMemberResponse> getFollows(
+            Long memberId, Long lastFollowId, boolean isFollowing, Integer size);
 }

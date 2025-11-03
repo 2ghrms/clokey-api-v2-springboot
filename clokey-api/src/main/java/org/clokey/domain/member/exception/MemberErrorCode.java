@@ -15,6 +15,9 @@ public enum MemberErrorCode implements BaseErrorCode {
     MUST_FOLLOW(400, "MEMBER_4005", "공개 회원에게는 팔로우를 보내야 합니다."),
     CANNOT_FOLLOW_BLOCKED(400, "MEMBER_4006", "차단을 했거나 상대방에게 차단을 당한 경우 팔로우 할 수 없습니다."),
 
+    PRIVATE_MEMBER_ACCESS_DENIED(403, "MEMBER_4031", "비공개 회원의 리소스에 접근할 수 없습니다."),
+    BLOCKED_MEMBER_ACCESS_DENIED(403, "MEMBER_4032", "차단된 사용자의 리소스에 접근할 수 없습니다"),
+
     MEMBER_NOT_FOUND(404, "MEMBER_4041", "해당 회원을 찾을 수 없습니다."),
     CLOKEY_ID_NOT_FOUND(404, "MEMBER_4042", "해당 클로키 아이디를 찾을 수 없습니다.");
 

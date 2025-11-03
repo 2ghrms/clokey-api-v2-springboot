@@ -6,6 +6,7 @@ import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
+import org.clokey.domain.member.dto.response.FollowMemberResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
@@ -106,6 +107,30 @@ public class MemberServiceImpl implements MemberService {
                         currentMember.getId(), lastBlockedId, size, direction));
     }
 
+    @Override
+    public SliceResponse<FollowMemberResponse> getFollows(
+            Long memberId, Long lastFollowId, boolean isFollowing, Integer size) {
+        Member currentMember = memberUtil.getCurrentMember();
+        Member targetMember = getMemberById(memberId);
+        SliceResponse<FollowMemberResponse> response;
+
+        if (!currentMember.equals(targetMember)) {
+            validatePrivacy(currentMember, targetMember);
+
+            validateBlocked(currentMember, targetMember);
+        }
+
+        if (isFollowing) {
+            return SliceResponse.from(
+                    followRepository.findAllFollowingsByMemberId(
+                            currentMember.getId(), memberId, lastFollowId, size));
+        } else {
+            return SliceResponse.from(
+                    followRepository.findAllFollowersByMemberId(
+                            currentMember.getId(), memberId, lastFollowId, size));
+        }
+    }
+
     private void validateVisualizeBannedMember(Member member, ProfileUpdateRequest request) {
         boolean banned = member.getMemberStatus().equals(MemberStatus.BANNED);
         boolean changeToPublic = request.visibility().equals(Visibility.PUBLIC);
@@ -179,10 +204,21 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
-    private Member getMemberById(Long memberId) {
-        return memberRepository
-                .findById(memberId)
-                .orElseThrow(() -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+    private void validatePrivacy(Member currentMember, Member targetMember) {
+        if (!currentMember.getId().equals(targetMember.getId())
+                && targetMember.getVisibility().equals(Visibility.PRIVATE)) {
+            if (!followRepository.existsByFollowFrom_IdAndFollowTo_Id(
+                    currentMember.getId(), targetMember.getId())) {
+                throw new BaseCustomException(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED);
+            }
+        }
+    }
+
+    private void validateBlocked(Member currentMember, Member targetMember) {
+        if (blockRepository.existsByBlockerIdAndBlockedId(
+                targetMember.getId(), currentMember.getId())) {
+            throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
+        }
     }
 
     private void validateFollowMyself(Member followFrom, Member followTo) {
@@ -208,5 +244,17 @@ public class MemberServiceImpl implements MemberService {
         if (member.getVisibility().equals(Visibility.PUBLIC)) {
             throw new BaseCustomException(MemberErrorCode.MUST_FOLLOW);
         }
+    }
+
+    private Member getMemberByCodiveId(String codiveId) {
+        return memberRepository
+                .findByClokeyId(codiveId)
+                .orElseThrow(() -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private Member getMemberById(Long memberId) {
+        return memberRepository
+                .findById(memberId)
+                .orElseThrow(() -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 }
