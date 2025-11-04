@@ -9,6 +9,9 @@ import org.clokey.exception.BaseErrorCode;
 @AllArgsConstructor
 public enum CommentErrorCode implements BaseErrorCode {
     REPLY_NOT_FROM_COMMENT(400, "COMMENT_4001", "댓글에 속하는 대댓글이 아닙니다."),
+    REPLY_ON_REPLY(400, "COMMENT_4002", "대댓글에 대댓글을 달 수 없습니다."),
+    REPLY_HISTORY_PARENT_HISTORY_MISMATCH(
+            400, "COMMENT_4003", "대댓글을 달고자 하는 기록과 부모 댓글의 기록이 일치하지 않습니다."),
 
     NOT_MY_COMMENT(403, "COMMENT_4031", "내가 작성하지 않은 댓글은 삭제할 수 없습니다."),
     NOT_MY_REPLY(403, "COMMENT_4032", "내가 작성하지 않은 대댓글은 삭제할 수 없습니다."),

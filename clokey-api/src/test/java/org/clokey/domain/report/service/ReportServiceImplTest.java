@@ -67,7 +67,7 @@ public class ReportServiceImplTest extends IntegrationTest {
                             LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
             historyRepository.save(history1);
 
-            Comment comment1 = Comment.createComment("옷이 예쁘네요", member1, history1);
+            Comment comment1 = Comment.createParentComment("옷이 예쁘네요", member1, history1);
             commentRepository.save(comment1);
         }
 
@@ -151,19 +151,6 @@ public class ReportServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> reportService.createReport(request))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(CommentErrorCode.COMMENT_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 대댓글이_존재하지_않는_경우_예외가_발생한다() {
-            // given
-            ReportCreateRequest request =
-                    new ReportCreateRequest(
-                            1001L, TargetType.REPLY, ReportReason.SWEARING_AND_CURSING, "나한테 욕했어요");
-
-            // when & then
-            assertThatThrownBy(() -> reportService.createReport(request))
-                    .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(CommentErrorCode.REPLY_NOT_FOUND.getMessage());
         }
 
         @Test

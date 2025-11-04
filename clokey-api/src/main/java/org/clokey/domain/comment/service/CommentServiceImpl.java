@@ -3,16 +3,13 @@ package org.clokey.domain.comment.service;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.clokey.comment.entitiy.Comment;
-import org.clokey.comment.entitiy.Reply;
 import org.clokey.domain.comment.dto.request.CommentCreateRequest;
-import org.clokey.domain.comment.dto.request.ReplyCreateRequest;
 import org.clokey.domain.comment.dto.response.CommentCreateResponse;
 import org.clokey.domain.comment.dto.response.CommentListResponse;
-import org.clokey.domain.comment.dto.response.ReplyCreateResponse;
+import org.clokey.domain.comment.dto.response.MyCommentListResponse;
 import org.clokey.domain.comment.dto.response.ReplyListResponse;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.repository.CommentRepository;
-import org.clokey.domain.comment.repository.ReplyRepository;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.exception.BaseCustomException;
@@ -36,7 +33,6 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final HistoryRepository historyRepository;
-    private final ReplyRepository replyRepository;
 
     @Override
     @Transactional
@@ -46,7 +42,7 @@ public class CommentServiceImpl implements CommentService {
 
         validateHistoryAuthority(currentMember, history);
 
-        Comment comment = Comment.createComment(request.content(), currentMember, history);
+        Comment comment = Comment.createParentComment(request.content(), currentMember, history);
 
         try {
             commentRepository.save(comment);
@@ -54,7 +50,7 @@ public class CommentServiceImpl implements CommentService {
             String message = e.getMostSpecificCause().getMessage();
 
             if (message != null && message.contains("fk_comment_history")) {
-                throw new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND);
+                throw new BaseCustomException(HistoryErrorCode.HISTORY_NOT_FOUND);
             }
 
             throw e;
@@ -65,27 +61,34 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public ReplyCreateResponse createReply(Long commentId, ReplyCreateRequest request) {
+    public CommentCreateResponse createReply(Long commentId, CommentCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final History history = getHistoryById(request.historyId());
         final Comment comment = getCommentById(commentId);
 
         validateHistoryAuthority(currentMember, comment.getHistory());
+        validateParentCommentHistory(comment, history);
+        validateReplyDepth(comment);
 
-        Reply reply = Reply.createReply(request.content(), currentMember, comment);
+        Comment reply = Comment.createReply(request.content(), currentMember, history, comment);
 
         try {
-            replyRepository.save(reply);
+            commentRepository.save(reply);
         } catch (DataIntegrityViolationException e) {
             String message = e.getMostSpecificCause().getMessage();
 
-            if (message != null && message.contains("fk_reply_comment")) {
+            if (message != null && message.contains("fk_comment_parent")) {
                 throw new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND);
+            }
+
+            if (message != null && message.contains("fk_comment_history")) {
+                throw new BaseCustomException(HistoryErrorCode.HISTORY_NOT_FOUND);
             }
 
             throw e;
         }
 
-        return ReplyCreateResponse.from(reply);
+        return CommentCreateResponse.from(comment);
     }
 
     @Override
@@ -97,7 +100,7 @@ public class CommentServiceImpl implements CommentService {
         validateHistoryAuthority(currentMember, history);
 
         Slice<CommentListResponse> result =
-                commentRepository.findAllByHistoryId(
+                commentRepository.findAllParentCommentByHistoryId(
                         historyId, currentMember.getId(), lastCommentId, size, direction);
         return SliceResponse.from(result);
     }
@@ -111,7 +114,7 @@ public class CommentServiceImpl implements CommentService {
         validateHistoryAuthority(currentMember, comment.getHistory());
 
         Slice<ReplyListResponse> result =
-                replyRepository.findAllByCommentId(
+                commentRepository.findAllRepliesByCommentId(
                         commentId, currentMember.getId(), lastReplyId, size, direction);
 
         return SliceResponse.from(result);
@@ -125,20 +128,24 @@ public class CommentServiceImpl implements CommentService {
 
         validateCommentOwner(currentMember, comment);
 
-        replyRepository.deleteByCommentId(comment.getId());
+        if (comment.getComment() != null) {
+            commentRepository.delete(comment);
+            return;
+        }
+
+        commentRepository.deleteReplies(comment.getId());
         commentRepository.delete(comment);
     }
 
     @Override
-    @Transactional
-    public void deleteReply(Long commentId, Long replyId) {
+    public SliceResponse<MyCommentListResponse> getMyComments(
+            Long lastHistoryId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Reply reply = getReplyById(replyId);
 
-        validateReplyOwner(currentMember, reply);
-        validateReplyFromComment(reply, commentId);
-
-        replyRepository.delete(reply);
+        Slice<MyCommentListResponse> result =
+                commentRepository.findAllMyComments(
+                        currentMember.getId(), lastHistoryId, size, direction);
+        return SliceResponse.from(result);
     }
 
     private void validateHistoryAuthority(Member member, History history) {
@@ -160,27 +167,21 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND));
     }
 
-    private Reply getReplyById(Long replyId) {
-        return replyRepository
-                .findById(replyId)
-                .orElseThrow(() -> new BaseCustomException(CommentErrorCode.REPLY_NOT_FOUND));
-    }
-
     private void validateCommentOwner(Member member, Comment comment) {
         if (!Objects.equals(comment.getMember().getId(), member.getId())) {
             throw new BaseCustomException(CommentErrorCode.NOT_MY_COMMENT);
         }
     }
 
-    private void validateReplyOwner(Member member, Reply reply) {
-        if (!Objects.equals(reply.getMember().getId(), member.getId())) {
-            throw new BaseCustomException(CommentErrorCode.NOT_MY_REPLY);
+    private void validateReplyDepth(Comment parentComment) {
+        if (parentComment.getComment() != null) {
+            throw new BaseCustomException(CommentErrorCode.REPLY_ON_REPLY);
         }
     }
 
-    private void validateReplyFromComment(Reply reply, Long commentId) {
-        if (!Objects.equals(reply.getComment().getId(), commentId)) {
-            throw new BaseCustomException(CommentErrorCode.REPLY_NOT_FROM_COMMENT);
+    private void validateParentCommentHistory(Comment parentComment, History history) {
+        if (!Objects.equals(parentComment.getHistory().getId(), history.getId())) {
+            throw new BaseCustomException(CommentErrorCode.REPLY_HISTORY_PARENT_HISTORY_MISMATCH);
         }
     }
 }

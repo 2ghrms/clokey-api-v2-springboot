@@ -3,7 +3,6 @@ package org.clokey.domain.report.service;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.repository.CommentRepository;
-import org.clokey.domain.comment.repository.ReplyRepository;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.report.dto.request.ReportCreateRequest;
@@ -28,7 +27,6 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
     private final CommentRepository commentRepository;
-    private final ReplyRepository replyRepository;
     private final HistoryRepository historyRepository;
 
     @Override
@@ -65,10 +63,6 @@ public class ReportServiceImpl implements ReportService {
         if (targetType.equals(TargetType.COMMENT)) {
             if (!commentRepository.existsById(targetId)) {
                 throw new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND);
-            }
-        } else if (targetType.equals(TargetType.REPLY)) {
-            if (!replyRepository.existsById(targetId)) {
-                throw new BaseCustomException(CommentErrorCode.REPLY_NOT_FOUND);
             }
         } else {
             if (!historyRepository.existsById(targetId)) {

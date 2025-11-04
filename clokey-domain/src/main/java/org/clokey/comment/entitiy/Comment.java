@@ -2,8 +2,6 @@ package org.clokey.comment.entitiy;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.*;
 import org.clokey.common.model.BaseEntity;
 import org.clokey.history.entity.History;
@@ -34,23 +32,38 @@ public class Comment extends BaseEntity {
     @NotNull
     private History history;
 
-    @OneToMany(mappedBy = "comment")
-    private List<Reply> replies = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment comment;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Comment(String content, boolean banned, Member member, History history) {
+    private Comment(
+            String content, boolean banned, Member member, History history, Comment comment) {
         this.content = content;
         this.banned = banned;
         this.member = member;
         this.history = history;
+        this.comment = comment;
     }
 
-    public static Comment createComment(String content, Member member, History history) {
+    public static Comment createParentComment(String content, Member member, History history) {
         return Comment.builder()
                 .content(content)
                 .banned(false)
                 .member(member)
                 .history(history)
+                .comment(null)
+                .build();
+    }
+
+    public static Comment createReply(
+            String content, Member member, History history, Comment parent) {
+        return Comment.builder()
+                .content(content)
+                .banned(false)
+                .member(member)
+                .history(history)
+                .comment(parent)
                 .build();
     }
 }
