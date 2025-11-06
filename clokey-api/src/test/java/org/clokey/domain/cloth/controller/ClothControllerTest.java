@@ -414,6 +414,7 @@ class ClothControllerTest {
             // given
             ClothDetailsResponse response =
                     new ClothDetailsResponse(
+                            "testClothImageUrl",
                             "testParentCategory",
                             "testCategory",
                             "testName",
@@ -428,6 +429,7 @@ class ClothControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.clothImageUrl").value("testClothImageUrl"))
                     .andExpect(jsonPath("$.result.parentCategory").value("testParentCategory"))
                     .andExpect(jsonPath("$.result.category").value("testCategory"))
                     .andExpect(jsonPath("$.result.name").value("testName"))

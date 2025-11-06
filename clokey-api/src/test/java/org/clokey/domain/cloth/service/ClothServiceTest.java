@@ -479,8 +479,20 @@ class ClothServiceTest extends IntegrationTest {
 
             // then
             assertThat(response)
-                    .extracting("parentCategory", "category", "name", "brand", "clothUrl")
-                    .containsExactly("testParentCategory", "testCategory", null, null, null);
+                    .extracting(
+                            "clothImageUrl",
+                            "parentCategory",
+                            "category",
+                            "name",
+                            "brand",
+                            "clothUrl")
+                    .containsExactly(
+                            "testImageUrl1",
+                            "testParentCategory",
+                            "testCategory",
+                            null,
+                            null,
+                            null);
         }
 
         @Test
