@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.clokey.cloth.enums.Season;
 
-public record ClothCreateRequest(
+public record ClothUpdateRequest(
         @NotBlank(message = "옷의 이미지 주소는 비워둘 수 없습니다.")
                 @Schema(description = "옷의 이미지 주소", example = "https://example.jpg")
                 String clothImageUrl,

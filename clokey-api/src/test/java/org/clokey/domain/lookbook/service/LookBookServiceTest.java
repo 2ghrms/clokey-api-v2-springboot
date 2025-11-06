@@ -10,6 +10,7 @@ import java.util.Objects;
 import org.clokey.IntegrationTest;
 import org.clokey.category.entity.Category;
 import org.clokey.cloth.entity.Cloth;
+import org.clokey.cloth.enums.Season;
 import org.clokey.coordinate.entity.Coordinate;
 import org.clokey.coordinate.entity.CoordinateCloth;
 import org.clokey.domain.category.repository.CategoryRepository;
@@ -171,7 +172,9 @@ class LookBookServiceTest extends IntegrationTest {
             Category category = Category.createCategory("testCategory", null);
             categoryRepository.save(category);
 
-            Cloth cloth = Cloth.createCloth("testImageUrl", category, member1);
+            Cloth cloth =
+                    Cloth.createCloth(
+                            "testImageUrl", null, null, null, Season.SPRING, category, member1);
 
             clothRepository.saveAll(List.of(cloth));
 
