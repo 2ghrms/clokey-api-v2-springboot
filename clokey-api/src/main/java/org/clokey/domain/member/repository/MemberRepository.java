@@ -5,7 +5,7 @@ import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     boolean existsByClokeyId(String clokeyId);
 

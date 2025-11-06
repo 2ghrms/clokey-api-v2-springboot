@@ -11,10 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
-import org.clokey.domain.member.dto.response.BlockedMemberResponse;
-import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
-import org.clokey.domain.member.dto.response.FollowMemberResponse;
-import org.clokey.domain.member.dto.response.MyselfCheckResponse;
+import org.clokey.domain.member.dto.response.*;
 import org.clokey.domain.member.service.MemberService;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.member.enums.Visibility;
@@ -548,6 +545,35 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+    }
+
+    @Nested
+    class 회원_정보_조회_시 {
+
+        @Test
+        void 유효한_요청이면_회원_정보를_반환한다() throws Exception {
+            // given
+            MemberInfoResponse result =
+                    new MemberInfoResponse(
+                            "codive123",
+                            "nickname123",
+                            "한줄소개입니다~",
+                            123L,
+                            321L,
+                            "https://img.example.com/bg.jpg",
+                            true,
+                            false);
+            given(memberService.getMemberInfo(1L)).willReturn(result);
+
+            // when
+            ResultActions perform = mockMvc.perform(get("/users/1"));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.codiveId").value("codive123"));
         }
     }
 }

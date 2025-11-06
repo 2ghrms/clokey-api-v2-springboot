@@ -11,6 +11,7 @@ import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.FollowMemberResponse;
+import org.clokey.domain.member.dto.response.MemberInfoResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
@@ -705,6 +706,62 @@ class MemberServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(response.content().size()).isEqualTo(1),
                     () -> assertThat(response.isLast()).isFalse());
+        }
+    }
+
+    @Nested
+    class 회원_정보를_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testCodiveId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+            Follow follow21 = Follow.createFollow(member2, member1);
+            followRepository.save(follow21);
+        }
+
+        @Test
+        void 유효한_요청이면_회원_정보를_반환한다() {
+            // when
+            MemberInfoResponse response = memberService.getMemberInfo(2L);
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId2"),
+                    () -> assertThat(response.nickname()).isEqualTo("testNickName2"),
+                    () -> assertThat(response.followerCount()).isZero(),
+                    () -> assertThat(response.isMe()).isFalse());
+        }
+
+        @Test
+        void 본인_정보_요청_시_isMe를_true로_반환한다() {
+            // when
+            MemberInfoResponse response = memberService.getMemberInfo(1L);
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId1"),
+                    () -> assertThat(response.nickname()).isEqualTo("testNickName1"),
+                    () -> assertThat(response.followerCount()).isOne(),
+                    () -> assertThat(response.isMe()).isTrue());
+        }
+
+        @Test
+        void 존재하지_않는_memberId로_요청한_경우_예외가_발생한다() {
+            //  when & then
+            assertThatThrownBy(() -> memberService.getMemberInfo(33L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
         }
     }
 }

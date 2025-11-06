@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
-import org.clokey.domain.member.dto.response.BlockedMemberResponse;
-import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
-import org.clokey.domain.member.dto.response.FollowMemberResponse;
-import org.clokey.domain.member.dto.response.MyselfCheckResponse;
+import org.clokey.domain.member.dto.response.*;
 import org.clokey.domain.member.service.MemberService;
 import org.clokey.global.annotation.PageSize;
 import org.clokey.global.paging.SortDirection;
@@ -107,5 +104,12 @@ public class MemberController {
         SliceResponse<FollowMemberResponse> followMembersSlice =
                 memberService.getFollows(memberId, lastFollowId, isFollowing, size);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, followMembersSlice);
+    }
+
+    @GetMapping("{memberId}")
+    @Operation(summary = "회원 조회 API", description = "입력받은 codive ID에 해당하는 회원의 정보를 조회합니다.")
+    public BaseResponse<MemberInfoResponse> getMemberInfo(@PathVariable Long memberId) {
+        return BaseResponse.onSuccess(
+                GlobalBaseSuccessCode.OK, memberService.getMemberInfo(memberId));
     }
 }

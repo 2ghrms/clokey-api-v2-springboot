@@ -4,10 +4,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
-import org.clokey.domain.member.dto.response.BlockedMemberResponse;
-import org.clokey.domain.member.dto.response.DuplicatedIdCheckResponse;
-import org.clokey.domain.member.dto.response.FollowMemberResponse;
-import org.clokey.domain.member.dto.response.MyselfCheckResponse;
+import org.clokey.domain.member.dto.response.*;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.FollowRepository;
@@ -129,6 +126,14 @@ public class MemberServiceImpl implements MemberService {
                     followRepository.findAllFollowersByMemberId(
                             currentMember.getId(), memberId, lastFollowId, size));
         }
+    }
+
+    @Override
+    public MemberInfoResponse getMemberInfo(Long memberId) {
+        Member currentMember = memberUtil.getCurrentMember();
+        Member targetMember = getMemberById(memberId);
+
+        return memberRepository.findMemberInfoById(currentMember.getId(), memberId);
     }
 
     private void validateVisualizeBannedMember(Member member, ProfileUpdateRequest request) {
