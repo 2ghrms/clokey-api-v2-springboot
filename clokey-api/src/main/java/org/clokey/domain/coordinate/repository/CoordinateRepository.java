@@ -27,4 +27,7 @@ public interface CoordinateRepository
     long countByMemberIdAndLikedTrue(Long memberId);
 
     List<Coordinate> findAllByLookBookId(Long lookBookId);
+
+    @Query("select c from Coordinate c where c.member.id = :memberId and c.liked = true")
+    List<Coordinate> findLikedCoordinatesByMemberId(Long memberId);
 }

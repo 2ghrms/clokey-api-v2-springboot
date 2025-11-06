@@ -5,10 +5,7 @@ import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
-import org.clokey.domain.coordinate.dto.response.CoordinateCreateResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
-import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
+import org.clokey.domain.coordinate.dto.response.*;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.response.SliceResponse;
 
@@ -32,4 +29,6 @@ public interface CoordinateService {
     List<CoordinateDetailsListResponse> getCoordinateDetails(Long coordinateId);
 
     void toggleCoordinateLike(Long coordinateId);
+
+    List<FavoriteCoordinateResponse> getFavoriteCoordinates();
 }

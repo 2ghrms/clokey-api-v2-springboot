@@ -25,6 +25,7 @@ import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
 import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
 import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
 import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
+import org.clokey.domain.coordinate.dto.response.FavoriteCoordinateResponse;
 import org.clokey.domain.coordinate.exception.CoordinateErrorCode;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateRepository;
@@ -1596,6 +1597,90 @@ class CoordinateServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> coordinateService.toggleCoordinateLike(6L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(CoordinateErrorCode.COORDINATE_LIKE_LIMIT.getMessage());
+        }
+    }
+
+    @Nested
+    class 최애_코디를_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            LookBook lookBook1 = LookBook.createLookBook("testName1", member1);
+            LookBook lookBook2 = LookBook.createLookBook("testName2", member2);
+            lookBookRepository.saveAll(List.of(lookBook1, lookBook2));
+
+            Category category = Category.createCategory("testCategory", null);
+            categoryRepository.save(category);
+
+            Coordinate coordinate1 =
+                    Coordinate.createCoordinateManual(
+                            "testName1", "testMemo1", "testUrl1", member1, lookBook1);
+            Coordinate coordinate2 =
+                    Coordinate.createCoordinateManual(
+                            "testName2", "testMemo2", "testUrl2", member1, lookBook1);
+            Coordinate coordinate3 =
+                    Coordinate.createCoordinateManual(
+                            "testName3", "testMemo3", "testUrl3", member1, lookBook1);
+            Coordinate coordinate4 =
+                    Coordinate.createCoordinateManual(
+                            "testName4", "testMemo4", "testUrl4", member1, lookBook1);
+            coordinate1.toggleLike();
+            coordinate2.toggleLike();
+
+            Coordinate coordinate5 =
+                    Coordinate.createCoordinateManual(
+                            "testName4", "testMemo4", "testUrl4", member1, lookBook1);
+            Coordinate coordinate6 =
+                    Coordinate.createCoordinateManual(
+                            "testName4", "testMemo4", "testUrl4", member1, lookBook1);
+            coordinateRepository.saveAll(
+                    List.of(
+                            coordinate1,
+                            coordinate2,
+                            coordinate3,
+                            coordinate4,
+                            coordinate5,
+                            coordinate6));
+        }
+
+        @Test
+        void 유효한_요청이면_좋아요한_코디를_반환한다() {
+            // when
+            List<FavoriteCoordinateResponse> responses = coordinateService.getFavoriteCoordinates();
+
+            // then
+            assertThat(responses)
+                    .extracting("coordinateId", "imageUrl")
+                    .containsExactly(tuple(1L, "testUrl1"), tuple(2L, "testUrl2"));
+        }
+
+        @Test
+        void 좋아요한_코디가_없는_경우_빈_리스틀_반환한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            // when
+            List<FavoriteCoordinateResponse> responses = coordinateService.getFavoriteCoordinates();
+
+            // then
+            assertThat(responses).isEmpty();
         }
     }
 }

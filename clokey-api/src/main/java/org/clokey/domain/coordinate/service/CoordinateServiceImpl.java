@@ -16,10 +16,7 @@ import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
-import org.clokey.domain.coordinate.dto.response.CoordinateCreateResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
-import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
+import org.clokey.domain.coordinate.dto.response.*;
 import org.clokey.domain.coordinate.exception.CoordinateErrorCode;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateRepository;
@@ -346,6 +343,20 @@ public class CoordinateServiceImpl implements CoordinateService {
         validateCoordinateLikeLimit(currentMember.getId(), coordinate);
 
         coordinate.toggleLike();
+    }
+
+    @Override
+    public List<FavoriteCoordinateResponse> getFavoriteCoordinates() {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        List<Coordinate> favoriteCoordinates =
+                coordinateRepository.findLikedCoordinatesByMemberId(currentMember.getId());
+
+        if (favoriteCoordinates.isEmpty()) {
+            return List.of();
+        }
+
+        return favoriteCoordinates.stream().map(FavoriteCoordinateResponse::from).toList();
     }
 
     private void validateAllClothesExist(List<Long> clothIds, Map<Long, Cloth> clothMap) {

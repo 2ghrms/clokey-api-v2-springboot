@@ -11,10 +11,7 @@ import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
-import org.clokey.domain.coordinate.dto.response.CoordinateCreateResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
-import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
+import org.clokey.domain.coordinate.dto.response.*;
 import org.clokey.domain.coordinate.service.CoordinateService;
 import org.clokey.global.annotation.PageSize;
 import org.clokey.global.paging.SortDirection;
@@ -108,5 +105,12 @@ public class CoordinateController {
     public BaseResponse<Void> toggleCoordinateLike(@PathVariable Long coordinateId) {
         coordinateService.toggleCoordinateLike(coordinateId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @GetMapping("/my-favorites")
+    @Operation(summary = "나의 최애 코디 조회", description = "나의 최애 코디를 조회하는 API입니다.")
+    public BaseResponse<List<FavoriteCoordinateResponse>> getFavoriteCoordinates() {
+        List<FavoriteCoordinateResponse> response = coordinateService.getFavoriteCoordinates();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 }

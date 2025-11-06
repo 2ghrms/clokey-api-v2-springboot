@@ -13,10 +13,7 @@ import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
-import org.clokey.domain.coordinate.dto.response.CoordinateCreateResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
-import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
+import org.clokey.domain.coordinate.dto.response.*;
 import org.clokey.domain.coordinate.service.CoordinateService;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.response.SliceResponse;
@@ -1632,6 +1629,32 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON204"))
                     .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
+
+    @Nested
+    class 최애_코디_조회_요청_시 {
+
+        @Test
+        void 유효한_요청이면_최애_코디_정보를_반환한다() throws Exception {
+            // given
+            List<FavoriteCoordinateResponse> response =
+                    List.of(
+                            new FavoriteCoordinateResponse(1L, "testImageUrl1"),
+                            new FavoriteCoordinateResponse(2L, "testImageUrl2"));
+
+            given(coordinateService.getFavoriteCoordinates()).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/coordinate/my-favorites"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result[0].coordinateId").value(1))
+                    .andExpect(jsonPath("$.result[0].imageUrl").value("testImageUrl1"))
+                    .andExpect(jsonPath("$.result[1].coordinateId").value(2))
+                    .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"));
         }
     }
 }
