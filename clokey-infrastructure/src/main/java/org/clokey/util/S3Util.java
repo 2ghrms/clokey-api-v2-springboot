@@ -1,11 +1,10 @@
 package org.clokey.util;
 
 import com.amazonaws.HttpMethod;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.*;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -26,9 +25,9 @@ public class S3Util {
     private final S3Properties s3Properties;
 
     public String createPresignedUrl(
-            ImageType imageType, Long targetId, FileExtension fileExtension, String md5Hash) {
+            ImageType imageType, Long memberId, FileExtension fileExtension, String md5Hash) {
         String imageKey = UUID.randomUUID().toString();
-        String fileName = createFileName(imageType, targetId, imageKey, fileExtension);
+        String fileName = createFileName(imageType, memberId, imageKey, fileExtension);
         String bucket = s3Properties.bucket();
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
@@ -59,6 +58,8 @@ public class S3Util {
 
         generatePresignedUrlRequest.addRequestParameter(
                 Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
+
+        generatePresignedUrlRequest.addRequestParameter("x-amz-tagging", "status=pending");
 
         generatePresignedUrlRequest.setContentMd5(md5Hash);
 
@@ -100,5 +101,51 @@ public class S3Util {
         expiration.setTime(expTimeMillis);
 
         return expiration;
+    }
+
+    public void updateTagToCompleteByUrl(String url) {
+        String bucket = s3Properties.bucket();
+        String key = extractObjectKey(url);
+
+        List<Tag> tags = List.of(new Tag("status", "complete"));
+        ObjectTagging tagging = new ObjectTagging(tags);
+
+        SetObjectTaggingRequest request = new SetObjectTaggingRequest(bucket, key, tagging);
+        amazonS3.setObjectTagging(request);
+    }
+
+    public void updateTagsToCompleteByUrls(List<String> urls) {
+        for (String url : urls) {
+            updateTagToCompleteByUrl(url);
+        }
+    }
+
+    public boolean doesFileExistByUrl(String url) {
+        String bucket = s3Properties.bucket();
+        String key = extractObjectKey(url);
+        try {
+            return amazonS3.doesObjectExist(bucket, key);
+        } catch (AmazonS3Exception e) {
+            if (e.getStatusCode() == 403) {
+                log.warn("Access denied for key={}, treating as non-existent", key);
+                return false;
+            }
+            log.error("S3 error while checking existence: {}", e.getErrorMessage(), e);
+            return false;
+        } catch (SdkClientException e) {
+            log.error("Network error while connecting to S3: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean doAllFilesExistByUrls(List<String> urls) {
+        for (String url : urls) {
+            if (!doesFileExistByUrl(url)) {
+                log.warn("File not found or inaccessible: {}", url);
+                return false;
+            }
+        }
+
+        return true;
     }
 }
