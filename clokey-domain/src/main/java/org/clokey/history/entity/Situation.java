@@ -2,14 +2,16 @@ package org.clokey.history.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import java.util.Locale;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.clokey.common.model.BaseEntity;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Hashtag extends BaseEntity {
+public class Situation extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,12 +22,11 @@ public class Hashtag extends BaseEntity {
     private String name;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Hashtag(String name) {
+    private Situation(String name) {
         this.name = name;
     }
 
-    public static Hashtag createHashtag(String name) {
-        String normalized = name.trim().toLowerCase(Locale.ROOT);
-        return Hashtag.builder().name(normalized).build();
+    public static Situation createSituation(String name) {
+        return Situation.builder().name(name).build();
     }
 }

@@ -1,9 +1,6 @@
 package org.clokey.history.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,20 +11,22 @@ import org.clokey.common.model.BaseEntity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class HistoryType extends BaseEntity {
+public class Style extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull private String name;
+    @Column(length = 30, unique = true)
+    @NotNull
+    private String name;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private HistoryType(String name) {
+    private Style(String name) {
         this.name = name;
     }
 
-    public static HistoryType createHistoryType(String name) {
-        return HistoryType.builder().name(name).build();
+    public static Style createStyle(String name) {
+        return Style.builder().name(name).build();
     }
 }

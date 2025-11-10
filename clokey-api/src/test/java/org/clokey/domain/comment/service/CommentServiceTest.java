@@ -22,14 +22,14 @@ import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryImageRepository;
 import org.clokey.domain.history.repository.HistoryRepository;
-import org.clokey.domain.history.repository.HistoryTypeRepository;
+import org.clokey.domain.history.repository.SituationRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.History;
 import org.clokey.history.entity.HistoryImage;
-import org.clokey.history.entity.HistoryType;
+import org.clokey.history.entity.Situation;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
@@ -52,8 +52,8 @@ class CommentServiceTest extends IntegrationTest {
     @MockitoSpyBean CommentRepository commentRepository;
     @Autowired HistoryRepository historyRepository;
     @Autowired MemberRepository memberRepository;
-    @Autowired HistoryTypeRepository historyTypeRepository;
     @Autowired HistoryImageRepository historyImageRepository;
+    @Autowired SituationRepository situationRepository;
 
     @MockitoBean private MemberUtil memberUtil;
 
@@ -79,15 +79,15 @@ class CommentServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            HistoryType historyType = HistoryType.createHistoryType("testType");
-            historyTypeRepository.save(historyType);
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
 
             History history1 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent1", member1, situation);
             History history2 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent2", member2, situation);
             historyRepository.saveAll(List.of(history1, history2));
         }
 
@@ -177,15 +177,15 @@ class CommentServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            HistoryType historyType = HistoryType.createHistoryType("testType");
-            historyTypeRepository.save(historyType);
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
 
             History history1 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent1", member1, situation);
             History history2 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent2", member2, situation);
             historyRepository.saveAll(List.of(history1, history2));
 
             Comment comment1 = Comment.createParentComment("testContent1", member1, history1);
@@ -340,18 +340,18 @@ class CommentServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            HistoryType historyType = HistoryType.createHistoryType("testType");
-            historyTypeRepository.save(historyType);
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
 
             History history1 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent1", member1, situation);
             History history2 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent2", member2, situation);
             History history3 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 2), "testContent3", member1, historyType);
+                            LocalDate.of(2025, 1, 2), "testContent3", member1, situation);
             historyRepository.saveAll(List.of(history1, history2, history3));
 
             Comment comment1 = Comment.createParentComment("testContent1", member1, history1);
@@ -469,15 +469,15 @@ class CommentServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            HistoryType historyType = HistoryType.createHistoryType("testType");
-            historyTypeRepository.save(historyType);
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
 
             History history1 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent1", member1, situation);
             History history2 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent2", member2, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent2", member2, situation);
             historyRepository.saveAll(List.of(history1, history2));
 
             Comment comment1 = Comment.createParentComment("testContent1", member1, history1);
@@ -598,12 +598,12 @@ class CommentServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            HistoryType historyType = HistoryType.createHistoryType("testType");
-            historyTypeRepository.save(historyType);
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
 
             History history =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent", member1, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent", member1, situation);
             historyRepository.save(history);
 
             Comment comment1 = Comment.createParentComment("testContent1", member1, history);
@@ -660,7 +660,7 @@ class CommentServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 나의_댓글_목록을_조회할_때 {
+    class 대댓글을_삭제할_때 {
 
         @BeforeEach
         void setUp() {
@@ -695,18 +695,18 @@ class CommentServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            HistoryType historyType = HistoryType.createHistoryType("testType");
-            historyTypeRepository.save(historyType);
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
 
             History history1 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 1), "testContent1", member1, historyType);
+                            LocalDate.of(2025, 1, 1), "testContent1", member1, situation);
             History history2 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 2), "testContent2", member1, historyType);
+                            LocalDate.of(2025, 1, 2), "testContent2", member1, situation);
             History history3 =
                     History.createHistory(
-                            LocalDate.of(2025, 1, 3), "testContent3", member1, historyType);
+                            LocalDate.of(2025, 1, 3), "testContent3", member1, situation);
             historyRepository.saveAll(List.of(history1, history2, history3));
 
             HistoryImage historyImage1_1 =

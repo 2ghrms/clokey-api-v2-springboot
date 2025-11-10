@@ -82,12 +82,6 @@ CREATE TABLE cloth (
                        CONSTRAINT fk_cloth_member FOREIGN KEY (member_id) REFERENCES member(id)
 );
 
-CREATE TABLE history_type (
-                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                       name VARCHAR(255) NOT NULL,
-                       created_at DATETIME(6) NOT NULL,
-                       updated_at DATETIME(6) NOT NULL
-);
 
 CREATE TABLE history (
                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -95,12 +89,11 @@ CREATE TABLE history (
                          content VARCHAR(200),
                          banned BOOLEAN NOT NULL,
                          member_id BIGINT NOT NULL,
-                         history_type_id BIGINT NOT NULL,
+                         situation_id BIGINT NOT NULL,
                          created_at DATETIME(6) NOT NULL,
                          updated_at DATETIME(6) NOT NULL,
 
-                         CONSTRAINT fk_history_member FOREIGN KEY (member_id) REFERENCES member(id),
-                         CONSTRAINT fk_history_history_type FOREIGN KEY (history_type_id) REFERENCES history_type(id)
+                         CONSTRAINT fk_history_member FOREIGN KEY (member_id) REFERENCES member(id)
 );
 
 CREATE TABLE hashtag (
@@ -136,17 +129,19 @@ CREATE TABLE cloth_folder (
 );
 
 
+CREATE TABLE situation (
+                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                           name VARCHAR(30) NOT NULL,
+                           created_at DATETIME(6) NOT NULL,
+                           updated_at DATETIME(6) NOT NULL
+);
 
-CREATE TABLE history_cloth (
-                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                               history_id BIGINT NOT NULL,
-                               cloth_id BIGINT NOT NULL,
-                               created_at DATETIME(6) NOT NULL,
-                               updated_at DATETIME(6) NOT NULL,
 
-                               CONSTRAINT fk_history_cloth_history FOREIGN KEY (history_id) REFERENCES history(id),
-                               CONSTRAINT fk_history_cloth_cloth FOREIGN KEY (cloth_id) REFERENCES cloth(id),
-                               CONSTRAINT uk_history_cloth_history_id_cloth_id UNIQUE (history_id, cloth_id)
+CREATE TABLE style (
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                       name VARCHAR(30) NOT NULL,
+                       created_at DATETIME(6) NOT NULL,
+                       updated_at DATETIME(6) NOT NULL
 );
 
 
@@ -160,19 +155,31 @@ CREATE TABLE history_image (
                                CONSTRAINT fk_history_image_history FOREIGN KEY (history_id) REFERENCES history(id)
 );
 
+
 CREATE TABLE history_cloth_tag (
                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                history_image_id BIGINT NOT NULL,
-                               history_cloth_id BIGINT NOT NULL,
+                               cloth_id BIGINT NOT NULL,
                                location_x DOUBLE NOT NULL,
                                location_y DOUBLE NOT NULL,
                                created_at DATETIME(6) NOT NULL,
                                updated_at DATETIME(6) NOT NULL,
 
                                CONSTRAINT fk_history_cloth_tag_history_image FOREIGN KEY (history_image_id) REFERENCES history_image(id),
-                               CONSTRAINT fk_history_cloth_tag_history_cloth FOREIGN KEY (history_cloth_id) REFERENCES history_cloth(id)
+                               CONSTRAINT fk_history_cloth_tag_cloth FOREIGN KEY (cloth_id) REFERENCES cloth(id)
 );
 
+
+CREATE TABLE history_style (
+                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                   history_id BIGINT NOT NULL,
+                                   style_id BIGINT NOT NULL,
+                                   created_at DATETIME(6) NOT NULL,
+                                   updated_at DATETIME(6) NOT NULL,
+
+                                   CONSTRAINT fk_history_style_history FOREIGN KEY (history_id) REFERENCES history(id),
+                                   CONSTRAINT fk_history_style_style FOREIGN KEY (style_id) REFERENCES style(id)
+);
 
 
 CREATE TABLE member_like (
@@ -188,7 +195,7 @@ CREATE TABLE member_like (
 );
 
 
-CREATE TABLE hashtag_history (
+CREATE TABLE history_hashtag (
                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                  hashtag_id BIGINT NOT NULL,
                                  history_id BIGINT NOT NULL,

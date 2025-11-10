@@ -3,6 +3,8 @@ package org.clokey.history.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 import org.clokey.common.model.BaseEntity;
 import org.clokey.member.entity.Member;
@@ -36,9 +38,18 @@ public class History extends BaseEntity {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "history_type_id")
+    @JoinColumn(name = "situation_id")
     @NotNull
-    private HistoryType historyType;
+    private Situation situation;
+
+    @OneToMany(mappedBy = "history")
+    private List<HistoryImage> historyImages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "history")
+    private List<HistoryStyle> historyStyles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "history")
+    private List<HistoryHashtag> historyHashtags = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private History(
@@ -46,22 +57,22 @@ public class History extends BaseEntity {
             String content,
             boolean banned,
             Member member,
-            HistoryType historyType) {
+            Situation situation) {
         this.historyDate = historyDate;
         this.content = content;
         this.banned = banned;
         this.member = member;
-        this.historyType = historyType;
+        this.situation = situation;
     }
 
     public static History createHistory(
-            LocalDate historyDate, String content, Member member, HistoryType historyType) {
+            LocalDate historyDate, String content, Member member, Situation situation) {
         return History.builder()
                 .historyDate(historyDate)
                 .content(content)
                 .banned(false)
                 .member(member)
-                .historyType(historyType)
+                .situation(situation)
                 .build();
     }
 }

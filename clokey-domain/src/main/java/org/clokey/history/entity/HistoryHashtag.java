@@ -14,7 +14,7 @@ import org.clokey.common.model.BaseEntity;
                     name = "uk_history_hashtag_history_id_hashtag_id",
                     columnNames = {"history_id", "hashtag_id"})
         })
-public class HashtagHistory extends BaseEntity {
+public class HistoryHashtag extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,12 +31,12 @@ public class HashtagHistory extends BaseEntity {
     private History history;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private HashtagHistory(Hashtag hashtag, History history) {
-        this.hashtag = hashtag;
+    private HistoryHashtag(History history, Hashtag hashtag) {
         this.history = history;
+        this.hashtag = hashtag;
     }
 
-    public static HashtagHistory createHashtagHistory(Hashtag hashtag, History history) {
-        return HashtagHistory.builder().hashtag(hashtag).history(history).build();
+    public static HistoryHashtag createHistoryHashtag(History history, Hashtag hashtag) {
+        return HistoryHashtag.builder().history(history).hashtag(hashtag).build();
     }
 }

@@ -9,7 +9,6 @@ import org.clokey.category.entity.Category;
 import org.clokey.cloth.enums.Season;
 import org.clokey.common.model.BaseEntity;
 import org.clokey.folder.entity.ClothFolder;
-import org.clokey.history.entity.HistoryCloth;
 import org.clokey.member.entity.Member;
 
 @Entity
@@ -43,9 +42,6 @@ public class Cloth extends BaseEntity {
     @JoinColumn(name = "member_id")
     @NotNull
     private Member member;
-
-    @OneToMany(mappedBy = "cloth")
-    private List<HistoryCloth> historyClothes = new ArrayList<>();
 
     @OneToMany(mappedBy = "cloth")
     private List<ClothFolder> clothFolders = new ArrayList<>();
