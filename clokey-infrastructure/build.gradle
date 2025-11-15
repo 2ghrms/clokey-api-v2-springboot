@@ -15,4 +15,5 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+    api 'com.google.firebase:firebase-admin:9.7.0'
 }

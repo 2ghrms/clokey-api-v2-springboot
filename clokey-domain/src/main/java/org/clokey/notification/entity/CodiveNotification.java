@@ -11,7 +11,7 @@ import org.clokey.notification.enums.RedirectType;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ClokeyNotification extends BaseEntity {
+public class CodiveNotification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,7 +40,7 @@ public class ClokeyNotification extends BaseEntity {
     private Member member;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private ClokeyNotification(
+    private CodiveNotification(
             Member member,
             String content,
             String notificationImageUrl,
@@ -55,13 +55,13 @@ public class ClokeyNotification extends BaseEntity {
         this.readStatus = readStatus;
     }
 
-    public static ClokeyNotification createClokeyNotification(
+    public static CodiveNotification createCodiveNotification(
             Member member,
             String content,
             String notificationImageUrl,
             String redirectInfo,
             RedirectType redirectType) {
-        return ClokeyNotification.builder()
+        return CodiveNotification.builder()
                 .member(member)
                 .content(content)
                 .notificationImageUrl(notificationImageUrl)

@@ -16,3 +16,15 @@ aws:
   s3:
     bucket: dummy
     endpoint: dummy
+
+firebase:
+  type: dummy
+  project-id: dummy
+  private-key-id: dummy
+  private-key: dummy
+  client-email: dummy
+  client-id: dummy
+  auth-uri: dummy
+  token-uri: dummy
+  auth-provider-x509-cert-url: dummy
+  client-x509-cert-url: dummy

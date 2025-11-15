@@ -18,7 +18,7 @@ import org.clokey.like.entity.MemberLike;
 import org.clokey.member.enums.MemberRole;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.Visibility;
-import org.clokey.notification.entity.ClokeyNotification;
+import org.clokey.notification.entity.CodiveNotification;
 import org.clokey.term.entity.MemberTerm;
 
 @Getter
@@ -68,7 +68,7 @@ public class Member extends BaseEntity {
     private List<MemberTerm> memberTermList = new ArrayList<>();
 
     @OneToMany(mappedBy = "member")
-    private List<ClokeyNotification> clokeyNotifications = new ArrayList<>();
+    private List<CodiveNotification> codiveNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "followFrom")
     private List<Follow> followFroms = new ArrayList<>();
