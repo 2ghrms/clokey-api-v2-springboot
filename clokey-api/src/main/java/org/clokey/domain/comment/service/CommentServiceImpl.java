@@ -8,6 +8,8 @@ import org.clokey.domain.comment.dto.response.CommentCreateResponse;
 import org.clokey.domain.comment.dto.response.CommentListResponse;
 import org.clokey.domain.comment.dto.response.MyCommentListResponse;
 import org.clokey.domain.comment.dto.response.ReplyListResponse;
+import org.clokey.domain.comment.event.NewCommentEvent;
+import org.clokey.domain.comment.event.NewReplyEvent;
 import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.history.exception.HistoryErrorCode;
@@ -19,6 +21,7 @@ import org.clokey.history.entity.History;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.Visibility;
 import org.clokey.response.SliceResponse;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final HistoryRepository historyRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -55,6 +59,16 @@ public class CommentServiceImpl implements CommentService {
 
             throw e;
         }
+
+        eventPublisher.publishEvent(
+                new NewCommentEvent(
+                        comment.getId(),
+                        history.getId(),
+                        history.getMember().getId(),
+                        currentMember.getId(),
+                        currentMember.getNickname(),
+                        currentMember.getProfileImageUrl(),
+                        comment.getContent()));
 
         return CommentCreateResponse.from(comment);
     }
@@ -87,6 +101,17 @@ public class CommentServiceImpl implements CommentService {
 
             throw e;
         }
+
+        eventPublisher.publishEvent(
+                new NewReplyEvent(
+                        reply.getId(),
+                        history.getId(),
+                        commentId,
+                        comment.getMember().getId(),
+                        currentMember.getId(),
+                        currentMember.getNickname(),
+                        currentMember.getProfileImageUrl(),
+                        request.content()));
 
         return CommentCreateResponse.from(comment);
     }
