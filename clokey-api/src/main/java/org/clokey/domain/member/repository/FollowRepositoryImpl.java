@@ -5,11 +5,13 @@ import static org.clokey.member.entity.QMember.member;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.member.dto.response.FollowMemberResponse;
+import org.clokey.member.entity.QBlock;
 import org.clokey.member.entity.QFollow;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -48,7 +50,8 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                         .join(follow.followTo, member)
                         .where(
                                 follow.followFrom.id.eq(targetId),
-                                lastFollowIdCondition(lastFollowId))
+                                lastFollowIdCondition(lastFollowId),
+                                blockFilter(currentId))
                         .limit(size + 1)
                         .orderBy(follow.id.desc())
                         .fetch();
@@ -80,12 +83,36 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                                         member.id.eq(currentId)))
                         .from(follow)
                         .join(follow.followFrom, member)
-                        .where(follow.followTo.id.eq(targetId), lastFollowIdCondition(lastFollowId))
+                        .where(
+                                follow.followTo.id.eq(targetId),
+                                lastFollowIdCondition(lastFollowId),
+                                blockFilter(currentId))
                         .limit(size + 1)
                         .orderBy(follow.id.desc())
                         .fetch();
 
         return checkLastPage(size, results);
+    }
+
+    private BooleanExpression blockFilter(Long currentId) {
+        QBlock blockCheck = new QBlock("blockCheck");
+
+        BooleanExpression blockCondition =
+                blockCheck
+                        .blocker
+                        .id
+                        .eq(currentId)
+                        .and(blockCheck.blocked.id.eq(member.id))
+                        .or(
+                                blockCheck
+                                        .blocker
+                                        .id
+                                        .eq(member.id)
+                                        .and(blockCheck.blocked.id.eq(currentId)));
+
+        return Expressions.asBoolean(
+                        JPAExpressions.selectOne().from(blockCheck).where(blockCondition).exists())
+                .not();
     }
 
     private BooleanExpression lastFollowIdCondition(Long lastFollowId) {

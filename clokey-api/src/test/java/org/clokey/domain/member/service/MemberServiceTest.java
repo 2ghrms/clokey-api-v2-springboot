@@ -640,9 +640,11 @@ class MemberServiceTest extends IntegrationTest {
             Follow follow23 = Follow.createFollow(member2, member3);
             Follow follow31 = Follow.createFollow(member3, member1);
             Follow follow32 = Follow.createFollow(member3, member2);
+            Follow follow42 = Follow.createFollow(member4, member2);
             Block block = Block.createBlock(member3, member1);
 
-            followRepository.saveAll(List.of(follow12, follow13, follow23, follow31, follow32));
+            followRepository.saveAll(
+                    List.of(follow12, follow13, follow23, follow31, follow32, follow42));
             blockRepository.save(block);
         }
 
@@ -654,7 +656,7 @@ class MemberServiceTest extends IntegrationTest {
             // then
             assertThat(response.content())
                     .extracting("codiveId", "isMe")
-                    .containsExactly(tuple("testCodiveId3", false), tuple("testCodiveId2", false));
+                    .containsExactly(tuple("testCodiveId2", false));
         }
 
         @Test
@@ -665,7 +667,17 @@ class MemberServiceTest extends IntegrationTest {
             // then
             assertThat(response.content())
                     .extracting("codiveId")
-                    .containsExactly("testCodiveId3", "testCodiveId1");
+                    .containsExactly("testCodiveId4", "testCodiveId1");
+        }
+
+        @Test
+        void 차단_관계의_멤버는_목록에_표시하지_않는다() {
+            // when
+            SliceResponse<FollowMemberResponse> response =
+                    memberService.getFollows(2L, null, true, 10);
+
+            // then
+            assertThat(response.content()).isEmpty();
         }
 
         @Test
@@ -677,7 +689,7 @@ class MemberServiceTest extends IntegrationTest {
             // then
             assertThat(response.content())
                     .extracting("codiveId", "isMe")
-                    .containsExactly(tuple("testCodiveId3", false), tuple("testCodiveId1", true));
+                    .containsExactly(tuple("testCodiveId4", false), tuple("testCodiveId1", true));
         }
 
         @Test
