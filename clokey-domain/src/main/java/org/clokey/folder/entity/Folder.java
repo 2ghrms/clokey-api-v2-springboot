@@ -28,4 +28,14 @@ public class Folder extends BaseEntity {
 
     @OneToMany(mappedBy = "folder")
     private List<ClothFolder> clothFolders = new ArrayList<>();
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Folder(String name, Member member) {
+        this.name = name;
+        this.member = member;
+    }
+
+    public static Folder createFolder(String name, Member member) {
+        return Folder.builder().name(name).member(member).build();
+    }
 }

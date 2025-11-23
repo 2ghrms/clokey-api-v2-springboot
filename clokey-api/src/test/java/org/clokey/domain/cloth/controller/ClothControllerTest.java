@@ -546,4 +546,22 @@ class ClothControllerTest {
                     .andExpect(jsonPath("$.result.categoryId").value("옷의 카테고리 ID는 비워둘 수 없습니다."));
         }
     }
+
+    @Nested
+    class 옷_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_옷을_삭제한다() throws Exception {
+            // given
+            willDoNothing().given(clothService).deleteCloth(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/clothes/1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
 }
