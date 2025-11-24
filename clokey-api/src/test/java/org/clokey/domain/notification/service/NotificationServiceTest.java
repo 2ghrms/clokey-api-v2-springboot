@@ -22,6 +22,7 @@ import org.clokey.domain.member.event.NewFollowerEvent;
 import org.clokey.domain.member.event.NewPendingFollowerEvent;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.member.service.MemberService;
+import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.repository.CodiveNotificationRepository;
 import org.clokey.domain.term.enums.TermInfo;
 import org.clokey.domain.term.repository.MemberTermRepository;
@@ -33,6 +34,8 @@ import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.member.enums.Visibility;
 import org.clokey.notification.entity.CodiveNotification;
+import org.clokey.notification.enums.ReadStatus;
+import org.clokey.notification.enums.RedirectType;
 import org.clokey.term.entity.MemberTerm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -348,6 +351,87 @@ public class NotificationServiceTest extends IntegrationTest {
             assertThat(notification.get().getMember().getId()).isEqualTo(2L);
             assertThat(notification.get().getContent())
                     .isEqualTo("replier님이 회원님의 댓글에 답장을 남겼습니다. : 테스트 대댓글입니다!");
+        }
+    }
+
+    @Nested
+    class 안읽은_알림_여부를_확인할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "nickname1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testCodiveId2",
+                            "nickname2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            CodiveNotification notification1 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림1",
+                            "www.testImageURl.com",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            notification1.updateReadStatus(ReadStatus.READ);
+
+            CodiveNotification notification2 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림2",
+                            "www.testImageURl2.com",
+                            "testClokeyId",
+                            RedirectType.MEMBER_REDIRECT);
+            notification2.updateReadStatus(ReadStatus.READ);
+
+            CodiveNotification notification3 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림3",
+                            "www.testImageURl3.com",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            CodiveNotification notification4 =
+                    CodiveNotification.createCodiveNotification(
+                            member2,
+                            "테스트 알림3",
+                            "www.testImageURl3.com",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            notification4.updateReadStatus(ReadStatus.READ);
+            notificationRepository.saveAll(
+                    List.of(notification1, notification2, notification3, notification4));
+        }
+
+        @Test
+        void 유효한_요청이면_안읽은_알림_여부를_반환한다() {
+            // when
+            UnreadNotificationResponse response = notificationService.existsUnreadNotification();
+
+            // then
+            assertThat(response.existsUnreadNotification()).isTrue();
+        }
+
+        @Test
+        void 안읽은_알림이_없으면_false를_반환한다() {
+            // given
+            Member member2 = memberRepository.findById(2L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member2);
+
+            // when
+            UnreadNotificationResponse response = notificationService.existsUnreadNotification();
+
+            // then
+            assertThat(response.existsUnreadNotification()).isFalse();
         }
     }
 }

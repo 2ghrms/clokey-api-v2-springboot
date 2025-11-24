@@ -70,4 +70,8 @@ public class CodiveNotification extends BaseEntity {
                 .readStatus(ReadStatus.NOT_READ)
                 .build();
     }
+
+    public void updateReadStatus(ReadStatus readStatus) {
+        this.readStatus = readStatus;
+    }
 }

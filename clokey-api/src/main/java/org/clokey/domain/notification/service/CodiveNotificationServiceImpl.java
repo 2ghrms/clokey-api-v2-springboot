@@ -14,16 +14,19 @@ import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
+import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.exception.NotificationErrorCode;
 import org.clokey.domain.notification.repository.CodiveNotificationRepository;
 import org.clokey.domain.term.enums.TermInfo;
 import org.clokey.domain.term.exception.TermErrorCode;
 import org.clokey.domain.term.repository.MemberTermRepository;
 import org.clokey.exception.BaseCustomException;
+import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.History;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.notification.entity.CodiveNotification;
+import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +40,8 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     private final HistoryRepository historyRepository;
     private final CommentRepository commentRepository;
     private final FirebaseMessaging firebaseMessaging;
+
+    private final MemberUtil memberUtil;
 
     private static final String NEW_FOLLOWER_NOTIFICATION = "%s님이 회원님의 옷장을 팔로우하기 시작했습니다.";
     private static final String NEW_PENDING_FOLLOWER_NOTIFICATION = "%s님이 회원님의 옷장에 팔로우를 요청했습니다.";
@@ -203,6 +208,17 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
 
             codiveNotificationRepository.save(codiveNotification);
         }
+    }
+
+    @Override
+    public UnreadNotificationResponse existsUnreadNotification() {
+        Member currentMember = memberUtil.getCurrentMember();
+
+        boolean isUnreadNotification =
+                codiveNotificationRepository.existsByMemberAndReadStatus(
+                        currentMember, ReadStatus.NOT_READ);
+
+        return new UnreadNotificationResponse(isUnreadNotification);
     }
 
     private Member getMemberById(Long memberId) {
