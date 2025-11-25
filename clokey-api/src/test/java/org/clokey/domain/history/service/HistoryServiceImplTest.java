@@ -3,6 +3,7 @@ package org.clokey.domain.history.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
+import java.time.LocalDate;
 import java.util.List;
 import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
@@ -15,20 +16,16 @@ import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest.ClothTag;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest.Payload;
+import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
 import org.clokey.domain.history.repository.*;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
-import org.clokey.history.entity.Hashtag;
-import org.clokey.history.entity.History;
-import org.clokey.history.entity.HistoryHashtag;
-import org.clokey.history.entity.HistoryImage;
-import org.clokey.history.entity.HistoryStyle;
-import org.clokey.history.entity.Situation;
-import org.clokey.history.entity.Style;
+import org.clokey.history.entity.*;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
@@ -291,6 +288,264 @@ class HistoryServiceImplTest extends IntegrationTest {
             assertThat(historyHashtags)
                     .extracting(hh -> hh.getHashtag().getName())
                     .containsExactlyInAnyOrder("testhashtag1", "testhashtag2", "testhashtag3");
+        }
+    }
+
+    @Nested
+    class 기록을_수정할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation1 = Situation.createSituation("testSituation1");
+            Situation situation2 = Situation.createSituation("testSituation2");
+            situationRepository.saveAll(List.of(situation1, situation2));
+
+            Style style1 = Style.createStyle("testStyle1");
+            Style style2 = Style.createStyle("testStyle2");
+            Style style3 = Style.createStyle("testStyle3");
+            styleRepository.saveAll(List.of(style1, style2, style3));
+
+            Category category = Category.createCategory("testCategory", null);
+            categoryRepository.save(category);
+
+            Cloth cloth1 =
+                    Cloth.createCloth(
+                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+            Cloth cloth2 =
+                    Cloth.createCloth(
+                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+            Cloth cloth3 =
+                    Cloth.createCloth(
+                            "testImageUrl2", null, null, null, Season.SPRING, category, member2);
+            clothRepository.saveAll(List.of(cloth1, cloth2, cloth3));
+
+            Hashtag hashtag1 = Hashtag.createHashtag("testhashtag1");
+            Hashtag hashtag2 = Hashtag.createHashtag("testhashtag2");
+            hashtagRepository.saveAll(List.of(hashtag1, hashtag2));
+
+            History history =
+                    History.createHistory(LocalDate.now(), "old content", member1, situation1);
+            historyRepository.save(history);
+
+            HistoryImage image1 = HistoryImage.createHistoryImage("image1", history);
+            HistoryImage image2 = HistoryImage.createHistoryImage("image2", history);
+            historyImageRepository.saveAll(List.of(image1, image2));
+
+            HistoryClothTag tag1 = HistoryClothTag.createHistoryClothTag(image1, cloth1, 0.2, 0.3);
+            HistoryClothTag tag2 = HistoryClothTag.createHistoryClothTag(image2, cloth2, 0.4, 0.5);
+            historyClothTagRepository.bulkInsertHistoryClothTags(List.of(tag1, tag2));
+
+            historyStyleRepository.bulkInsertHistoryStyles(
+                    List.of(
+                            HistoryStyle.createHistoryStyle(history, style1),
+                            HistoryStyle.createHistoryStyle(history, style2)));
+
+            historyHashtagRepository.bulkInsertHistoryHashtags(
+                    List.of(HistoryHashtag.createHistoryHashtag(history, hashtag1)));
+        }
+
+        @Test
+        void 유효한_요청이면_기록을_수정한다() {
+            // given
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "new content ",
+                            2L,
+                            List.of(2L, 3L),
+                            List.of("testHashtag2", "newHash"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            2L, 0.5, 0.6))),
+                                    new HistoryUpdateRequest.Payload(
+                                            "image3",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            1L, 0.1, 0.2)))));
+
+            // when
+            historyService.updateHistory(1L, request);
+
+            // then
+            History updated =
+                    transactionUtil.getResult(() -> historyRepository.findById(1L).orElseThrow());
+
+            assertThat(updated.getContent()).isEqualTo("new content");
+            assertThat(updated.getSituation().getId()).isEqualTo(2L);
+
+            List<HistoryImage> images = historyImageRepository.findByHistoryId(1L);
+            assertThat(images).hasSize(2);
+            assertThat(images)
+                    .extracting(HistoryImage::getImageUrl)
+                    .containsExactlyInAnyOrder("image1", "image3");
+
+            HistoryImage keptImage =
+                    images.stream()
+                            .filter(img -> "image1".equals(img.getImageUrl()))
+                            .findFirst()
+                            .orElseThrow();
+            List<org.clokey.history.entity.HistoryClothTag> keptTags =
+                    historyClothTagRepository.findByHistoryImageId(keptImage.getId());
+            assertThat(keptTags)
+                    .extracting(
+                            t -> t.getCloth().getId(),
+                            t -> t.getLocation().getLocationX(),
+                            t -> t.getLocation().getLocationY())
+                    .containsExactly(tuple(2L, 0.5, 0.6));
+
+            HistoryImage newImage =
+                    images.stream()
+                            .filter(img -> "image3".equals(img.getImageUrl()))
+                            .findFirst()
+                            .orElseThrow();
+            List<org.clokey.history.entity.HistoryClothTag> newTags =
+                    historyClothTagRepository.findByHistoryImageId(newImage.getId());
+            assertThat(newTags)
+                    .extracting(
+                            t -> t.getCloth().getId(),
+                            t -> t.getLocation().getLocationX(),
+                            t -> t.getLocation().getLocationY())
+                    .containsExactly(tuple(1L, 0.1, 0.2));
+
+            assertThat(historyStyleRepository.findByHistoryId(1L))
+                    .extracting(hs -> hs.getStyle().getId())
+                    .containsExactlyInAnyOrder(2L, 3L);
+
+            List<HistoryHashtag> hashtags =
+                    historyHashtagRepository.findAllByHistoryIdWithHashtag(1L);
+            assertThat(hashtags)
+                    .extracting(hh -> hh.getHashtag().getName())
+                    .containsExactlyInAnyOrder("testhashtag2", "newhash");
+        }
+
+        @Test
+        void 다른_사용자가_수정하면_권한_예외가_발생한다() {
+            // given
+            Member otherMember =
+                    transactionUtil.getResult(() -> memberRepository.findById(2L).orElseThrow());
+            given(memberUtil.getCurrentMember()).willReturn(otherMember);
+
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "new content ",
+                            2L,
+                            List.of(2L, 3L),
+                            List.of("testHashtag2", "newHash"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            2L, 0.5, 0.6))),
+                                    new HistoryUpdateRequest.Payload(
+                                            "image3",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            1L, 0.1, 0.2)))));
+
+            // when & then
+            assertThatThrownBy(() -> historyService.updateHistory(1L, request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 존재하지_않는_historyId면_예외가_발생한다() {
+            // given
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "new content ",
+                            2L,
+                            List.of(2L, 3L),
+                            List.of("testHashtag2", "newHash"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            2L, 0.5, 0.6))),
+                                    new HistoryUpdateRequest.Payload(
+                                            "image3",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            1L, 0.1, 0.2)))));
+
+            // when & then
+            assertThatThrownBy(() -> historyService.updateHistory(999L, request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 존재하지_않는_상황_ID를_포함하는_경우_예외가_발생한다() {
+            // given
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "new content ",
+                            999L,
+                            List.of(2L, 3L),
+                            List.of("testHashtag2", "newHash"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            2L, 0.5, 0.6))),
+                                    new HistoryUpdateRequest.Payload(
+                                            "image3",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            1L, 0.1, 0.2)))));
+
+            // when & then
+            assertThatThrownBy(() -> historyService.updateHistory(1L, request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(SituationErrorCode.SITUATION_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 이미지_태그에_내_옷이_아닌_옷이_포함되면_예외가_발생한다() {
+            // given
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "new content ",
+                            2L,
+                            List.of(2L, 3L),
+                            List.of("testHashtag2", "newHash"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            3L, 0.5, 0.6))),
+                                    new HistoryUpdateRequest.Payload(
+                                            "image3",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            1L, 0.1, 0.2)))));
+
+            // when & then
+            assertThatThrownBy(() -> historyService.updateHistory(1L, request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(ClothErrorCode.NOT_CLOTH_OWNER.getMessage());
         }
     }
 }

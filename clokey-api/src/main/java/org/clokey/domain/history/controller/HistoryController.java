@@ -6,14 +6,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
+import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
 import org.clokey.domain.history.service.HistoryService;
 import org.clokey.response.BaseResponse;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/histories")
@@ -30,5 +28,13 @@ public class HistoryController {
             @Valid @RequestBody HistoryCreateRequest request) {
         HistoryCreateResponse response = historyService.createHistory(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, response);
+    }
+
+    @PatchMapping("/{historyId}")
+    @Operation(summary = "기록 수정", description = "기록을 수정하는 API입니다")
+    public BaseResponse<Void> updateHistory(
+            @PathVariable Long historyId, @Valid @RequestBody HistoryUpdateRequest request) {
+        historyService.updateHistory(historyId, request);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 }

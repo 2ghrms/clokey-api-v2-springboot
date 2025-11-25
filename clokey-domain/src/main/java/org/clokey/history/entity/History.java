@@ -75,4 +75,9 @@ public class History extends BaseEntity {
                 .situation(situation)
                 .build();
     }
+
+    public void updateHistory(String content, Situation situation) {
+        this.content = content;
+        this.situation = situation;
+    }
 }

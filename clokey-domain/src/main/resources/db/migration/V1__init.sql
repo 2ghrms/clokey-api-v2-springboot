@@ -250,7 +250,7 @@ CREATE TABLE pending_follow (
 );
 
 
-CREATE TABLE clokey_notification (
+CREATE TABLE codive_notification (
                                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                      content VARCHAR(50) NOT NULL,
                                      notification_image_url VARCHAR(255) NOT NULL,
@@ -267,7 +267,7 @@ CREATE TABLE clokey_notification (
                                      created_at DATETIME(6) NOT NULL,
                                      updated_at DATETIME(6) NOT NULL,
 
-                                     CONSTRAINT fk_clokey_notification_member FOREIGN KEY (member_id) REFERENCES member(id)
+                                     CONSTRAINT fk_codive_notification_member FOREIGN KEY (member_id) REFERENCES member(id)
 );
 
 CREATE TABLE report (

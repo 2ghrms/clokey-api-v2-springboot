@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
+import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
 import org.clokey.domain.history.service.HistoryService;
 import org.junit.jupiter.api.Nested;
@@ -516,6 +517,113 @@ public class HistoryControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
                     .andExpect(jsonPath("$.result['hashtags[0]']").value("해시태그는 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 기록_수정_요청_시 {
+
+        @Test
+        void 유효한_요청이면_기록을_수정한다() throws Exception {
+            // given
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "updated content",
+                            1L,
+                            List.of(1L, 2L),
+                            List.of("tag1", "tag2"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            1L, 0.1, 0.2))),
+                                    new HistoryUpdateRequest.Payload("image2", null)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/histories/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 수정_내용이_null_또는_공백이면_예외가_발생한다(String content) throws Exception {
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            content,
+                            1L,
+                            List.of(1L, 2L),
+                            List.of("tag1", "tag2"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            1L, 0.1, 0.2)))));
+
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/histories/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.content").value("기록 내용은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 수정_이미지목록이_null이면_예외가_발생한다() throws Exception {
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "updated content", 1L, List.of(1L, 2L), List.of("tag1", "tag2"), null);
+
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/histories/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.payloads").value("기록 이미지 목록은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 수정_이미지가_0개면_예외가_발생한다() throws Exception {
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "updated content",
+                            1L,
+                            List.of(1L, 2L),
+                            List.of("tag1", "tag2"),
+                            List.of());
+
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/histories/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.payloads").value("이미지는 1~10개만 첨부 가능합니다."));
         }
     }
 }
