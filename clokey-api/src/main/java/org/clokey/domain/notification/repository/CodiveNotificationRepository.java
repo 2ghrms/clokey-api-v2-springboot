@@ -5,7 +5,8 @@ import org.clokey.notification.entity.CodiveNotification;
 import org.clokey.notification.enums.ReadStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CodiveNotificationRepository extends JpaRepository<CodiveNotification, Long> {
+public interface CodiveNotificationRepository
+        extends JpaRepository<CodiveNotification, Long>, CodiveNotificationRepositoryCustom {
 
     boolean existsByMemberAndReadStatus(Member currentMember, ReadStatus readStatus);
 }

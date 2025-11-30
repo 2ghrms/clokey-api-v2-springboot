@@ -22,6 +22,7 @@ import org.clokey.domain.member.event.NewFollowerEvent;
 import org.clokey.domain.member.event.NewPendingFollowerEvent;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.member.service.MemberService;
+import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.repository.CodiveNotificationRepository;
 import org.clokey.domain.term.enums.TermInfo;
@@ -36,6 +37,7 @@ import org.clokey.member.enums.Visibility;
 import org.clokey.notification.entity.CodiveNotification;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
+import org.clokey.response.SliceResponse;
 import org.clokey.term.entity.MemberTerm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -379,7 +381,7 @@ public class NotificationServiceTest extends IntegrationTest {
                     CodiveNotification.createCodiveNotification(
                             member1,
                             "테스트 알림1",
-                            "www.testImageURl.com",
+                            "http://testImageURl1.test",
                             "1",
                             RedirectType.HISTORY_REDIRECT);
             notification1.updateReadStatus(ReadStatus.READ);
@@ -388,7 +390,7 @@ public class NotificationServiceTest extends IntegrationTest {
                     CodiveNotification.createCodiveNotification(
                             member1,
                             "테스트 알림2",
-                            "www.testImageURl2.com",
+                            "http://testImageURl2.test",
                             "testClokeyId",
                             RedirectType.MEMBER_REDIRECT);
             notification2.updateReadStatus(ReadStatus.READ);
@@ -397,14 +399,14 @@ public class NotificationServiceTest extends IntegrationTest {
                     CodiveNotification.createCodiveNotification(
                             member1,
                             "테스트 알림3",
-                            "www.testImageURl3.com",
+                            "http://testImageURl3.test",
                             "1",
                             RedirectType.HISTORY_REDIRECT);
             CodiveNotification notification4 =
                     CodiveNotification.createCodiveNotification(
                             member2,
-                            "테스트 알림3",
-                            "www.testImageURl3.com",
+                            "테스트 알림4",
+                            "http://testImageURl4.test",
                             "1",
                             RedirectType.HISTORY_REDIRECT);
             notification4.updateReadStatus(ReadStatus.READ);
@@ -432,6 +434,87 @@ public class NotificationServiceTest extends IntegrationTest {
 
             // then
             assertThat(response.existsUnreadNotification()).isFalse();
+        }
+    }
+
+    @Nested
+    class 알림_목록을_요청했을_떄 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "nickname1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testCodiveId2",
+                            "nickname2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            CodiveNotification notification1 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림1",
+                            "http://testImageURl1.test",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            notification1.updateReadStatus(ReadStatus.READ);
+
+            CodiveNotification notification2 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림2",
+                            "http://testImageURl2.test",
+                            "testClokeyId",
+                            RedirectType.MEMBER_REDIRECT);
+            notification2.updateReadStatus(ReadStatus.READ);
+
+            CodiveNotification notification3 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림3",
+                            "http://testImageURl3.test",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            CodiveNotification notification4 =
+                    CodiveNotification.createCodiveNotification(
+                            member2,
+                            "테스트 알림4",
+                            "http://testImageURl4.test",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            notification4.updateReadStatus(ReadStatus.READ);
+            notificationRepository.saveAll(
+                    List.of(notification1, notification2, notification3, notification4));
+        }
+
+        @Test
+        void 유효한_요청이면_알림_목록을_반환한다() {
+            // when
+            SliceResponse<NotificationListResponse> response =
+                    notificationService.getNotificationList(null, 10);
+
+            // then
+            assertThat(response.content()).extracting("notificationId").containsExactly(3L, 2L, 1L);
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<NotificationListResponse> response =
+                    notificationService.getNotificationList(null, 1);
+
+            // then
+            org.junit.jupiter.api.Assertions.assertAll(
+                    () -> Assertions.assertThat(response.content().size()).isEqualTo(1),
+                    () -> Assertions.assertThat(response.isLast()).isFalse());
         }
     }
 }

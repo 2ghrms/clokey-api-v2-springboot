@@ -14,6 +14,7 @@ import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
+import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.exception.NotificationErrorCode;
 import org.clokey.domain.notification.repository.CodiveNotificationRepository;
@@ -28,6 +29,7 @@ import org.clokey.member.enums.MemberStatus;
 import org.clokey.notification.entity.CodiveNotification;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
+import org.clokey.response.SliceResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -208,6 +210,16 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
 
             codiveNotificationRepository.save(codiveNotification);
         }
+    }
+
+    @Override
+    public SliceResponse<NotificationListResponse> getNotificationList(
+            Long lastNotificationId, Integer size) {
+        Member currentMember = memberUtil.getCurrentMember();
+
+        return SliceResponse.from(
+                codiveNotificationRepository.findAllNotificationsByMemberId(
+                        currentMember.getId(), lastNotificationId, size));
     }
 
     @Override
