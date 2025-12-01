@@ -738,10 +738,29 @@ class MemberServiceTest extends IntegrationTest {
                             "testCodiveId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
-            memberRepository.saveAll(List.of(member1, member2));
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testCodiveId3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+            Member member4 =
+                    Member.createMember(
+                            "testEmail4",
+                            "testCodiveId4",
+                            "testNickName4",
+                            OauthInfo.createOauthInfo("testOauthId4", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2, member3, member4));
             given(memberUtil.getCurrentMember()).willReturn(member1);
+
             Follow follow21 = Follow.createFollow(member2, member1);
-            followRepository.save(follow21);
+            Follow follow34 = Follow.createFollow(member3, member4);
+            Follow follow42 = Follow.createFollow(member4, member2);
+            Follow follow43 = Follow.createFollow(member4, member3);
+            followRepository.saveAll(List.of(follow21, follow34, follow42, follow43));
+
+            Block block13 = Block.createBlock(member1, member3);
+            blockRepository.save(block13);
         }
 
         @Test
@@ -752,7 +771,7 @@ class MemberServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(response.codiveId()).isEqualTo("testCodiveId2"),
                     () -> assertThat(response.nickname()).isEqualTo("testNickName2"),
-                    () -> assertThat(response.followerCount()).isZero(),
+                    () -> assertThat(response.followerCount()).isOne(),
                     () -> assertThat(response.isMe()).isFalse());
         }
 
@@ -766,6 +785,32 @@ class MemberServiceTest extends IntegrationTest {
                     () -> assertThat(response.nickname()).isEqualTo("testNickName1"),
                     () -> assertThat(response.followerCount()).isOne(),
                     () -> assertThat(response.isMe()).isTrue());
+        }
+
+        @Test
+        void 차단_관계인_멤버는_팔로워_수에_집계하지_않는다() {
+            // when
+            MemberInfoResponse response = memberService.getMemberInfo(4L);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId4"),
+                    () -> assertThat(response.nickname()).isEqualTo("testNickName4"),
+                    () -> assertThat(response.followerCount()).isZero(),
+                    () -> assertThat(response.isMe()).isFalse());
+        }
+
+        @Test
+        void 차단_관계인_멤버는_팔로잉_수에_집계하지_않는다() {
+            // when
+            MemberInfoResponse response = memberService.getMemberInfo(4L);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId4"),
+                    () -> assertThat(response.nickname()).isEqualTo("testNickName4"),
+                    () -> assertThat(response.followingCount()).isOne(),
+                    () -> assertThat(response.isMe()).isFalse());
         }
 
         @Test
