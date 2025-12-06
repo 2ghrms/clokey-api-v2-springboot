@@ -2,6 +2,7 @@ package org.clokey.domain.cloth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDate;
@@ -17,8 +18,10 @@ import org.clokey.domain.category.exception.CategoryErrorCode;
 import org.clokey.domain.category.repository.CategoryRepository;
 import org.clokey.domain.cloth.dto.request.ClothCreateRequest;
 import org.clokey.domain.cloth.dto.request.ClothCreateRequests;
+import org.clokey.domain.cloth.dto.request.ClothImagesUploadRequest;
 import org.clokey.domain.cloth.dto.request.ClothUpdateRequest;
 import org.clokey.domain.cloth.dto.response.ClothDetailsResponse;
+import org.clokey.domain.cloth.dto.response.ClothImagesPresignedUrlResponse;
 import org.clokey.domain.cloth.dto.response.ClothListResponse;
 import org.clokey.domain.cloth.dto.response.ClothRecommendListResponse;
 import org.clokey.domain.cloth.exception.ClothErrorCode;
@@ -34,6 +37,7 @@ import org.clokey.domain.history.repository.SituationRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
 import org.clokey.domain.member.repository.MemberRepository;
+import org.clokey.enums.FileExtension;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.folder.entity.ClothFolder;
 import org.clokey.folder.entity.Folder;
@@ -48,6 +52,7 @@ import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.response.SliceResponse;
+import org.clokey.util.S3Util;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -79,7 +84,50 @@ class ClothServiceTest extends IntegrationTest {
     @Autowired private SituationRepository situationRepository;
 
     @MockitoBean private MemberUtil memberUtil;
+    @MockitoBean private S3Util s3Util;
     @Autowired private ApplicationEvents applicationEvents;
+
+    @Nested
+    class 옷_업로드_presigned_url를_발급할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            "testEmail",
+                            "testClokeyId",
+                            "testNickName",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
+
+        /** Only Mock Test For Coverage */
+        @Test
+        void 유효한_요청이면_옷을_생성한다() {
+            // given
+            ClothImagesUploadRequest request =
+                    new ClothImagesUploadRequest(
+                            List.of(
+                                    new ClothImagesUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1"),
+                                    new ClothImagesUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash2")));
+            given(s3Util.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash1")))
+                    .willReturn("testUrl1");
+
+            given(s3Util.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash2")))
+                    .willReturn("testUrl2");
+
+            // when
+            ClothImagesPresignedUrlResponse response =
+                    clothService.getClothUploadPresignedUrls(request);
+
+            // then
+            assertThat(response.urls()).containsExactly("testUrl1", "testUrl2");
+        }
+    }
 
     @Nested
     class 옷을_생성할_때 {

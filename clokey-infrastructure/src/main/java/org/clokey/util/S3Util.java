@@ -97,7 +97,7 @@ public class S3Util {
     private Date getPresignedUrlExpiration() {
         Date expiration = new Date();
         long expTimeMillis = expiration.getTime();
-        expTimeMillis += TimeUnit.MINUTES.toMillis(1);
+        expTimeMillis += TimeUnit.HOURS.toMillis(1);
         expiration.setTime(expTimeMillis);
 
         return expiration;

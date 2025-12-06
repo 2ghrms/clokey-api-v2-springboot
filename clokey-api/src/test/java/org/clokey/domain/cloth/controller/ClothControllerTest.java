@@ -11,12 +11,11 @@ import java.util.List;
 import org.clokey.cloth.enums.Season;
 import org.clokey.domain.cloth.dto.request.ClothCreateRequest;
 import org.clokey.domain.cloth.dto.request.ClothCreateRequests;
+import org.clokey.domain.cloth.dto.request.ClothImagesUploadRequest;
 import org.clokey.domain.cloth.dto.request.ClothUpdateRequest;
-import org.clokey.domain.cloth.dto.response.ClothCreateResponse;
-import org.clokey.domain.cloth.dto.response.ClothDetailsResponse;
-import org.clokey.domain.cloth.dto.response.ClothListResponse;
-import org.clokey.domain.cloth.dto.response.ClothRecommendListResponse;
+import org.clokey.domain.cloth.dto.response.*;
 import org.clokey.domain.cloth.service.ClothService;
+import org.clokey.enums.FileExtension;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.response.SliceResponse;
 import org.junit.jupiter.api.Nested;
@@ -41,6 +40,42 @@ class ClothControllerTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private ClothService clothService;
+
+    @Nested
+    class 옷_업로드_presigned_url_발급_요청_시 {
+
+        @Test
+        void 유효한_요청이면_옷_이미지_업로드_Presigned_URL들을_반환한다() throws Exception {
+            // given
+            ClothImagesUploadRequest request =
+                    new ClothImagesUploadRequest(
+                            List.of(
+                                    new ClothImagesUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1"),
+                                    new ClothImagesUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash2")));
+
+            ClothImagesPresignedUrlResponse response =
+                    new ClothImagesPresignedUrlResponse(
+                            List.of("testPresignedUrl1", "testPresignedUrl2"));
+
+            given(clothService.getClothUploadPresignedUrls(request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/clothes/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON201"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 리소스 생성됨"))
+                    .andExpect(jsonPath("$.result.urls[0]").value("testPresignedUrl1"))
+                    .andExpect(jsonPath("$.result.urls[1]").value("testPresignedUrl2"));
+        }
+    }
 
     @Nested
     class 옷_생성_요청_시 {
