@@ -10,6 +10,8 @@ import java.util.List;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.SituationListResponse;
+import org.clokey.domain.history.dto.response.StyleListResponse;
 import org.clokey.domain.history.service.HistoryService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -624,6 +626,76 @@ public class HistoryControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
                     .andExpect(jsonPath("$.result.payloads").value("이미지는 1~10개만 첨부 가능합니다."));
+        }
+    }
+
+    @Nested
+    class 전체_스타일_목록_요청_시 {
+
+        @Test
+        void 유효한_요청이면_전체_스타일_목록을_반환한다() throws Exception {
+            // given
+            StyleListResponse response =
+                    new StyleListResponse(
+                            List.of(
+                                    new StyleListResponse.Content(1L, "testStyle1"),
+                                    new StyleListResponse.Content(2L, "testStyle2"),
+                                    new StyleListResponse.Content(3L, "testStyle3")));
+
+            given(historyService.getAllStyles()).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/histories/styles").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.contents").isArray())
+                    .andExpect(jsonPath("$.result.contents.length()").value(3))
+                    .andExpect(jsonPath("$.result.contents[0].styleId").value(1L))
+                    .andExpect(jsonPath("$.result.contents[0].name").value("testStyle1"))
+                    .andExpect(jsonPath("$.result.contents[1].styleId").value(2L))
+                    .andExpect(jsonPath("$.result.contents[1].name").value("testStyle2"))
+                    .andExpect(jsonPath("$.result.contents[2].styleId").value(3L))
+                    .andExpect(jsonPath("$.result.contents[2].name").value("testStyle3"));
+        }
+    }
+
+    @Nested
+    class 전체_상황_목록_요청_시 {
+
+        @Test
+        void 유효한_요청이면_전체_상황_목록을_반환한다() throws Exception {
+            // given
+            SituationListResponse response =
+                    new SituationListResponse(
+                            List.of(
+                                    new SituationListResponse.Content(1L, "testSituation1"),
+                                    new SituationListResponse.Content(2L, "testSituation2"),
+                                    new SituationListResponse.Content(3L, "testSituation3")));
+
+            given(historyService.getAllSituations()).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/histories/situations").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.contents").isArray())
+                    .andExpect(jsonPath("$.result.contents.length()").value(3))
+                    .andExpect(jsonPath("$.result.contents[0].situationId").value(1L))
+                    .andExpect(jsonPath("$.result.contents[0].name").value("testSituation1"))
+                    .andExpect(jsonPath("$.result.contents[1].situationId").value(2L))
+                    .andExpect(jsonPath("$.result.contents[1].name").value("testSituation2"))
+                    .andExpect(jsonPath("$.result.contents[2].situationId").value(3L))
+                    .andExpect(jsonPath("$.result.contents[2].name").value("testSituation3"));
         }
     }
 }

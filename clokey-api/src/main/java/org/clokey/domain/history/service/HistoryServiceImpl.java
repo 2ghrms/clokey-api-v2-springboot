@@ -11,6 +11,8 @@ import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.SituationListResponse;
+import org.clokey.domain.history.dto.response.StyleListResponse;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
@@ -179,6 +181,16 @@ public class HistoryServiceImpl implements HistoryService {
             }
         }
         saveHistoryRelations(history, styleIds, styleMap, newImages, clothTags, request.hashtags());
+    }
+
+    @Override
+    public StyleListResponse getAllStyles() {
+        return styleRepository.findAllStyles();
+    }
+
+    @Override
+    public SituationListResponse getAllSituations() {
+        return situationRepository.findAllSituations();
     }
 
     private void saveHistoryRelations(

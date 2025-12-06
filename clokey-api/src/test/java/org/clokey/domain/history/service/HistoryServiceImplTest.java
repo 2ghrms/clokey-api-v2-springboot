@@ -18,6 +18,8 @@ import org.clokey.domain.history.dto.request.HistoryCreateRequest.ClothTag;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest.Payload;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.SituationListResponse;
+import org.clokey.domain.history.dto.response.StyleListResponse;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
@@ -546,6 +548,62 @@ class HistoryServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> historyService.updateHistory(1L, request))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(ClothErrorCode.NOT_CLOTH_OWNER.getMessage());
+        }
+    }
+
+    @Nested
+    class 전체_스타일_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Style style1 = Style.createStyle("testStyle1");
+            Style style2 = Style.createStyle("testStyle2");
+            Style style3 = Style.createStyle("testStyle3");
+            styleRepository.saveAll(List.of(style1, style2, style3));
+        }
+
+        @Test
+        void 전체_스타일_목록을_반환한다() {
+            // when
+            StyleListResponse response = historyService.getAllStyles();
+
+            // then
+            assertThat(response.contents()).hasSize(3);
+            assertThat(response.contents())
+                    .extracting(StyleListResponse.Content::styleId, StyleListResponse.Content::name)
+                    .containsExactly(
+                            tuple(1L, "testStyle1"),
+                            tuple(2L, "testStyle2"),
+                            tuple(3L, "testStyle3"));
+        }
+    }
+
+    @Nested
+    class 전체_상황_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Situation situation1 = Situation.createSituation("testSituation1");
+            Situation situation2 = Situation.createSituation("testSituation2");
+            Situation situation3 = Situation.createSituation("testSituation3");
+            situationRepository.saveAll(List.of(situation1, situation2, situation3));
+        }
+
+        @Test
+        void 전체_상황_목록을_반환한다() {
+            // when
+            SituationListResponse response = historyService.getAllSituations();
+
+            // then
+            assertThat(response.contents()).hasSize(3);
+            assertThat(response.contents())
+                    .extracting(
+                            SituationListResponse.Content::situationId,
+                            SituationListResponse.Content::name)
+                    .containsExactly(
+                            tuple(1L, "testSituation1"),
+                            tuple(2L, "testSituation2"),
+                            tuple(3L, "testSituation3"));
         }
     }
 }

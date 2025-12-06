@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ClothFolderRepository extends JpaRepository<ClothFolder, Long> {
 
-    List<ClothFolder> findAllByClothId(Long clothId);
-
     @Modifying
     @Query("DELETE FROM ClothFolder cf WHERE cf.cloth.id = :clothId")
     void deleteAllByClothId(Long clothId);
+
+    List<ClothFolder> findAllByClothId(Long clothId);
 }

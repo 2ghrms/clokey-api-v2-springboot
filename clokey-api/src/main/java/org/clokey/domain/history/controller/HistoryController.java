@@ -8,6 +8,8 @@ import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.SituationListResponse;
+import org.clokey.domain.history.dto.response.StyleListResponse;
 import org.clokey.domain.history.service.HistoryService;
 import org.clokey.response.BaseResponse;
 import org.springframework.validation.annotation.Validated;
@@ -36,5 +38,19 @@ public class HistoryController {
             @PathVariable Long historyId, @Valid @RequestBody HistoryUpdateRequest request) {
         historyService.updateHistory(historyId, request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @GetMapping("/styles")
+    @Operation(summary = "스타일 목록 조회", description = "스타일 목록을 조회하는 API입니다. (기록 생성용)")
+    public BaseResponse<StyleListResponse> getAllStyles() {
+        StyleListResponse response = historyService.getAllStyles();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @GetMapping("/situations")
+    @Operation(summary = "상황 목록 조회", description = "상황 목록을 조회하는 API입니다. (기록 생성용)")
+    public BaseResponse<SituationListResponse> getAllSituations() {
+        SituationListResponse response = historyService.getAllSituations();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 }
