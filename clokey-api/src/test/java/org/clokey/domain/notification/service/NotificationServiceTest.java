@@ -1,5 +1,6 @@
 package org.clokey.domain.notification.service;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -24,9 +25,11 @@ import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.member.service.MemberService;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
+import org.clokey.domain.notification.exception.NotificationErrorCode;
 import org.clokey.domain.notification.repository.CodiveNotificationRepository;
 import org.clokey.domain.term.enums.TermInfo;
 import org.clokey.domain.term.repository.MemberTermRepository;
+import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.History;
 import org.clokey.history.entity.Situation;
@@ -438,7 +441,7 @@ public class NotificationServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 알림_목록을_요청했을_떄 {
+    class 알림_목록을_요청했을_때 {
 
         @BeforeEach
         void setUp() {
@@ -515,6 +518,48 @@ public class NotificationServiceTest extends IntegrationTest {
             org.junit.jupiter.api.Assertions.assertAll(
                     () -> Assertions.assertThat(response.content().size()).isEqualTo(1),
                     () -> Assertions.assertThat(response.isLast()).isFalse());
+        }
+    }
+
+    @Nested
+    class 알림_상태_읽음으로_변경_요청했을_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            memberRepository.save(member1);
+
+            CodiveNotification notification1 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림1",
+                            "http://testImageURl1.test",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            notificationRepository.save(notification1);
+        }
+
+        @Test
+        void 유효한_요청이면_알림_상태를_READ로_변경한다() {
+            // when & then
+            notificationService.updateReadStatus(1L);
+            CodiveNotification notification = notificationRepository.findById(1L).orElseThrow();
+
+            assertThat(notification.getReadStatus()).isEqualTo(ReadStatus.READ);
+        }
+
+        @Test
+        void 유효하지_않은_알림ID일_경우_예외가_발생한다() {
+            // when & then
+
+            assertThatThrownBy(() -> notificationService.updateReadStatus(100L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(NotificationErrorCode.NOTIFICATION_NOT_FOUND.getMessage());
         }
     }
 }

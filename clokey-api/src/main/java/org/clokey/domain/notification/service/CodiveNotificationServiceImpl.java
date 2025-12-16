@@ -233,6 +233,13 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
         return new UnreadNotificationResponse(isUnreadNotification);
     }
 
+    @Override
+    public void updateReadStatus(Long notificationId) {
+        CodiveNotification notification = getNotificationById(notificationId);
+        notification.updateReadStatus(ReadStatus.READ);
+        codiveNotificationRepository.save(notification);
+    }
+
     private Member getMemberById(Long memberId) {
         return memberRepository
                 .findById(memberId)
@@ -249,6 +256,15 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
         return commentRepository
                 .findById(commentId)
                 .orElseThrow(() -> new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND));
+    }
+
+    private CodiveNotification getNotificationById(Long notificationId) {
+        return codiveNotificationRepository
+                .findById(notificationId)
+                .orElseThrow(
+                        () ->
+                                new BaseCustomException(
+                                        NotificationErrorCode.NOTIFICATION_NOT_FOUND));
     }
 
     private boolean isAbleToSendNotification(Member followToMember) {

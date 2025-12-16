@@ -12,10 +12,7 @@ import org.clokey.global.annotation.PageSize;
 import org.clokey.response.BaseResponse;
 import org.clokey.response.SliceResponse;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/notifications")
@@ -43,5 +40,12 @@ public class CodiveNotificationController {
     public BaseResponse<UnreadNotificationResponse> existsUnreadNotification() {
         return BaseResponse.onSuccess(
                 GlobalBaseSuccessCode.OK, codiveNotificationService.existsUnreadNotification());
+    }
+
+    @PatchMapping("/{notificationId}")
+    @Operation(summary = "알림 읽음 처리 API", description = "알림을 읽음 상태로 업데이트 합니다.")
+    public BaseResponse<Void> updateReadStatus(@PathVariable Long notificationId) {
+        codiveNotificationService.updateReadStatus(notificationId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 }
