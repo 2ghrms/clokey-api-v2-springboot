@@ -124,4 +124,22 @@ public class NotificationControllerTest {
                     .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
         }
     }
+
+    @Nested
+    class 알림_전체_읽음_처리_요청_시 {
+        @Test
+        void 유효한_요청이면_전체_알림_상태를_읽음으로_변경한다() throws Exception {
+            // given
+            willDoNothing().given(codiveNotificationService).updateAllReadStatus();
+
+            // when
+            ResultActions perform = mockMvc.perform(patch("/notifications/read-all"));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
 }

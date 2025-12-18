@@ -31,9 +31,11 @@ import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CodiveNotificationServiceImpl implements CodiveNotificationService {
 
     private final MemberRepository memberRepository;
@@ -234,10 +236,19 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     }
 
     @Override
+    @Transactional
     public void updateReadStatus(Long notificationId) {
         CodiveNotification notification = getNotificationById(notificationId);
         notification.updateReadStatus(ReadStatus.READ);
         codiveNotificationRepository.save(notification);
+    }
+
+    @Override
+    @Transactional
+    public void updateAllReadStatus() {
+        Member member = memberUtil.getCurrentMember();
+
+        codiveNotificationRepository.updateAllReadStatusByMemberId(member.getId());
     }
 
     private Member getMemberById(Long memberId) {

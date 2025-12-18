@@ -22,4 +22,6 @@ public interface CodiveNotificationService {
     UnreadNotificationResponse existsUnreadNotification();
 
     void updateReadStatus(Long notificationId);
+
+    void updateAllReadStatus();
 }

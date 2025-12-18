@@ -6,4 +6,6 @@ import org.springframework.data.domain.Slice;
 public interface CodiveNotificationRepositoryCustom {
     Slice<NotificationListResponse> findAllNotificationsByMemberId(
             Long memberId, Long lastNotificationId, Integer size);
+
+    void updateAllReadStatusByMemberId(Long memberId);
 }

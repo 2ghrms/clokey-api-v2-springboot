@@ -522,7 +522,7 @@ public class NotificationServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 알림_상태_읽음으로_변경_요청했을_때 {
+    class 알림_상태를_읽음으로_변경_요청했을_때 {
 
         @BeforeEach
         void setUp() {
@@ -560,6 +560,65 @@ public class NotificationServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> notificationService.updateReadStatus(100L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(NotificationErrorCode.NOTIFICATION_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 모든_알림_상태를_읽음으로_변경_요청했을_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            memberRepository.save(member1);
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            CodiveNotification notification1 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림1",
+                            "http://testImageURl1.test",
+                            "1",
+                            RedirectType.HISTORY_REDIRECT);
+            CodiveNotification notification2 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림2",
+                            "http://testImageURl2.test",
+                            "2",
+                            RedirectType.HISTORY_REDIRECT);
+            CodiveNotification notification3 =
+                    CodiveNotification.createCodiveNotification(
+                            member1,
+                            "테스트 알림3",
+                            "http://testImageURl3.test",
+                            "3",
+                            RedirectType.MEMBER_REDIRECT);
+            notificationRepository.saveAll(List.of(notification1, notification2, notification3));
+        }
+
+        @Test
+        void 유효한_요청이면_모든_알림_상태를_READ로_변경한다() {
+            // when & then
+            notificationService.updateAllReadStatus();
+            CodiveNotification notification1 = notificationRepository.findById(1L).orElseThrow();
+            CodiveNotification notification2 = notificationRepository.findById(2L).orElseThrow();
+            CodiveNotification notification3 = notificationRepository.findById(3L).orElseThrow();
+
+            org.junit.jupiter.api.Assertions.assertAll(
+                    () ->
+                            Assertions.assertThat(notification1.getReadStatus())
+                                    .isEqualTo(ReadStatus.READ),
+                    () ->
+                            Assertions.assertThat(notification2.getReadStatus())
+                                    .isEqualTo(ReadStatus.READ),
+                    () ->
+                            Assertions.assertThat(notification3.getReadStatus())
+                                    .isEqualTo(ReadStatus.READ));
         }
     }
 }

@@ -48,4 +48,11 @@ public class CodiveNotificationController {
         codiveNotificationService.updateReadStatus(notificationId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
+
+    @PatchMapping("read-all")
+    @Operation(summary = "알림 전체 읽음 처리 API", description = "해당 사용자의 모든 알림을 읽음 상태로 업데이트 합니다.")
+    public BaseResponse<Void> updateAllReadStatus() {
+        codiveNotificationService.updateAllReadStatus();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
 }

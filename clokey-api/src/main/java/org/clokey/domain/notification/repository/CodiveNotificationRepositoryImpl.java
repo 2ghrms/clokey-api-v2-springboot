@@ -5,9 +5,11 @@ import static org.clokey.notification.entity.QCodiveNotification.codiveNotificat
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
+import org.clokey.notification.enums.ReadStatus;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -43,6 +45,18 @@ public class CodiveNotificationRepositoryImpl implements CodiveNotificationRepos
                         .fetch();
 
         return checkLastPage(size, results);
+    }
+
+    @Override
+    public void updateAllReadStatusByMemberId(Long memberId) {
+        queryFactory
+                .update(codiveNotification)
+                .set(codiveNotification.readStatus, ReadStatus.READ)
+                .set(codiveNotification.updatedAt, LocalDateTime.now())
+                .where(
+                        codiveNotification.member.id.eq(memberId),
+                        codiveNotification.readStatus.eq(ReadStatus.NOT_READ))
+                .execute();
     }
 
     private BooleanExpression lastNotificationIdCondition(Long lastNotificationId) {
