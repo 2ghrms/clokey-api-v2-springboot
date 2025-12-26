@@ -78,7 +78,7 @@ jobs:
             export DOCKERHUB_NAME=${{ secrets.DOCKERHUB_USERNAME }}
             export DOCKER_TAG=prod-app
 
-            export DEV_MYSQL_HOST=${{ secrets.PROD_MYSQL_HOST }}
+            export PROD_MYSQL_HOST=${{ secrets.PROD_MYSQL_HOST }}
             export MYSQL_PORT=${{ secrets.MYSQL_PORT }}
             export DB_NAME=${{ secrets.DB_NAME }}
             export DB_USERNAME=${{ secrets.DB_USERNAME }}
@@ -100,11 +100,11 @@ jobs:
             export JWT_REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION_TIME }}
             export JWT_ISSUER=${{ secrets.JWT_ISSUER }}
 
-            export DEV_AWS_ACCESS_KEY_ID=${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
-            export DEV_AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+            export PROD_AWS_ACCESS_KEY_ID=${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+            export PROD_AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
             export AWS_REGION=${{ secrets.AWS_REGION }}
-            export DEV_S3_BUCKET=${{ secrets.PROD_S3_BUCKET }}
-            export DEV_S3_ENDPOINT=${{ secrets.PROD_S3_ENDPOINT }}
+            export PROD_S3_BUCKET=${{ secrets.PROD_S3_BUCKET }}
+            export PROD_S3_ENDPOINT=${{ secrets.PROD_S3_ENDPOINT }}
 
             export SWAGGER_USERNAME=${{ secrets.SWAGGER_USERNAME }}
             export SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
