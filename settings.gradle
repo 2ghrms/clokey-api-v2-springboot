@@ -1,1 +1,8 @@
 rootProject.name = 'clokey-server'
+
+include 'clokey-api'
+include 'clokey-batch'
+include 'clokey-common'
+include 'clokey-common-web'
+include 'clokey-domain'
+include 'clokey-infrastructure'

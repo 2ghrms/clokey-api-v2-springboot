@@ -1,0 +1,41 @@
+# Git 관련
+.git
+.gitignore
+.gitattributes
+
+# IDE 관련
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Build 관련
+build/
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+
+# 로그 파일
+*.log
+
+# OS 관련
+.DS_Store
+Thumbs.db
+
+# 테스트 관련
+**/test/
+**/src/test/
+
+# 문서
+README.md
+documentation/
+
+# Docker 관련
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# 기타
+*.md
+.env
+.env.local

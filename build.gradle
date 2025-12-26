@@ -1,28 +1,133 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.4'
+    id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.diffplug.spotless' version '7.0.4'
+    id "org.sonarqube" version '6.2.0.5505'
 }
 
-group = 'org.clokey'
-version = '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+bootJar {
+    enabled = false
 }
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+sonarqube {
+    properties {
+        property 'sonar.projectKey', 'Clokey-dev_clokey-server'
+        property 'sonar.organization', 'clokey-dev'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.sources', 'src'
+        property 'sonar.language', 'java'
+        property 'sonar.sourceEncoding', 'UTF-8'
+        property 'sonar.test.inclusions', '**/*Test.java'
+        property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/** ,**/*Application*.java , **/*Config*.java,' +
+                '**/*Dto*.java, **/*Request*.java, **/*Response*.java ,**/*Exception*.java ,**/*ErrorCode*.java, **/*Util*.java, **/*Filter*.java,' +
+                '**/*Handler*.java, **/*Validator*.java, **/*Principal*.java, **/*Properties*.java, **/clokey-domain/**'
+        property 'sonar.java.coveragePlugin', 'jacoco'
+    }
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+subprojects {
+    group = 'org.clokey'
+    version = '0.0.1-SNAPSHOT'
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
+    apply plugin: 'org.sonarqube'
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            html.required.set(true)
+            xml.required.set(true)
+            csv.required.set(false)
+            xml.destination file("${buildDir}/reports/jacoco.xml")
+        }
+
+        def QDomains = []
+
+        for (qPattern in '**/QA'..'**/QZ') {
+            QDomains.add(qPattern + '*')
+        }
+
+        afterEvaluate {
+            classDirectories.setFrom(
+                    files(classDirectories.files.collect {
+                        fileTree(dir: it,
+                                excludes: [
+                                        "**/*Application*",
+                                        "**/*Config*",
+                                        "**/*Dto*",
+                                        "**/*Request*",
+                                        "**/*Response*",
+                                        "**/*Interceptor*",
+                                        "**/*Exception*"
+                                ] + QDomains)
+                    })
+            )
+        }
+    }
+
+    sonarqube {
+        properties {
+            property 'sonar.java.binaries', "${buildDir}/classes"
+            property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco.xml"
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+        // lombok
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+    }
+
+    test {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
 }
+
+spotless {
+    java {
+        target("**/*.java")
+        googleJavaFormat().aosp()
+        importOrder()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+tasks.register('updateGitHooks', Copy) {
+    from './scripts/pre-commit'
+    into './.git/hooks'
+}
+
+tasks.register('makeGitHooksExecutable', Exec) {
+    commandLine 'chmod', '+x', './.git/hooks/pre-commit'
+    dependsOn updateGitHooks
+}
+
+compileJava.dependsOn makeGitHooksExecutable

@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  app:
+    image: ${DOCKERHUB_NAME}/clokey-docker-2025:${DOCKER_TAG}
+    container_name: clokey-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+
+      # Database
+      DEV_MYSQL_HOST: ${DEV_MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # Redis
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # Kakao OIDC
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+
+      # Apple OIDC
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID}
+      APPLE_CLIENT_SECRET: ${APPLE_CLIENT_SECRET}
+
+      # JWT
+      JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET}
+      JWT_REFRESH_TOKEN_SECRET: ${JWT_REFRESH_TOKEN_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION_TIME: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+      JWT_ISSUER: ${JWT_ISSUER}
+
+      # AWS S3
+      DEV_AWS_ACCESS_KEY_ID: ${DEV_AWS_ACCESS_KEY_ID}
+      DEV_AWS_SECRET_ACCESS_KEY: ${DEV_AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      DEV_S3_BUCKET: ${DEV_S3_BUCKET}
+      DEV_S3_ENDPOINT: ${DEV_S3_ENDPOINT}
+
+      # Swagger
+      SWAGGER_USERNAME: ${SWAGGER_USERNAME}
+      SWAGGER_PASSWORD: ${SWAGGER_PASSWORD}
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    name: app_network
+    driver: bridge

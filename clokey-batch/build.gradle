@@ -1,0 +1,11 @@
+jar {
+    enabled = false
+}
+
+dependencies {
+    implementation project(':clokey-domain')
+    implementation project(':clokey-common')
+    // implementation 'org.springframework.boot:spring-boot-starter-batch'
+    // testImplementation 'org.springframework.batch:spring-batch-test'
+    runtimeOnly 'com.h2database:h2'
+}

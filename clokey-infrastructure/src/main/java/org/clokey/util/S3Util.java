@@ -1,0 +1,151 @@
+package org.clokey.util;
+
+import com.amazonaws.HttpMethod;
+import com.amazonaws.SdkClientException;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.Headers;
+import com.amazonaws.services.s3.model.*;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.clokey.enums.FileExtension;
+import org.clokey.enums.ImageType;
+import org.clokey.properties.S3Properties;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class S3Util {
+
+    private final AmazonS3 amazonS3;
+    private final S3Properties s3Properties;
+
+    public String createPresignedUrl(
+            ImageType imageType, Long memberId, FileExtension fileExtension, String md5Hash) {
+        String imageKey = UUID.randomUUID().toString();
+        String fileName = createFileName(imageType, memberId, imageKey, fileExtension);
+        String bucket = s3Properties.bucket();
+
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                generatePresignedUrlRequest(
+                        bucket, fileName, fileExtension.getExtension(), md5Hash);
+
+        return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
+    }
+
+    private String createFileName(
+            ImageType imageType, Long memberId, String imageKey, FileExtension fileExtension) {
+        return memberId
+                + "/"
+                + imageType.getType()
+                + "/"
+                + imageKey
+                + "."
+                + fileExtension.getExtension();
+    }
+
+    private GeneratePresignedUrlRequest generatePresignedUrlRequest(
+            String bucket, String fileName, String imageFileExtension, String md5Hash) {
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.PUT)
+                        .withKey(fileName)
+                        .withContentType("image/" + imageFileExtension)
+                        .withExpiration(getPresignedUrlExpiration());
+
+        generatePresignedUrlRequest.addRequestParameter(
+                Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
+
+        generatePresignedUrlRequest.addRequestParameter("x-amz-tagging", "status=pending");
+
+        generatePresignedUrlRequest.setContentMd5(md5Hash);
+
+        return generatePresignedUrlRequest;
+    }
+
+    public void deleteAllByUrls(List<String> urls) {
+        if (urls == null || urls.isEmpty()) {
+            log.info("deleteAllByUrls skipped: received null or empty urls");
+            return;
+        }
+        String bucket = s3Properties.bucket();
+
+        List<DeleteObjectsRequest.KeyVersion> keys =
+                urls.stream()
+                        .map(this::extractObjectKey)
+                        .map(DeleteObjectsRequest.KeyVersion::new)
+                        .toList();
+
+        DeleteObjectsRequest request = new DeleteObjectsRequest(bucket).withKeys(keys);
+        amazonS3.deleteObjects(request);
+    }
+
+    public void deleteByUrl(String url) {
+        String bucket = s3Properties.bucket();
+        String objectKey = extractObjectKey(url);
+        amazonS3.deleteObject(bucket, objectKey);
+    }
+
+    private String extractObjectKey(String url) {
+        int comIndex = url.indexOf(".com/");
+        return url.substring(comIndex + 5);
+    }
+
+    private Date getPresignedUrlExpiration() {
+        Date expiration = new Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += TimeUnit.HOURS.toMillis(1);
+        expiration.setTime(expTimeMillis);
+
+        return expiration;
+    }
+
+    public void updateTagToCompleteByUrl(String url) {
+        String bucket = s3Properties.bucket();
+        String key = extractObjectKey(url);
+
+        List<Tag> tags = List.of(new Tag("status", "complete"));
+        ObjectTagging tagging = new ObjectTagging(tags);
+
+        SetObjectTaggingRequest request = new SetObjectTaggingRequest(bucket, key, tagging);
+        amazonS3.setObjectTagging(request);
+    }
+
+    public void updateTagsToCompleteByUrls(List<String> urls) {
+        for (String url : urls) {
+            updateTagToCompleteByUrl(url);
+        }
+    }
+
+    public boolean doesFileExistByUrl(String url) {
+        String bucket = s3Properties.bucket();
+        String key = extractObjectKey(url);
+        try {
+            return amazonS3.doesObjectExist(bucket, key);
+        } catch (AmazonS3Exception e) {
+            if (e.getStatusCode() == 403) {
+                log.warn("Access denied for key={}, treating as non-existent", key);
+                return false;
+            }
+            log.error("S3 error while checking existence: {}", e.getErrorMessage(), e);
+            return false;
+        } catch (SdkClientException e) {
+            log.error("Network error while connecting to S3: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean doAllFilesExistByUrls(List<String> urls) {
+        for (String url : urls) {
+            if (!doesFileExistByUrl(url)) {
+                log.warn("File not found or inaccessible: {}", url);
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
