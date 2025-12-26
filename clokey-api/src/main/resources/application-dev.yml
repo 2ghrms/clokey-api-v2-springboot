@@ -76,7 +76,6 @@ swagger:
   username: ${SWAGGER_USERNAME}
   password: ${SWAGGER_PASSWORD}
 
-
 spring-doc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
@@ -85,3 +84,15 @@ spring-doc:
     operations-sorter : method
     path: /swagger-ui
     doc-expansion : none
+
+firebase:
+  type: ${FIREBASE_TYPE}
+  project-id: ${FIREBASE_PROJECT_ID}
+  private-key-id: ${FIREBASE_PRIVATE_KEY_ID}
+  private-key: ${FIREBASE_PRIVATE_KEY}
+  client-email: ${FIREBASE_CLIENT_EMAIL}
+  client-id: ${FIREBASE_CLIENT_ID}
+  auth-uri: ${FIREBASE_AUTH_URI}
+  token-uri: ${FIREBASE_TOKEN_URI}
+  auth-provider-x509-cert-url: ${FIREBASE_AUTH_PROVIDER_X509_CERT_URL}
+  client-x509-cert-url: ${FIREBASE_CLIENT_X509_CERT_URL}

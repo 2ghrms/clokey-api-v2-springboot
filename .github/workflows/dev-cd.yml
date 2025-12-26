@@ -98,7 +98,18 @@ jobs:
 
             export SWAGGER_USERNAME=${{ secrets.SWAGGER_USERNAME }}
             export SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
-            
+
+            export FIREBASE_TYPE=${{ secrets.FIREBASE_TYPE }}
+            export FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+            export FIREBASE_PRIVATE_KEY_ID=${{ secrets.FIREBASE_PRIVATE_KEY_ID }}
+            export FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
+            export FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
+            export FIREBASE_CLIENT_ID=${{ secrets.FIREBASE_CLIENT_ID }}
+            export FIREBASE_AUTH_URI=${{ secrets.FIREBASE_AUTH_URI }}
+            export FIREBASE_TOKEN_URI=${{ secrets.FIREBASE_TOKEN_URI }}
+            export FIREBASE_AUTH_PROVIDER_X509_CERT_URL=${{ secrets.FIREBASE_AUTH_PROVIDER_X509_CERT_URL }}
+            export FIREBASE_CLIENT_X509_CERT_URL=${{ secrets.FIREBASE_CLIENT_X509_CERT_URL }}
+
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
             cd /home/ubuntu
