@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://${DEV_MYSQL_HOST}:${MYSQL_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
@@ -65,12 +65,12 @@ jwt:
   issuer: ${JWT_ISSUER}
 
 aws:
-  access-key-id: ${AWS_ACCESS_KEY_ID}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+  access-key-id: ${DEV_AWS_ACCESS_KEY_ID}
+  secret-access-key: ${DEV_AWS_SECRET_ACCESS_KEY}
   region: ${AWS_REGION}
   s3:
-    bucket: ${S3_BUCKET}
-    endpoint: ${S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
+    bucket: ${DEV_S3_BUCKET}
+    endpoint: ${DEV_S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
 
 swagger:
   username: ${SWAGGER_USERNAME}
