@@ -63,55 +63,47 @@ jobs:
           username: ubuntu
           host: ${{ secrets.DEV_EC2_HOST }}
           key: ${{ secrets.DEV_EC2_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,DEV_MYSQL_HOST,MYSQL_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD,REDIS_HOST,REDIS_PORT,REDIS_PASSWORD,DEV_KAKAO_CLIENT_ID,DEV_KAKAO_CLIENT_SECRET,DEV_APPLE_CLIENT_ID,DEV_APPLE_CLIENT_SECRET,JWT_ACCESS_TOKEN_SECRET,JWT_REFRESH_TOKEN_SECRET,JWT_ACCESS_TOKEN_EXPIRATION_TIME,JWT_REFRESH_TOKEN_EXPIRATION_TIME,JWT_ISSUER,DEV_AWS_ACCESS_KEY_ID,DEV_AWS_SECRET_ACCESS_KEY,AWS_REGION,DEV_S3_BUCKET,DEV_S3_ENDPOINT,SWAGGER_USERNAME,SWAGGER_PASSWORD
           script: |
-            set -euo pipefail
-            sudo mkdir -p /home/ubuntu/clokey-api
-            if [ -f /home/ubuntu/dev-compose.yml ] && [ ! -f /home/ubuntu/clokey-api/dev-compose.yml ]; then
-              sudo mv /home/ubuntu/dev-compose.yml /home/ubuntu/clokey-api/dev-compose.yml
-            fi
-            cd /home/ubuntu/clokey-api
-            cat > .env << 'EOF'
-            DOCKERHUB_NAME=${{ secrets.DOCKERHUB_USERNAME }}
-            DOCKER_TAG=dev-app
+            export DOCKERHUB_NAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export DOCKER_TAG=dev-app
 
-            DEV_MYSQL_HOST=${{ secrets.DEV_MYSQL_HOST }}
-            MYSQL_PORT=${{ secrets.MYSQL_PORT }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export DEV_MYSQL_HOST=${{ secrets.DEV_MYSQL_HOST }}
+            export MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+            export DB_NAME=${{ secrets.DB_NAME }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 
-            REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=${{ secrets.REDIS_PORT }}
-            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            export REDIS_HOST=${{ secrets.REDIS_HOST }}
+            export REDIS_PORT=${{ secrets.REDIS_PORT }}
+            export REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
 
-            KAKAO_CLIENT_ID=${{ secrets.DEV_KAKAO_CLIENT_ID }}
-            KAKAO_CLIENT_SECRET=${{ secrets.DEV_KAKAO_CLIENT_SECRET }}
+            export KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+            export KAKAO_CLIENT_SECRET=${{ secrets.DEV_KAKAO_CLIENT_SECRET }}
 
-            APPLE_CLIENT_ID=${{ secrets.DEV_APPLE_CLIENT_ID }}
-            APPLE_CLIENT_SECRET=${{ secrets.DEV_APPLE_CLIENT_SECRET }}
+            export APPLE_CLIENT_ID=${{ secrets.APPLE_CLIENT_ID }}
+            export APPLE_CLIENT_SECRET=${{ secrets.APPLE_CLIENT_SECRET }}
 
-            JWT_ACCESS_TOKEN_SECRET=${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
-            JWT_REFRESH_TOKEN_SECRET=${{ secrets.JWT_REFRESH_TOKEN_SECRET }}
-            JWT_ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION_TIME }}
-            JWT_REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION_TIME }}
-            JWT_ISSUER=${{ secrets.JWT_ISSUER }}
+            export JWT_ACCESS_TOKEN_SECRET=${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
+            export JWT_REFRESH_TOKEN_SECRET=${{ secrets.JWT_REFRESH_TOKEN_SECRET }}
+            export JWT_ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION_TIME }}
+            export JWT_REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION_TIME }}
+            export JWT_ISSUER=${{ secrets.JWT_ISSUER }}
 
-            DEV_AWS_ACCESS_KEY_ID=${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
-            DEV_AWS_SECRET_ACCESS_KEY=${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
-            AWS_REGION=${{ secrets.AWS_REGION }}
-            DEV_S3_BUCKET=${{ secrets.DEV_S3_BUCKET }}
-            DEV_S3_ENDPOINT=${{ secrets.DEV_S3_ENDPOINT }}
+            export DEV_AWS_ACCESS_KEY_ID=${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+            export DEV_AWS_SECRET_ACCESS_KEY=${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
+            export AWS_REGION=${{ secrets.AWS_REGION }}
+            export DEV_S3_BUCKET=${{ secrets.DEV_S3_BUCKET }}
+            export DEV_S3_ENDPOINT=${{ secrets.DEV_S3_ENDPOINT }}
 
-            SWAGGER_USERNAME=${{ secrets.SWAGGER_USERNAME }}
-            SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
-            EOF
+            export SWAGGER_USERNAME=${{ secrets.SWAGGER_USERNAME }}
+            export SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
+            
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-            sudo docker compose -f dev-compose.yml pull
-            sudo docker compose -f dev-compose.yml up -d
-
-            sudo docker compose -f dev-compose.yml ps
+            cd /home/ubuntu
+            docker compose -f clokey-api/dev-compose.yml up -d
+            
             echo "Cleaning up dangling Docker images..."
-            sudo docker image prune -f
+            docker image prune -f
             
