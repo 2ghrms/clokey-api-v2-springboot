@@ -4,6 +4,7 @@ services:
   app:
     image: ${DOCKERHUB_NAME}/clokey-docker-2025:${DOCKER_TAG}
     container_name: clokey-app
+    pull_policy: always
     ports:
       - "8080:8080"
     environment:
