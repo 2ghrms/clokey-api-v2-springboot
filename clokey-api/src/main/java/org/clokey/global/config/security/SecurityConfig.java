@@ -95,7 +95,8 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers("/public/**")
+                                auth.requestMatchers(
+                                                "/public/**", "/swagger-ui/**", "/v3/api-docs/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
@@ -119,8 +120,8 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(
                 List.of(
                         "http://localhost:3000",
-                        "https://dev-clokey.shop",
-                        "https://prod-clokey.shop"));
+                        "https://dev.clokey.store",
+                        "https://prod.clokey.store"));
 
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
