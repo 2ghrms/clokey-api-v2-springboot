@@ -1,7 +1,7 @@
 name: Clokey-Dev CD
 
 on:
-  pull_request:
+  push:
     branches: [ develop ]
 
 jobs:

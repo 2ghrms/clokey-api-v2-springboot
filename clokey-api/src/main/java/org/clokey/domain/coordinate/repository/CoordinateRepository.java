@@ -30,4 +30,6 @@ public interface CoordinateRepository
 
     @Query("select c from Coordinate c where c.member.id = :memberId and c.liked = true")
     List<Coordinate> findLikedCoordinatesByMemberId(Long memberId);
+
+    boolean existsByMemberId(Long memberId);
 }
