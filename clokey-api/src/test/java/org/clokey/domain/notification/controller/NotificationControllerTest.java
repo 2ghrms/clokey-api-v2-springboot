@@ -2,13 +2,14 @@ package org.clokey.domain.notification.controller;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.clokey.domain.notification.dto.request.TemperatureNotificationRequest;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.service.CodiveNotificationService;
@@ -18,19 +19,24 @@ import org.clokey.response.SliceResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @WebMvcTest(CodiveNotificationController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class NotificationControllerTest {
 
     @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+
     @MockitoBean private CodiveNotificationService codiveNotificationService;
 
     @Nested
@@ -127,6 +133,7 @@ public class NotificationControllerTest {
 
     @Nested
     class 알림_전체_읽음_처리_요청_시 {
+
         @Test
         void 유효한_요청이면_전체_알림_상태를_읽음으로_변경한다() throws Exception {
             // given
@@ -140,6 +147,55 @@ public class NotificationControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON204"))
                     .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+    }
+
+    @Nested
+    class 오늘의_온도_알림_발송_요청_시 {
+
+        @Test
+        void 유효한_요청이면_오늘의_온도_알림을_발송한다() throws Exception {
+            // given
+            TemperatureNotificationRequest request = new TemperatureNotificationRequest(-5.5);
+            willDoNothing()
+                    .given(codiveNotificationService)
+                    .sendNewTemperatureNotification(request);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/notifications/today-temperature")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 반환값 없음"));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        void 오늘의_온도를_비워두면_예외가_발생한다(Double temp) throws Exception {
+            // given
+            TemperatureNotificationRequest request = new TemperatureNotificationRequest(temp);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/notifications/today-temperature")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.isSuccess").value(false))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("COMMON400"))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(
+                            MockMvcResultMatchers.jsonPath("$.result.temperature")
+                                    .value("온도는 비워둘 수 없습니다."));
         }
     }
 }
