@@ -71,7 +71,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    @Profile({"dev", "local"})
+    @Profile({"dev", "local", "prod"})
     public SecurityFilterChain swaggerFilterChain(HttpSecurity http) throws Exception {
         defaultFilterChain(http);
 
