@@ -3,8 +3,10 @@ package org.clokey.domain.notification.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
+import org.clokey.domain.notification.dto.request.TemperatureNotificationRequest;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.service.CodiveNotificationService;
@@ -53,6 +55,14 @@ public class CodiveNotificationController {
     @Operation(summary = "알림 전체 읽음 처리 API", description = "해당 사용자의 모든 알림을 읽음 상태로 업데이트 합니다.")
     public BaseResponse<Void> updateAllReadStatus() {
         codiveNotificationService.updateAllReadStatus();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @PostMapping("/today-temperature")
+    @Operation(summary = "오늘의 온도 API", description = "오늘의 온도를 알리는 알림을 발송합니다.")
+    public BaseResponse<Void> sendTemperatureNotification(
+            @Valid @RequestBody TemperatureNotificationRequest request) {
+        codiveNotificationService.sendNewTemperatureNotification(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 }

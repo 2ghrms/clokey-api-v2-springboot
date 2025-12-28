@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.Message;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import org.clokey.domain.member.event.NewFollowerEvent;
 import org.clokey.domain.member.event.NewPendingFollowerEvent;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.member.service.MemberService;
+import org.clokey.domain.notification.dto.request.TemperatureNotificationRequest;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.exception.NotificationErrorCode;
@@ -619,6 +621,67 @@ public class NotificationServiceTest extends IntegrationTest {
                     () ->
                             Assertions.assertThat(notification3.getReadStatus())
                                     .isEqualTo(ReadStatus.READ));
+        }
+    }
+
+    @Nested
+    class 오늘의_온도_알림을_보낼_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testCodiveId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            member1.updateDeviceToken("test-device-token-for-temp");
+            memberRepository.save(member1);
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            MemberTerm mockAgreement = Mockito.mock(MemberTerm.class);
+            given(mockAgreement.isAgreed()).willReturn(true);
+
+            given(
+                            memberTermRepository.findByMemberIdAndTermId(
+                                    eq(member1.getId()),
+                                    eq(TermInfo.PUSH_NOTIFICATION_RECEIVE.getId())))
+                    .willReturn(Optional.of(mockAgreement));
+        }
+
+        @Test
+        void 유효한_요청이면_오늘의_온도_알림을_전송한다() throws Exception {
+            // given
+            TemperatureNotificationRequest request = new TemperatureNotificationRequest(-16.5);
+
+            // when
+            notificationService.sendNewTemperatureNotification(request);
+
+            // then
+            // firebaseMessaging.send() 메서드가 1번 호출되었는지 검증
+            Mockito.verify(firebaseMessaging, Mockito.times(1)).send(Mockito.any(Message.class));
+        }
+
+        @Test
+        void 알림_수신_미동의_시_전송하지_않는다() throws Exception {
+            // given
+            MemberTerm mockAgreement = Mockito.mock(MemberTerm.class);
+            given(mockAgreement.isAgreed()).willReturn(false);
+
+            Member member = memberUtil.getCurrentMember();
+            given(
+                            memberTermRepository.findByMemberIdAndTermId(
+                                    eq(member.getId()),
+                                    eq(TermInfo.PUSH_NOTIFICATION_RECEIVE.getId())))
+                    .willReturn(Optional.of(mockAgreement));
+
+            TemperatureNotificationRequest request = new TemperatureNotificationRequest(-16.5);
+
+            // when
+            notificationService.sendNewTemperatureNotification(request);
+
+            // then
+            Mockito.verify(firebaseMessaging, Mockito.times(0)).send(Mockito.any(Message.class));
         }
     }
 }

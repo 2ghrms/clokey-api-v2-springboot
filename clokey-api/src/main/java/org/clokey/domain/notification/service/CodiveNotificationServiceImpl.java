@@ -14,6 +14,7 @@ import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
+import org.clokey.domain.notification.dto.request.TemperatureNotificationRequest;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.exception.NotificationErrorCode;
@@ -51,6 +52,9 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     private static final String NEW_PENDING_FOLLOWER_NOTIFICATION = "%s님이 회원님의 옷장에 팔로우를 요청했습니다.";
     private static final String NEW_COMMENT_NOTIFICATION = "%s님이 회원님의 기록에 댓글을 남겼습니다. : %s";
     private static final String NEW_REPLY_NOTIFICATION = "%s님이 회원님의 댓글에 답장을 남겼습니다. : %s";
+
+    private static final String TODAY_TEMPERATURE_NOTIFICATION =
+            "오늘의 기온은 %d도 입니다!\n날씨에 맞는 오늘의 옷차림이 기다리고 있어요👀";
 
     @Override
     public void sendNewFollowerNotification(Long followFromId, Long followToId) {
@@ -211,6 +215,28 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             RedirectType.HISTORY_REDIRECT);
 
             codiveNotificationRepository.save(codiveNotification);
+        }
+    }
+
+    @Override
+    public void sendNewTemperatureNotification(TemperatureNotificationRequest request) {
+        Member receiver = memberUtil.getCurrentMember();
+        String content = "";
+
+        if (isAbleToSendNotification(receiver)) {
+
+            Notification notification = Notification.builder().setBody(content).build();
+            Message message =
+                    Message.builder()
+                            .setToken(receiver.getDeviceToken())
+                            .setNotification(notification)
+                            .build();
+
+            try {
+                firebaseMessaging.send(message);
+            } catch (FirebaseMessagingException e) {
+                throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
+            }
         }
     }
 
