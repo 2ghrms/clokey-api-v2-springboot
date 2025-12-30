@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/clothes")
 @RequiredArgsConstructor
-@Tag(name = "3. 옷 API", description = "옷 관련 API입니다.")
+@Tag(name = "03. 옷 API", description = "옷 관련 API입니다.")
 @Validated
 public class ClothController {
 
@@ -31,6 +31,7 @@ public class ClothController {
 
     @PostMapping("/images")
     @Operation(
+            operationId = "Cloth_getClothUploadPresignedUrl",
             summary = "옷 이미지 업로드용 presignedUrl 발급",
             description = "옷 이미지 업로드용 presignedUrl을 발급합니다.")
     public BaseResponse<ClothImagesPresignedUrlResponse> getClothUploadPresignedUrl(
@@ -41,7 +42,7 @@ public class ClothController {
     }
 
     @PostMapping
-    @Operation(summary = "옷 생성", description = "새로운 옷을 생성합니다.")
+    @Operation(operationId = "Cloth_createClothes", summary = "옷 생성", description = "새로운 옷을 생성합니다.")
     public BaseResponse<ClothCreateResponse> createClothes(
             @Valid @RequestBody ClothCreateRequests request) {
         ClothCreateResponse response = clothService.createClothes(request);
@@ -49,7 +50,10 @@ public class ClothController {
     }
 
     @GetMapping("/recommend")
-    @Operation(summary = "카테고리별 계절에 맞는 옷 조회", description = "카테고리별로 계절에 맞는 옷을 조회하는 API입니다.")
+    @Operation(
+            operationId = "Cloth_recommendCategoryClothes",
+            summary = "카테고리별 계절에 맞는 옷 조회",
+            description = "카테고리별로 계절에 맞는 옷을 조회하는 API입니다.")
     public BaseResponse<SliceResponse<ClothRecommendListResponse>> recommendCategoryClothes(
             @Parameter(description = "이전 페이지의 옷ID (첫 요청 시 생략)") @RequestParam(required = false)
                     Long lastClothId,
@@ -62,7 +66,10 @@ public class ClothController {
     }
 
     @GetMapping
-    @Operation(summary = "옷 목록 조회", description = "옷장에서 옷 목록을 조회하는 API입니다.")
+    @Operation(
+            operationId = "Cloth_getClothes",
+            summary = "옷 목록 조회",
+            description = "옷장에서 옷 목록을 조회하는 API입니다.")
     public BaseResponse<SliceResponse<ClothListResponse>> getClothes(
             @Parameter(description = "이전 페이지의 옷 ID(첫 요청 시 생략)") @RequestParam(required = false)
                     Long lastClothId,
@@ -80,14 +87,17 @@ public class ClothController {
     }
 
     @GetMapping("/{clothId}")
-    @Operation(summary = "옷 상세 조회", description = "옷을 상세 조회하는 API입니다.")
+    @Operation(
+            operationId = "Cloth_getClothDetails",
+            summary = "옷 상세 조회",
+            description = "옷을 상세 조회하는 API입니다.")
     public BaseResponse<ClothDetailsResponse> getClothDetails(@PathVariable Long clothId) {
         ClothDetailsResponse response = clothService.getClothDetails(clothId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
     @PatchMapping("/{clothId}")
-    @Operation(summary = "옷 수정", description = "옷을 수정하는 API입니다.")
+    @Operation(operationId = "Cloth_updateCloth", summary = "옷 수정", description = "옷을 수정하는 API입니다.")
     public BaseResponse<Void> updateCloth(
             @PathVariable Long clothId, @RequestBody @Valid ClothUpdateRequest request) {
         clothService.updateCloth(clothId, request);
@@ -95,7 +105,7 @@ public class ClothController {
     }
 
     @DeleteMapping("/{clothId}")
-    @Operation(summary = "옷 삭제", description = "옷을 삭제합니다.")
+    @Operation(operationId = "Cloth_deleteCloth", summary = "옷 삭제", description = "옷을 삭제합니다.")
     public BaseResponse<Void> deleteCloth(@PathVariable Long clothId) {
         clothService.deleteCloth(clothId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);

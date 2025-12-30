@@ -22,7 +22,10 @@ public class ReportController {
     private final ReportService reportService;
 
     @PostMapping
-    @Operation(summary = "신고 생성", description = "신고를 생성합니다.")
+    @Operation(
+            operationId = "Report_createNewReport",
+            summary = "신고 생성",
+            description = "신고를 생성합니다.")
     public BaseResponse<ReportCreateResponse> createNewReport(
             @Valid @RequestBody ReportCreateRequest reportCreatRequest) {
         ReportCreateResponse response = reportService.createReport(reportCreatRequest);

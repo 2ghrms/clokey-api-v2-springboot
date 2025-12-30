@@ -27,14 +27,20 @@ public class MemberController {
     private final MemberService memberService;
 
     @PatchMapping
-    @Operation(summary = "프로필 수정", description = "프로필을 수정/추가 합니다.")
+    @Operation(
+            operationId = "Member_updateProfile",
+            summary = "프로필 수정",
+            description = "프로필을 수정/추가 합니다.")
     public BaseResponse<Void> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
         memberService.updateProfile(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
     @PostMapping("/check-duplicate-id")
-    @Operation(summary = "아이디 중복확인", description = "클로키아이디 중복을 확인합니다.")
+    @Operation(
+            operationId = "Member_checkDuplicateClokeyId",
+            summary = "아이디 중복확인",
+            description = "클로키아이디 중복을 확인합니다.")
     public BaseResponse<DuplicatedIdCheckResponse> checkDuplicateClokeyId(
             @Valid @RequestBody DuplicatedIdCheckRequest request) {
 
@@ -43,7 +49,10 @@ public class MemberController {
     }
 
     @PostMapping("/follow")
-    @Operation(summary = "팔로우 API", description = "다른 사용자를 팔로우/취소하는 API입니다. 공개 계정에 팔로우시 팔로우 됩니다.")
+    @Operation(
+            operationId = "Member_toggleFollow",
+            summary = "팔로우 API",
+            description = "다른 사용자를 팔로우/취소하는 API입니다. 공개 계정에 팔로우시 팔로우 됩니다.")
     public BaseResponse<Void> toggleFollow(@RequestParam("userId") Long userId) {
 
         memberService.toggleFollow(userId);
@@ -53,6 +62,7 @@ public class MemberController {
 
     @PostMapping("/pending-follow")
     @Operation(
+            operationId = "Member_togglePendingFollow",
             summary = "팔로우 API",
             description = "다른 사용자를 팔로우/취소하는 API입니다. 비공개 계정에 팔로우시 요청이 들어갑니다.")
     public BaseResponse<Void> togglePendingFollow(@RequestParam("userId") Long userId) {
@@ -62,14 +72,20 @@ public class MemberController {
     }
 
     @PostMapping("/block/{memberId}")
-    @Operation(summary = "차단 토글 API", description = "차단 상태를 변경합니다.")
+    @Operation(
+            operationId = "Member_toggleBlockStatus",
+            summary = "차단 토글 API",
+            description = "차단 상태를 변경합니다.")
     public BaseResponse<Void> toggleBlockStatus(@PathVariable Long memberId) {
         memberService.toggleBlockStatus(memberId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
     @GetMapping("/check-myself")
-    @Operation(summary = "본인인지 여부 확인", description = "클로키 아이디로 본인인지 확인합니다.")
+    @Operation(
+            operationId = "Member_checkIsMySelf",
+            summary = "본인인지 여부 확인",
+            description = "클로키 아이디로 본인인지 확인합니다.")
     public BaseResponse<MyselfCheckResponse> checkIsMySelf(
             @Parameter(description = "본인인지 확인할 클로키 ID") @RequestParam("clokeyId") String clokeyId) {
 
@@ -78,7 +94,10 @@ public class MemberController {
     }
 
     @GetMapping("/blocks")
-    @Operation(summary = "차단한 멤버 조회", description = "사용자가 차단한 모든 멤버들을 조회합니다.")
+    @Operation(
+            operationId = "Member_getBlockedMembers",
+            summary = "차단한 멤버 조회",
+            description = "사용자가 차단한 모든 멤버들을 조회합니다.")
     public BaseResponse<SliceResponse<BlockedMemberResponse>> getBlockedMembers(
             @Parameter(description = "이전 페이지의 마지막 Block ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
@@ -93,7 +112,10 @@ public class MemberController {
     }
 
     @GetMapping("follows")
-    @Operation(summary = "팔로잉/팔로워 멤버 조회", description = "해당 사용자의  모든 팔로잉 OR 팔로워들을 조회합니다.")
+    @Operation(
+            operationId = "Member_getFollows",
+            summary = "팔로잉/팔로워 멤버 조회",
+            description = "해당 사용자의  모든 팔로잉 OR 팔로워들을 조회합니다.")
     public BaseResponse<SliceResponse<FollowMemberResponse>> getFollows(
             @Parameter(description = "목록을 조회할 멤버의 Member ID") @RequestParam Long memberId,
             @Parameter(description = "이전 페이지의 마지막 Follow ID (첫 요청 시 생략)")
@@ -107,7 +129,10 @@ public class MemberController {
     }
 
     @GetMapping("{memberId}")
-    @Operation(summary = "회원 조회 API", description = "입력받은 codive ID에 해당하는 회원의 정보를 조회합니다.")
+    @Operation(
+            operationId = "Member_getMemberInfo",
+            summary = "회원 조회 API",
+            description = "입력받은 codive ID에 해당하는 회원의 정보를 조회합니다.")
     public BaseResponse<MemberInfoResponse> getMemberInfo(@PathVariable Long memberId) {
         return BaseResponse.onSuccess(
                 GlobalBaseSuccessCode.OK, memberService.getMemberInfo(memberId));

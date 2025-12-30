@@ -1,0 +1,74 @@
+name: Prod-OpenAPI to CodiveAPI
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-openapi
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    env:
+      CODIVEAPI_BRANCH: main
+      TARGET_PATH: Sources/CodiveAPI/openapi.yaml
+
+    steps:
+      - name: Checkout backend repo (for context only)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Fetch OpenAPI JSON from production
+        env:
+          PROD_OPENAPI_URL: ${{ secrets.PROD_OPENAPI_URL }}
+        run: |
+          set -euo pipefail
+          echo "Fetching OpenAPI from: $PROD_OPENAPI_URL"
+          curl -fsSL --retry 5 --retry-delay 2 --connect-timeout 10 --max-time 30 \
+            "$PROD_OPENAPI_URL" -o openapi.json
+          test -s openapi.json
+          head -c 1 openapi.json | grep -q '{'
+
+      - name: Convert OpenAPI JSON -> YAML (swagger-cli)
+        run: |
+          set -euo pipefail
+          npm i -g @apidevtools/swagger-cli
+          swagger-cli bundle openapi.json --type yaml --outfile openapi.yaml
+
+      - name: Checkout CodiveAPI repo
+        uses: actions/checkout@v4
+        with:
+          repository: Clokey-dev/CodiveAPI
+          ref: ${{ env.CODIVEAPI_BRANCH }}
+          token: ${{ secrets.CODIVEAPI_PAT }}
+          path: codiveapi
+          fetch-depth: 1
+
+      - name: Copy openapi.yaml into CodiveAPI
+        run: |
+          set -euo pipefail
+          cp openapi.yaml "codiveapi/${TARGET_PATH}"
+
+      - name: Commit & push if changed
+        working-directory: codiveapi
+        run: |
+          set -euo pipefail
+          git config user.name "clokey-bot"
+          git config user.email "clokey-bot@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "No changes detected. Skipping commit."
+            exit 0
+          fi
+
+          git add "${TARGET_PATH}"
+          git commit -m "chore: update openapi.yaml from production"
+          git push origin "${CODIVEAPI_BRANCH}"

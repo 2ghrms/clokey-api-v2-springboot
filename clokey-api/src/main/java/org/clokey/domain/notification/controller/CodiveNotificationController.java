@@ -26,7 +26,10 @@ public class CodiveNotificationController {
     private final CodiveNotificationService codiveNotificationService;
 
     @GetMapping
-    @Operation(summary = "알림 목록 조회", description = "회원의 알림 목록을 조회합니다")
+    @Operation(
+            operationId = "Notification_getNotificationList",
+            summary = "알림 목록 조회",
+            description = "회원의 알림 목록을 조회합니다")
     public BaseResponse<SliceResponse<NotificationListResponse>> getNotificationList(
             @Parameter(description = "이전 페이지의 마지막 CodiveNotification ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
@@ -38,7 +41,10 @@ public class CodiveNotificationController {
     }
 
     @GetMapping("not-read-exist")
-    @Operation(summary = "안읽은 알림 존재 유무 확인", description = "안읽음 상태인 알림 존재 유무를 확인합니다.")
+    @Operation(
+            operationId = "Notification_existsUnreadNotification",
+            summary = "안읽은 알림 존재 유무 확인",
+            description = "안읽음 상태인 알림 존재 유무를 확인합니다.")
     public BaseResponse<UnreadNotificationResponse> existsUnreadNotification() {
         return BaseResponse.onSuccess(
                 GlobalBaseSuccessCode.OK, codiveNotificationService.existsUnreadNotification());

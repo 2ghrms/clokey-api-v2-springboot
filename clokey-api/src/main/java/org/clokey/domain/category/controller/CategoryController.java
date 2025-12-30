@@ -14,14 +14,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/categories")
 @RequiredArgsConstructor
-@Tag(name = "2. 카테고리 API", description = "카테고리 관련 API입니다.")
+@Tag(name = "02. 카테고리 API", description = "카테고리 관련 API입니다.")
 @Validated
 public class CategoryController {
 
     private final CategoryService categoryService;
 
     @GetMapping
-    @Operation(summary = "카테고리 목록 조회", description = "카테고리 목록을 조회합니다.")
+    @Operation(
+            operationId = "Category_getAllCategories",
+            summary = "카테고리 목록 조회",
+            description = "카테고리 목록을 조회합니다.")
     public BaseResponse<List<GetCategoryListResponse>> getAllCategories() {
         List<GetCategoryListResponse> categories = categoryService.getCategoryList();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, categories);
