@@ -18,20 +18,26 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "1-1. 인증 API", description = "인증 관련 API입니다.")
+@Tag(name = "01. 인증 API", description = "인증 관련 API입니다.")
 public class AuthController {
 
     private final AuthService authService;
 
     @GetMapping("/my-status")
-    @Operation(summary = "회원 상태 확인", description = "가입 완료 or 약관 동의 여부 확인 가능.")
+    @Operation(
+            operationId = "Auth_getUserStatus",
+            summary = "회원 상태 확인",
+            description = "가입 완료 or 약관 동의 여부 확인 가능.")
     public BaseResponse<UserStatusResponse> getUserStatus() {
         UserStatusResponse response = authService.getUserStatus();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
     @PatchMapping("/device-token")
-    @Operation(summary = "Device Token 갱신", description = "디바이스 토큰을 갱신합니다.")
+    @Operation(
+            operationId = "Auth_renewDeviceToken",
+            summary = "Device Token 갱신",
+            description = "디바이스 토큰을 갱신합니다.")
     public BaseResponse<Void> renewDeviceToken(
             @Valid @RequestBody DeviceTokenRenewRequest request) {
         authService.renewDeviceToken(request);
@@ -40,6 +46,7 @@ public class AuthController {
 
     @PostMapping("/reissue-token")
     @Operation(
+            operationId = "Auth_reissueTokens",
             summary = "토큰 재발급",
             description = "리프레시 토큰을 바탕으로 Access Token과 Refresh Token을 재발급합니다.")
     public BaseResponse<TokenResponse> reissueTokens(
@@ -49,7 +56,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "로그 아웃", description = "Redis에 저장된 사용자의 리프레시 토큰을 삭제합니다.")
+    @Operation(
+            operationId = "Auth_logoutUser",
+            summary = "로그 아웃",
+            description = "Redis에 저장된 사용자의 리프레시 토큰을 삭제합니다.")
     public BaseResponse<Void> logoutUser() {
         authService.logoutUser();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);

@@ -23,14 +23,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/coordinate")
 @RequiredArgsConstructor
-@Tag(name = "5. 코디 API", description = "코디 관련 API입니다.")
+@Tag(name = "05. 코디 API", description = "코디 관련 API입니다.")
 @Validated
 public class CoordinateController {
 
     private final CoordinateService coordinateService;
 
     @PostMapping("/daily")
-    @Operation(summary = "오늘의 코디 생성", description = "홈화면에서 오늘의 코디를 생성하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_createDailyCoordinate",
+            summary = "오늘의 코디 생성",
+            description = "홈화면에서 오늘의 코디를 생성하는 API입니다.")
     public BaseResponse<CoordinateCreateResponse> createDailyCoordinate(
             @Valid @RequestBody DailyCoordinateCreateRequest request) {
         CoordinateCreateResponse response = coordinateService.createDailyCoordinate(request);
@@ -38,7 +41,10 @@ public class CoordinateController {
     }
 
     @PostMapping("/manual")
-    @Operation(summary = "코디 수동 생성", description = "코디 생성을 수동으로 하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_createCoordinateManual",
+            summary = "코디 수동 생성",
+            description = "코디 생성을 수동으로 하는 API입니다.")
     public BaseResponse<CoordinateCreateResponse> createCoordinateManual(
             @Valid @RequestBody CoordinateManualCreateRequest request) {
         CoordinateCreateResponse response = coordinateService.createCoordinateManual(request);
@@ -46,7 +52,10 @@ public class CoordinateController {
     }
 
     @PostMapping("/auto")
-    @Operation(summary = "코디 자동 생성", description = "오늘의 코디를 통해서 코디를 생성하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_createCoordinateAuto",
+            summary = "코디 자동 생성",
+            description = "오늘의 코디를 통해서 코디를 생성하는 API입니다.")
     public BaseResponse<CoordinateCreateResponse> createCoordinateAuto(
             @Valid @RequestBody CoordinateAutoCreateRequest request) {
         CoordinateCreateResponse response = coordinateService.createCoordinateAuto(request);
@@ -54,7 +63,10 @@ public class CoordinateController {
     }
 
     @PatchMapping("/{coordinateId}")
-    @Operation(summary = "코디 수정", description = "코디를 수정하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_updateCoordinate",
+            summary = "코디 수정",
+            description = "코디를 수정하는 API입니다.")
     public BaseResponse<Void> updateCoordinate(
             @PathVariable Long coordinateId, @Valid @RequestBody CoordinateUpdateRequest request) {
         coordinateService.updateCoordinate(coordinateId, request);
@@ -62,14 +74,20 @@ public class CoordinateController {
     }
 
     @DeleteMapping("/{coordinateId}")
-    @Operation(summary = "코디 삭제", description = "코디를 룩북에서 삭제하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_deleteCoordinate",
+            summary = "코디 삭제",
+            description = "코디를 룩북에서 삭제하는 API입니다.")
     public BaseResponse<Void> deleteCoordinate(@PathVariable Long coordinateId) {
         coordinateService.deleteCoordinate(coordinateId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
     @GetMapping("/daily")
-    @Operation(summary = "과거 일일 코디 조회", description = "룩북 추가를 위해 과거 일일 코디를 조회하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_getDailyCoordinates",
+            summary = "과거 일일 코디 조회",
+            description = "룩북 추가를 위해 과거 일일 코디를 조회하는 API입니다.")
     public BaseResponse<SliceResponse<DailyCoordinateListResponse>> getDailyCoordinates(
             @Parameter(description = "이전 페이지의 마지막 코디 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
@@ -84,7 +102,10 @@ public class CoordinateController {
     }
 
     @GetMapping("/{coordinateId}/preview")
-    @Operation(summary = "코디 Preview 조회", description = "룩북에 존재하는 코디의 Preview를 조회하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_getCoordinatePreview",
+            summary = "코디 Preview 조회",
+            description = "룩북에 존재하는 코디의 Preview를 조회하는 API입니다.")
     public BaseResponse<CoordinatePreviewResponse> getCoordinatePreview(
             @PathVariable Long coordinateId) {
         CoordinatePreviewResponse response = coordinateService.getCoordinatePreview(coordinateId);
@@ -92,7 +113,10 @@ public class CoordinateController {
     }
 
     @GetMapping("/{coordinateId}/details")
-    @Operation(summary = "코디 Details 조회", description = "룩북에 존재하는 코디의 Details를 조회하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_getCoordinateDetails",
+            summary = "코디 Details 조회",
+            description = "룩북에 존재하는 코디의 Details를 조회하는 API입니다.")
     public BaseResponse<List<CoordinateDetailsListResponse>> getCoordinateDetails(
             @PathVariable Long coordinateId) {
         List<CoordinateDetailsListResponse> response =
@@ -101,14 +125,20 @@ public class CoordinateController {
     }
 
     @PatchMapping("/{coordinateId}/like")
-    @Operation(summary = "코디 좋아요 토글", description = "룩북에 존재하는 코디에 좋아요를 토글하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_toggleCoordinateLike",
+            summary = "코디 좋아요 토글",
+            description = "룩북에 존재하는 코디에 좋아요를 토글하는 API입니다.")
     public BaseResponse<Void> toggleCoordinateLike(@PathVariable Long coordinateId) {
         coordinateService.toggleCoordinateLike(coordinateId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
     @GetMapping("/my-favorites")
-    @Operation(summary = "나의 최애 코디 조회", description = "나의 최애 코디를 조회하는 API입니다.")
+    @Operation(
+            operationId = "Coordinate_getFavoriteCoordinates",
+            summary = "나의 최애 코디 조회",
+            description = "나의 최애 코디를 조회하는 API입니다.")
     public BaseResponse<List<FavoriteCoordinateResponse>> getFavoriteCoordinates() {
         List<FavoriteCoordinateResponse> response = coordinateService.getFavoriteCoordinates();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);

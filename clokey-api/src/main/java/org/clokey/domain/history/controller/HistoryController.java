@@ -18,14 +18,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/histories")
 @RequiredArgsConstructor
-@Tag(name = "7. 기록 API", description = "기록 관련 API입니다.")
+@Tag(name = "07. 기록 API", description = "기록 관련 API입니다.")
 @Validated
 public class HistoryController {
 
     private final HistoryService historyService;
 
     @PostMapping
-    @Operation(summary = "기록 생성", description = "새로운 기록을 생성합니다.")
+    @Operation(
+            operationId = "History_createHistory",
+            summary = "기록 생성",
+            description = "새로운 기록을 생성합니다.")
     public BaseResponse<HistoryCreateResponse> createHistory(
             @Valid @RequestBody HistoryCreateRequest request) {
         HistoryCreateResponse response = historyService.createHistory(request);
@@ -33,7 +36,10 @@ public class HistoryController {
     }
 
     @PatchMapping("/{historyId}")
-    @Operation(summary = "기록 수정", description = "기록을 수정하는 API입니다")
+    @Operation(
+            operationId = "History_updateHistory",
+            summary = "기록 수정",
+            description = "기록을 수정하는 API입니다")
     public BaseResponse<Void> updateHistory(
             @PathVariable Long historyId, @Valid @RequestBody HistoryUpdateRequest request) {
         historyService.updateHistory(historyId, request);
@@ -41,14 +47,20 @@ public class HistoryController {
     }
 
     @GetMapping("/styles")
-    @Operation(summary = "스타일 목록 조회", description = "스타일 목록을 조회하는 API입니다. (기록 생성용)")
+    @Operation(
+            operationId = "History_getAllStyles",
+            summary = "스타일 목록 조회",
+            description = "스타일 목록을 조회하는 API입니다. (기록 생성용)")
     public BaseResponse<StyleListResponse> getAllStyles() {
         StyleListResponse response = historyService.getAllStyles();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
     @GetMapping("/situations")
-    @Operation(summary = "상황 목록 조회", description = "상황 목록을 조회하는 API입니다. (기록 생성용)")
+    @Operation(
+            operationId = "History_getAllSituations",
+            summary = "상황 목록 조회",
+            description = "상황 목록을 조회하는 API입니다. (기록 생성용)")
     public BaseResponse<SituationListResponse> getAllSituations() {
         SituationListResponse response = historyService.getAllSituations();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);

@@ -29,7 +29,10 @@ public class LookBookController {
     private final LookBookService lookBookService;
 
     @PostMapping()
-    @Operation(summary = "룩북 생성", description = "룩북을 생성하는 API입니다.")
+    @Operation(
+            operationId = "LookBook_createLookBook",
+            summary = "룩북 생성",
+            description = "룩북을 생성하는 API입니다.")
     public BaseResponse<LookBookCreateResponse> createLookBook(
             @Valid @RequestBody LookBookCreateRequest request) {
         LookBookCreateResponse response = lookBookService.createLookBook(request);
@@ -37,7 +40,10 @@ public class LookBookController {
     }
 
     @PatchMapping("/{lookBookId}")
-    @Operation(summary = "룩북 수정", description = "룩북을 수정하는 API입니다.")
+    @Operation(
+            operationId = "LookBook_updateLookBook",
+            summary = "룩북 수정",
+            description = "룩북을 수정하는 API입니다.")
     public BaseResponse<Void> updateLookBook(
             @PathVariable Long lookBookId, @Valid @RequestBody LookBookUpdateRequest request) {
         lookBookService.updateLookBook(lookBookId, request);
@@ -45,14 +51,20 @@ public class LookBookController {
     }
 
     @DeleteMapping("/{lookBookId}")
-    @Operation(summary = "룩북 삭제", description = "룩북을 삭제하는 API입니다.")
+    @Operation(
+            operationId = "LookBook_deleteLookBook",
+            summary = "룩북 삭제",
+            description = "룩북을 삭제하는 API입니다.")
     public BaseResponse<Void> deleteLookBook(@PathVariable Long lookBookId) {
         lookBookService.deleteLookBook(lookBookId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
     @GetMapping()
-    @Operation(summary = "룩북 전체 목록 조회", description = "룩북 전체 목록을 조회하는 API입니다.")
+    @Operation(
+            operationId = "LookBook_getLookBooks",
+            summary = "룩북 전체 목록 조회",
+            description = "룩북 전체 목록을 조회하는 API입니다.")
     public BaseResponse<SliceResponse<LookBookListResponse>> getLookBooks(
             @Parameter(description = "이전 페이지의 마지막 룩북 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
@@ -67,7 +79,10 @@ public class LookBookController {
     }
 
     @GetMapping("/{lookBookId}")
-    @Operation(summary = "개별 룩북 코디 목록 조회", description = "개별 룩북 내부의 코디들을 API입니다.")
+    @Operation(
+            operationId = "LookBook_getCoordinates",
+            summary = "개별 룩북 코디 목록 조회",
+            description = "개별 룩북 내부의 코디들을 API입니다.")
     public BaseResponse<SliceResponse<CoordinateListResponse>> getCoordinates(
             @PathVariable Long lookBookId,
             @Parameter(description = "이전 페이지의 마지막 코디 ID (첫 요청 시 생략)")

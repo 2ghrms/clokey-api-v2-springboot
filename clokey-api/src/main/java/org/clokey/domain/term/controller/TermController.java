@@ -21,28 +21,34 @@ public class TermController {
     private final TermService termService;
 
     @GetMapping
-    @Operation(summary = "전체 약관 조회", description = "전체 약관 조회 API")
+    @Operation(operationId = "Term_getTerms", summary = "전체 약관 조회", description = "전체 약관 조회 API")
     public BaseResponse<TermListResponse> getTerms() {
         TermListResponse response = termService.getTerms();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
     @PostMapping
-    @Operation(summary = "약관 동의", description = "약관 동의 정보를 설정합니다.")
+    @Operation(operationId = "Term_agreeTerm", summary = "약관 동의", description = "약관 동의 정보를 설정합니다.")
     public BaseResponse<Void> agreeTerm(@Valid @RequestBody TermAgreeRequest request) {
         termService.agreeTerm(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
     @GetMapping("/my-optional")
-    @Operation(summary = "나의 선택 약관 조회", description = "나의 선택 약관 정보 조회 API")
+    @Operation(
+            operationId = "Term_getMyOptionalTerms",
+            summary = "나의 선택 약관 조회",
+            description = "나의 선택 약관 정보 조회 API")
     public BaseResponse<MyOptionalTermResponse> getMyOptionalTerms() {
         MyOptionalTermResponse response = termService.getMyOptionalTerms();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
     @PatchMapping("/my-optional-toggle")
-    @Operation(summary = "나의 선택 약관 수정", description = "나의 선택 약관 수정 API")
+    @Operation(
+            operationId = "Term_toggleMyOptionalTerms",
+            summary = "나의 선택 약관 수정",
+            description = "나의 선택 약관 수정 API")
     public BaseResponse<Void> toggleMyOptionalTerms(@RequestParam Long termId) {
         termService.toggleMyOptionalTerms(termId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, null);

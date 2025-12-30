@@ -29,14 +29,20 @@ public class StatisticsController {
     private final StatisticsService statisticsService;
 
     @GetMapping("/check-conditions")
-    @Operation(summary = "통계 최소 조건 확인", description = "통계 집계가 가능한 최소 조건을 확인하는 API입니다.")
+    @Operation(
+            operationId = "Statistics_checkStatisticsCondition",
+            summary = "통계 최소 조건 확인",
+            description = "통계 집계가 가능한 최소 조건을 확인하는 API입니다.")
     public BaseResponse<StatisticsCheckConditionResponse> checkStatisticsCondition() {
         StatisticsCheckConditionResponse response = statisticsService.checkStatisticsCondition();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
     @GetMapping("/favorite-category-items")
-    @Operation(summary = "카테고리별 최애 아이템 조회", description = "카테고리별 아이템의 개수와 점유율을 조회하는 API입니다..")
+    @Operation(
+            operationId = "Statistics_getFavoriteCategoryItems",
+            summary = "카테고리별 최애 아이템 조회",
+            description = "카테고리별 아이템의 개수와 점유율을 조회하는 API입니다..")
     public BaseResponse<FavoriteCategoryItemsResponse> getFavoriteCategoryItems(
             @Parameter(description = "카테고리 ID") @RequestParam Long categoryId) {
         FavoriteCategoryItemsResponse response =
@@ -45,7 +51,10 @@ public class StatisticsController {
     }
 
     @GetMapping("/favorite-items")
-    @Operation(summary = "옷장 아이템 통계 조회", description = "옷장 아이템 통계를 조회합니다.")
+    @Operation(
+            operationId = "Statistics_getFavoriteItems",
+            summary = "옷장 아이템 통계 조회",
+            description = "옷장 아이템 통계를 조회합니다.")
     public BaseResponse<FavoriteItemsResponse> getFavoriteItems() {
         FavoriteItemsResponse response = statisticsService.getFavoriteItems();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
@@ -53,6 +62,7 @@ public class StatisticsController {
 
     @GetMapping("/closet-utilization")
     @Operation(
+            operationId = "Statistics_getClosetUtilization",
             summary = "옷장 활용도 조회",
             description =
                     "시즌별 옷장 활용도를 조회합니다. HistoryClothTag에 태그되었거나 Daily Coordinate에 포함된 옷을 활용된 것으로 간주합니다.")
