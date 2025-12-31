@@ -16,7 +16,7 @@ public class SwaggerConfig {
     public OpenAPI stewAPI() {
         Info info = new Info().title("CLOKEY API").description("CLOKEY API 명세서").version("2.0.0");
 
-        String jwtSchemeName = "JWT TOKEN";
+        String jwtSchemeName = "JWT_TOKEN";
         SecurityRequirement securityRequirement = new SecurityRequirement().addList(jwtSchemeName);
         Components components =
                 new Components()
