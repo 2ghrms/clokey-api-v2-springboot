@@ -40,7 +40,7 @@ jobs:
       - name: Convert OpenAPI JSON -> YAML (swagger-cli)
         run: |
           set -euo pipefail
-          npm i -g @apidevtools/swagger-cli
+          npm i -g @apidevtools/swagger-cli@4
           swagger-cli bundle openapi.json --type yaml --outfile openapi.yaml
 
       - name: Checkout CodiveAPI repo
@@ -57,20 +57,38 @@ jobs:
           set -euo pipefail
           cp openapi.yaml "codiveapi/${TARGET_PATH}"
 
-      - name: Commit & push if changed
+      - name: Detect change (stage openapi)
+        id: regen
         working-directory: codiveapi
         run: |
           set -euo pipefail
-          git config user.name "clokey-bot"
-          git config user.email "clokey-bot@users.noreply.github.com"
+          git config user.name "codive-bot"
+          git config user.email "codive-bot@users.noreply.github.com"
           
           git add "${TARGET_PATH}"
-          ls -al "${TARGET_PATH}"
           
           if git diff --cached --quiet; then
-            echo "No changes detected. Skipping commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected. Skipping commit. (staged)."
             exit 0
           fi
+          
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "OpenAPI changed."
 
-          git commit -m "chore: update openapi.yaml from production"
+      - name: Run generate script if changed
+        if: steps.regen.outputs.changed == 'true'
+        working-directory: codiveapi
+        run: |
+          set -euo pipefail
+          chmod +x ./regenerate-api.sh
+          ./regenerate-api.sh
+          git add -A
+
+      - name: Commit & Push Changes if changed
+        if: steps.regen.outputs.changed == 'true'
+        working-directory: codiveapi
+        run: |
+          set -euo pipefail
+          git commit -m "chore: update openapi.yaml and regenerate API"
           git push origin "${CODIVEAPI_BRANCH}"
