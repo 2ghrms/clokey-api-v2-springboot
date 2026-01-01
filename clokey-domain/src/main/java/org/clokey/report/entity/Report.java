@@ -24,9 +24,14 @@ public class Report extends BaseEntity {
     @NotNull private Long targetId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "reporter_member_id")
     @NotNull
     private Member reporter;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reported_member_id")
+    @NotNull
+    private Member reported;
 
     @Enumerated(EnumType.STRING)
     @NotNull
@@ -46,12 +51,14 @@ public class Report extends BaseEntity {
     private Report(
             Long targetId,
             Member reporter,
+            Member reported,
             TargetType targetType,
             ReportReason reportReason,
             String content,
             ReportStatus reportStatus) {
         this.targetId = targetId;
         this.reporter = reporter;
+        this.reported = reported;
         this.targetType = targetType;
         this.reportReason = reportReason;
         this.content = content;
@@ -61,6 +68,7 @@ public class Report extends BaseEntity {
     public static Report createReport(
             Long targetId,
             Member reporter,
+            Member reported,
             TargetType targetType,
             ReportReason reportReason,
             String content) {
@@ -68,6 +76,7 @@ public class Report extends BaseEntity {
                 Report.builder()
                         .targetId(targetId)
                         .reporter(reporter)
+                        .reported(reported)
                         .targetType(targetType)
                         .reportReason(reportReason)
                         .content(content)
