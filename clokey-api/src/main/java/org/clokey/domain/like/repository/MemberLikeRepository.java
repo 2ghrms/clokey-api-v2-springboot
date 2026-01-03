@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
 
+    long countByHistoryId(Long historyId);
+
     @Query(
             """
         SELECT ml
