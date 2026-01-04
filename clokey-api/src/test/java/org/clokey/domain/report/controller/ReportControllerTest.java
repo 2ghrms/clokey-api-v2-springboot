@@ -1,12 +1,14 @@
 package org.clokey.domain.report.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.clokey.domain.report.dto.request.ReportCreateRequest;
 import org.clokey.domain.report.dto.response.ReportCreateResponse;
+import org.clokey.domain.report.dto.response.ReportedCheckResponse;
 import org.clokey.domain.report.service.ReportService;
 import org.clokey.report.enums.ReportReason;
 import org.clokey.report.enums.TargetType;
@@ -147,6 +149,29 @@ class ReportControllerTest {
                     .andExpect(
                             MockMvcResultMatchers.jsonPath("$.result.reportReason")
                                     .value("신고 사유는 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 접수된_미확인_신고_확인_요청_시 {
+
+        @Test
+        void 유효한_요청이면_최신_UNCHECKED_상태의_신고_존재_여부를_반환한다() throws Exception {
+            // given
+            ReportedCheckResponse response = new ReportedCheckResponse(true, TargetType.COMMENT);
+            given(reportService.checkReportReceived()).willReturn(response);
+
+            // when
+            ResultActions perform = mockMvc.perform(get("/reports/received"));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.isSuccess").value(true))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("COMMON200"))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.result.isReported").value(true))
+                    .andExpect(
+                            MockMvcResultMatchers.jsonPath("$.result.targetType")
+                                    .value(TargetType.COMMENT.name()));
         }
     }
 }

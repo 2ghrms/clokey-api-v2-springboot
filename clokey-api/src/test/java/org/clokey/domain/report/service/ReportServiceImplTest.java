@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDate;
+import java.util.List;
 import org.clokey.IntegrationTest;
 import org.clokey.comment.entitiy.Comment;
 import org.clokey.domain.comment.exception.CommentErrorCode;
@@ -14,6 +15,7 @@ import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.history.repository.SituationRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.report.dto.request.ReportCreateRequest;
+import org.clokey.domain.report.dto.response.ReportedCheckResponse;
 import org.clokey.domain.report.exception.ReportErrorCode;
 import org.clokey.domain.report.repository.ReportRepository;
 import org.clokey.exception.BaseCustomException;
@@ -87,11 +89,13 @@ public class ReportServiceImplTest extends IntegrationTest {
                     .extracting(
                             "targetId",
                             "reporter.id",
+                            "reported.id",
                             "targetType",
                             "reportReason",
                             "reportStatus",
                             "content")
                     .containsExactly(
+                            1L,
                             1L,
                             1L,
                             TargetType.HISTORY,
@@ -180,6 +184,68 @@ public class ReportServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> reportService.createReport(request2))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(ReportErrorCode.REPORT_DUPLICATED.getMessage());
+        }
+    }
+
+    @Nested
+    class 접수된_미확인_신고_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member2);
+
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
+
+            History history1 =
+                    History.createHistory(
+                            LocalDate.of(2026, 1, 1), "testContent1", member2, situation);
+            historyRepository.save(history1);
+
+            Report report =
+                    Report.createReport(
+                            1L,
+                            member1,
+                            member2,
+                            TargetType.HISTORY,
+                            ReportReason.VIOLENT,
+                            "Test Report");
+            reportRepository.save(report);
+        }
+
+        @Test
+        void 유효한_요청이면_미확인_신고_여부를_반환한다() {
+            // when & then
+            ReportedCheckResponse response = reportService.checkReportReceived();
+
+            assertThat(response.isReported()).isTrue();
+            assertThat(response.targetType()).isEqualTo(TargetType.HISTORY);
+        }
+
+        @Test
+        void 접수된_신고가_없으면_false를_반환한다() {
+            // given
+            Member member1 = memberRepository.findById(1L).orElse(null);
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            // when & then
+            ReportedCheckResponse response = reportService.checkReportReceived();
+
+            assertThat(response.isReported()).isFalse();
+            assertThat(response.targetType()).isEqualTo(null);
         }
     }
 }

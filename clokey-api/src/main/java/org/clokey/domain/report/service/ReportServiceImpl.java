@@ -7,6 +7,7 @@ import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.report.dto.request.ReportCreateRequest;
 import org.clokey.domain.report.dto.response.ReportCreateResponse;
+import org.clokey.domain.report.dto.response.ReportedCheckResponse;
 import org.clokey.domain.report.exception.ReportErrorCode;
 import org.clokey.domain.report.repository.ReportRepository;
 import org.clokey.exception.BaseCustomException;
@@ -32,14 +33,15 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ReportCreateResponse createReport(ReportCreateRequest request) {
-        final Member reporter = memberUtil.getCurrentMember();
-        validateTargetExists(request.targetType(), request.targetId());
+        Member reporter = memberUtil.getCurrentMember();
+        Member reported = getReportedMember(request.targetType(), request.targetId());
         validateDuplicateReport(request);
 
         Report report =
                 Report.createReport(
                         request.targetId(),
                         reporter,
+                        reported,
                         request.targetType(),
                         request.reportReason(),
                         request.content());
@@ -49,6 +51,37 @@ public class ReportServiceImpl implements ReportService {
         return ReportCreateResponse.from(report);
     }
 
+    @Override
+    public ReportedCheckResponse checkReportReceived() {
+        Member member = memberUtil.getCurrentMember();
+
+        Report report =
+                reportRepository
+                        .findTopByReported_IdAndReportStatusOrderByCreatedAtDesc(
+                                member.getId(), ReportStatus.UNCHECKED)
+                        .orElse(null);
+
+        if (report != null) {
+            return ReportedCheckResponse.of(true, report.getTargetType());
+        }
+
+        return ReportedCheckResponse.of(false, null);
+    }
+
+    private Member getReportedMember(TargetType targetType, Long targetId) {
+        if (targetType.equals(TargetType.COMMENT)) {
+            return commentRepository
+                    .findById(targetId)
+                    .orElseThrow(() -> new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND))
+                    .getMember();
+        } else {
+            return historyRepository
+                    .findById(targetId)
+                    .orElseThrow(() -> new BaseCustomException(HistoryErrorCode.HISTORY_NOT_FOUND))
+                    .getMember();
+        }
+    }
+
     private void validateDuplicateReport(ReportCreateRequest request) {
         boolean exists =
                 reportRepository.existsByTargetTypeAndTargetIdAndReportStatusIsNot(
@@ -56,18 +89,6 @@ public class ReportServiceImpl implements ReportService {
 
         if (exists) {
             throw new BaseCustomException(ReportErrorCode.REPORT_DUPLICATED);
-        }
-    }
-
-    private void validateTargetExists(TargetType targetType, Long targetId) {
-        if (targetType.equals(TargetType.COMMENT)) {
-            if (!commentRepository.existsById(targetId)) {
-                throw new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND);
-            }
-        } else {
-            if (!historyRepository.existsById(targetId)) {
-                throw new BaseCustomException(HistoryErrorCode.HISTORY_NOT_FOUND);
-            }
         }
     }
 }
