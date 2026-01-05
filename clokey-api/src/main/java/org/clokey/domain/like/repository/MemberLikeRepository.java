@@ -9,11 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
 
-<<<<<<< HEAD
-=======
     long countByHistoryId(Long historyId);
 
->>>>>>> 707263d5afbbd10030259d946f7748710380a71c
     @Query(
             """
         SELECT ml
@@ -24,8 +21,6 @@ public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
         """)
     List<MemberLike> findLikedHistoriesByMemberId(
             Long memberId, Long lastLikeId, Pageable pageable);
-<<<<<<< HEAD
-=======
 
     @Query(
             """
@@ -38,5 +33,4 @@ public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
     List<MemberLike> findLikeMembersByHistoryId(Long historyId, Long lastLikeId, Pageable pageable);
 
     Optional<MemberLike> findByMemberIdAndHistoryId(Long memberId, Long historyId);
->>>>>>> 707263d5afbbd10030259d946f7748710380a71c
 }
