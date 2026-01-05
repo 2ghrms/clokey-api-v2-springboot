@@ -10,4 +10,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, Comment
     @Modifying
     @Query("delete from Comment c where c.comment.id = :parentId")
     void deleteReplies(Long parentId);
+
+    long countByHistoryIdAndBannedFalse(Long historyId);
 }

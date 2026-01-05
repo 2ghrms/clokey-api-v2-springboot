@@ -80,4 +80,12 @@ public class History extends BaseEntity {
         this.content = content;
         this.situation = situation;
     }
+
+    public void ban() {
+        this.banned = true;
+    }
+
+    public void unban() {
+        this.banned = false;
+    }
 }

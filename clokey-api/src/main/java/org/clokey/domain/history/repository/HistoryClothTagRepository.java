@@ -15,4 +15,10 @@ public interface HistoryClothTagRepository
     @Modifying
     @Query("DELETE FROM HistoryClothTag hct WHERE hct.cloth.id = :clothId")
     void deleteAllByClothId(Long clothId);
+
+    @Query(
+            "select hct from HistoryClothTag hct "
+                    + "join fetch hct.cloth "
+                    + "where hct.historyImage.id = :historyImageId")
+    List<HistoryClothTag> findAllByHistoryImageIdWithCloth(Long historyImageId);
 }

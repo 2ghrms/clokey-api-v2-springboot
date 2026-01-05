@@ -13,21 +13,29 @@ import org.clokey.cloth.enums.Season;
 import org.clokey.domain.category.repository.CategoryRepository;
 import org.clokey.domain.cloth.exception.ClothErrorCode;
 import org.clokey.domain.cloth.repository.ClothRepository;
+import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest.ClothTag;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest.Payload;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
+import org.clokey.domain.history.dto.response.DailyHistoryResponse;
+import org.clokey.domain.history.dto.response.HistoryClothTagListResponse;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
+import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
 import org.clokey.domain.history.repository.*;
+import org.clokey.domain.like.repository.MemberLikeRepository;
+import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.*;
+import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
@@ -51,6 +59,9 @@ class HistoryServiceImplTest extends IntegrationTest {
     @Autowired private HistoryClothTagRepository historyClothTagRepository;
     @Autowired private ClothRepository clothRepository;
     @Autowired private CategoryRepository categoryRepository;
+    @Autowired private MemberLikeRepository memberLikeRepository;
+    @Autowired private CommentRepository commentRepository;
+    @Autowired private BlockRepository blockRepository;
 
     @MockitoBean private MemberUtil memberUtil;
 
@@ -604,6 +615,411 @@ class HistoryServiceImplTest extends IntegrationTest {
                             tuple(1L, "testSituation1"),
                             tuple(2L, "testSituation2"),
                             tuple(3L, "testSituation3"));
+        }
+    }
+
+    @Nested
+    class 기록_이미지_옷_태그를_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            memberRepository.save(member1);
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation1 = Situation.createSituation("testSituation1");
+            situationRepository.save(situation1);
+
+            Category category = Category.createCategory("testCategory", null);
+            categoryRepository.save(category);
+
+            Cloth cloth1 =
+                    Cloth.createCloth(
+                            "testClothImageUrl1",
+                            null,
+                            "testClothName1",
+                            "testBrand1",
+                            Season.SPRING,
+                            category,
+                            member1);
+            Cloth cloth2 =
+                    Cloth.createCloth(
+                            "testClothImageUrl2",
+                            null,
+                            "testClothName2",
+                            "testBrand2",
+                            Season.SPRING,
+                            category,
+                            member1);
+            clothRepository.saveAll(List.of(cloth1, cloth2));
+
+            History history =
+                    History.createHistory(LocalDate.now(), "testContent", member1, situation1);
+            historyRepository.save(history);
+
+            HistoryImage historyImage = HistoryImage.createHistoryImage("testImageUrl", history);
+            historyImageRepository.save(historyImage);
+
+            HistoryClothTag tag1 =
+                    HistoryClothTag.createHistoryClothTag(historyImage, cloth1, 0.5, 0.7);
+            HistoryClothTag tag2 =
+                    HistoryClothTag.createHistoryClothTag(historyImage, cloth2, 0.3, 0.4);
+            historyClothTagRepository.bulkInsertHistoryClothTags(List.of(tag1, tag2));
+        }
+
+        @Test
+        void 유효한_요청이면_기록_이미지에_태그된_옷들의_정보를_반환한다() {
+            // when
+            HistoryClothTagListResponse response = historyService.getHistoryClothTags(1L);
+
+            // then
+            assertThat(response.payloads()).hasSize(2);
+            assertThat(response.payloads())
+                    .extracting(
+                            HistoryClothTagListResponse.Payload::clothId,
+                            HistoryClothTagListResponse.Payload::clothImageUrl,
+                            HistoryClothTagListResponse.Payload::name,
+                            HistoryClothTagListResponse.Payload::brand,
+                            HistoryClothTagListResponse.Payload::locationX,
+                            HistoryClothTagListResponse.Payload::locationY)
+                    .containsExactlyInAnyOrder(
+                            tuple(
+                                    1L,
+                                    "testClothImageUrl1",
+                                    "testClothName1",
+                                    "testBrand1",
+                                    0.5,
+                                    0.7),
+                            tuple(
+                                    2L,
+                                    "testClothImageUrl2",
+                                    "testClothName2",
+                                    "testBrand2",
+                                    0.3,
+                                    0.4));
+        }
+
+        @Test
+        void 존재하지_않는_기록_이미지_ID를_입력하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> historyService.getHistoryClothTags(999L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_IMAGE_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 월별_기록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            member2.changeVisibility();
+
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testClokeyId3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2, member3));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation1 = Situation.createSituation("testSituation1");
+            situationRepository.save(situation1);
+
+            History history1 =
+                    History.createHistory(
+                            LocalDate.of(2025, 1, 1), "testContent1", member1, situation1);
+            History history2 =
+                    History.createHistory(
+                            LocalDate.of(2025, 1, 15), "testContent2", member1, situation1);
+            historyRepository.saveAll(List.of(history1, history2));
+
+            HistoryImage image1 = HistoryImage.createHistoryImage("testImageUrl1", history1);
+            HistoryImage image2 = HistoryImage.createHistoryImage("testImageUrl2", history2);
+            historyImageRepository.saveAll(List.of(image1, image2));
+        }
+
+        @Test
+        void 유효한_요청이면_월별_기록을_반환한다() {
+            // when
+            MonthlyHistoryResponse response = historyService.getMonthlyHistory(1L, 2025, 1);
+
+            // then
+            assertThat(response.payloads()).hasSize(2);
+            assertThat(response.payloads())
+                    .extracting(
+                            MonthlyHistoryResponse.Payload::historyId,
+                            MonthlyHistoryResponse.Payload::firstImageUrl)
+                    .containsExactly(tuple(1L, "testImageUrl1"), tuple(2L, "testImageUrl2"));
+        }
+
+        @Test
+        void 존재하지_않는_회원_ID를_입력하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> historyService.getMonthlyHistory(999L, 2025, 1))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(
+                            org.clokey.domain.member.exception.MemberErrorCode.MEMBER_NOT_FOUND
+                                    .getMessage());
+        }
+
+        @Test
+        void 비공개_회원이고_본인이_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> historyService.getMonthlyHistory(2L, 2025, 1))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 차단한_회원의_월별_기록을_조회하면_예외가_발생한다() {
+            // given
+            Member blocker =
+                    transactionUtil.getResult(() -> memberRepository.findById(1L).orElseThrow());
+            Member blocked =
+                    transactionUtil.getResult(() -> memberRepository.findById(3L).orElseThrow());
+            Block block = Block.createBlock(blocker, blocked);
+            blockRepository.save(block);
+
+            // when & then
+            assertThatThrownBy(() -> historyService.getMonthlyHistory(3L, 2025, 1))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.BLOCKED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 차단당한_회원의_월별_기록을_조회하면_예외가_발생한다() {
+            // given
+            Member blocker =
+                    transactionUtil.getResult(() -> memberRepository.findById(3L).orElseThrow());
+            Member blocked =
+                    transactionUtil.getResult(() -> memberRepository.findById(1L).orElseThrow());
+            Block block = Block.createBlock(blocker, blocked);
+            blockRepository.save(block);
+
+            // when & then
+            assertThatThrownBy(() -> historyService.getMonthlyHistory(3L, 2025, 1))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.BLOCKED_AUTHORITY.getMessage());
+        }
+    }
+
+    @Nested
+    class 기록_소유_여부를_확인할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation1 = Situation.createSituation("testSituation1");
+            situationRepository.save(situation1);
+
+            History history =
+                    History.createHistory(LocalDate.now(), "testContent", member1, situation1);
+            historyRepository.save(history);
+        }
+
+        @Test
+        void 유효한_요청이면_기록_소유_여부를_반환한다() {
+            // when
+            HistoryOwnershipCheckResponse response = historyService.checkHistoryOwnership(1L);
+
+            // then
+            assertThat(response.isOwner()).isTrue();
+        }
+
+        @Test
+        void 존재하지_않는_기록_ID를_입력하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> historyService.checkHistoryOwnership(999L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 다른_사용자의_기록을_확인하면_false를_반환한다() {
+            // given
+            Member otherMember =
+                    transactionUtil.getResult(() -> memberRepository.findById(2L).orElseThrow());
+            given(memberUtil.getCurrentMember()).willReturn(otherMember);
+
+            // when
+            HistoryOwnershipCheckResponse response = historyService.checkHistoryOwnership(1L);
+
+            // then
+            assertThat(response.isOwner()).isFalse();
+        }
+    }
+
+    @Nested
+    class 일별_기록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            member2.changeVisibility();
+
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testClokeyId3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2, member3));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation1 = Situation.createSituation("testSituation1");
+            situationRepository.save(situation1);
+
+            Style style1 = Style.createStyle("testStyle1");
+            Style style2 = Style.createStyle("testStyle2");
+            styleRepository.saveAll(List.of(style1, style2));
+
+            History history1 =
+                    History.createHistory(LocalDate.now(), "testContent1", member1, situation1);
+            History history2 =
+                    History.createHistory(LocalDate.now(), "testContent2", member2, situation1);
+            History history3 =
+                    History.createHistory(LocalDate.now(), "testContent3", member3, situation1);
+            historyRepository.saveAll(List.of(history1, history2, history3));
+
+            HistoryImage image1 = HistoryImage.createHistoryImage("testImageUrl1", history1);
+            HistoryImage image2 = HistoryImage.createHistoryImage("testImageUrl2", history1);
+            HistoryImage image3 = HistoryImage.createHistoryImage("testImageUrl3", history3);
+            historyImageRepository.saveAll(List.of(image1, image2, image3));
+
+            historyStyleRepository.bulkInsertHistoryStyles(
+                    List.of(
+                            HistoryStyle.createHistoryStyle(history1, style1),
+                            HistoryStyle.createHistoryStyle(history1, style2)));
+        }
+
+        @Test
+        void 유효한_요청이면_일별_기록을_반환한다() {
+            // when
+            DailyHistoryResponse response = historyService.getDailyHistory(1L);
+
+            // then
+            assertThat(response)
+                    .extracting(
+                            DailyHistoryResponse::memberId,
+                            DailyHistoryResponse::historyDate,
+                            DailyHistoryResponse::situationId,
+                            DailyHistoryResponse::situationName,
+                            DailyHistoryResponse::likeCount,
+                            DailyHistoryResponse::commentCount)
+                    .containsExactly(1L, LocalDate.now(), 1L, "testSituation1", 0L, 0L);
+
+            assertThat(response.images()).hasSize(2);
+            assertThat(response.images())
+                    .extracting(
+                            DailyHistoryResponse.ImagePayload::imageId,
+                            DailyHistoryResponse.ImagePayload::imageUrl)
+                    .containsExactlyInAnyOrder(
+                            tuple(1L, "testImageUrl1"), tuple(2L, "testImageUrl2"));
+
+            assertThat(response.styles()).hasSize(2);
+            assertThat(response.styles())
+                    .extracting(
+                            DailyHistoryResponse.StylePayload::styleId,
+                            DailyHistoryResponse.StylePayload::styleName)
+                    .containsExactlyInAnyOrder(tuple(1L, "testStyle1"), tuple(2L, "testStyle2"));
+        }
+
+        @Test
+        void 존재하지_않는_기록_ID를_입력하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> historyService.getDailyHistory(999L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 비공개_회원의_기록이고_본인이_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> historyService.getDailyHistory(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 차단한_회원의_기록을_조회하면_예외가_발생한다() {
+            // given
+            Member blocker =
+                    transactionUtil.getResult(() -> memberRepository.findById(1L).orElseThrow());
+            Member blocked =
+                    transactionUtil.getResult(() -> memberRepository.findById(3L).orElseThrow());
+            Block block = Block.createBlock(blocker, blocked);
+            blockRepository.save(block);
+
+            // when & then
+            assertThatThrownBy(() -> historyService.getDailyHistory(3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.BLOCKED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 차단당한_회원의_기록을_조회하면_예외가_발생한다() {
+            // given
+            Member blocker =
+                    transactionUtil.getResult(() -> memberRepository.findById(3L).orElseThrow());
+            Member blocked =
+                    transactionUtil.getResult(() -> memberRepository.findById(1L).orElseThrow());
+            Block block = Block.createBlock(blocker, blocked);
+            blockRepository.save(block);
+
+            // when & then
+            assertThatThrownBy(() -> historyService.getDailyHistory(3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.BLOCKED_AUTHORITY.getMessage());
         }
     }
 }
