@@ -1,24 +1,28 @@
 package org.clokey.domain.like.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryImageRepository;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.like.dto.response.LikedHistoriesResponse;
+import org.clokey.domain.like.dto.response.LikedMembersResponse;
 import org.clokey.domain.like.repository.MemberLikeRepository;
+import org.clokey.domain.like.repository.MemberLikeRepositoryCustom;
 import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.History;
 import org.clokey.like.entity.MemberLike;
 import org.clokey.member.entity.Member;
 import org.clokey.response.SliceResponse;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,8 @@ public class LikeServiceImpl implements LikeService {
     private final HistoryImageRepository historyImageRepository;
     private final HistoryRepository historyRepository;
     private final BlockRepository blockRepository;
+    private final FollowRepository followRepository;
+    private final MemberLikeRepositoryCustom memberLikeRepositoryCustom;
 
     @Override
     public SliceResponse<LikedHistoriesResponse.LikedHistoryPreview> getLikedHistories(
@@ -39,37 +45,30 @@ public class LikeServiceImpl implements LikeService {
 
         Member currentMember = memberUtil.getCurrentMember();
 
-        // limit + 1 조회
-        Pageable pageable = PageRequest.of(0, size + 1);
+        Slice<LikedHistoriesResponse.LikedHistoryPreview> likedHistoriesSlice =
+                memberLikeRepositoryCustom.findLikedHistoriesSliceByMemberId(
+                        currentMember.getId(), lastLikeId, size);
 
-        List<MemberLike> likes =
-                memberLikeRepository.findLikedHistoriesByMemberId(
-                        currentMember.getId(), lastLikeId, pageable);
-
-        boolean isLast = likes.size() <= size;
-
-        if (!isLast) {
-            likes = likes.subList(0, size);
-        }
-
-        if (likes.isEmpty()) {
+        if (likedHistoriesSlice.isEmpty()) {
             return new SliceResponse<>(List.of(), true);
         }
 
-        List<Long> historyIds = likes.stream().map(like -> like.getHistory().getId()).toList();
+        List<Long> historyIds =
+                likedHistoriesSlice.getContent().stream()
+                        .map(LikedHistoriesResponse.LikedHistoryPreview::getId)
+                        .toList();
 
         Map<Long, String> imageMap = findFirstImagesByHistoryIds(historyIds);
 
         List<LikedHistoriesResponse.LikedHistoryPreview> previews =
-                likes.stream()
+                likedHistoriesSlice.getContent().stream()
                         .map(
-                                like ->
+                                preview ->
                                         new LikedHistoriesResponse.LikedHistoryPreview(
-                                                like.getHistory().getId(),
-                                                imageMap.get(like.getHistory().getId())))
+                                                preview.getId(), imageMap.get(preview.getId())))
                         .toList();
 
-        return new SliceResponse<>(previews, isLast);
+        return new SliceResponse<>(previews, likedHistoriesSlice.isLast());
     }
 
     private Map<Long, String> findFirstImagesByHistoryIds(List<Long> historyIds) {
@@ -114,5 +113,43 @@ public class LikeServiceImpl implements LikeService {
         return blockRepository.existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(
                 fromId, toId,
                 toId, fromId);
+    }
+
+    @Override
+    public SliceResponse<LikedMembersResponse.LikedMemberPreview> getLikedMembers(
+            Long historyId, Long lastLikeId, Integer size) {
+
+        Member currentMember = memberUtil.getCurrentMember();
+
+        Slice<LikedMembersResponse.LikedMemberPreview> likedMembersSlice =
+                memberLikeRepositoryCustom.findLikedMembersSliceByHistoryId(
+                        historyId, lastLikeId, size);
+
+        if (likedMembersSlice.isEmpty()) {
+            return new SliceResponse<>(List.of(), true);
+        }
+
+        List<Long> memberIds =
+                likedMembersSlice.getContent().stream()
+                        .map(LikedMembersResponse.LikedMemberPreview::getId)
+                        .toList();
+
+        Set<Long> followedIdSet =
+                new HashSet<>(
+                        followRepository.findFollowedMemberIds(currentMember.getId(), memberIds));
+
+        List<LikedMembersResponse.LikedMemberPreview> previews =
+                likedMembersSlice.getContent().stream()
+                        .map(
+                                preview ->
+                                        new LikedMembersResponse.LikedMemberPreview(
+                                                preview.getId(),
+                                                preview.getCodiveId(),
+                                                preview.getImageUrl(),
+                                                preview.getNickname(),
+                                                followedIdSet.contains(preview.getId())))
+                        .toList();
+
+        return new SliceResponse<>(previews, likedMembersSlice.isLast());
     }
 }

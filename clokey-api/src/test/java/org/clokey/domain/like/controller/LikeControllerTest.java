@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.clokey.domain.like.dto.response.LikedHistoriesResponse;
+import org.clokey.domain.like.dto.response.LikedMembersResponse;
 import org.clokey.domain.like.service.LikeService;
 import org.clokey.response.SliceResponse;
 import org.junit.jupiter.api.Nested;
@@ -127,6 +128,96 @@ public class LikeControllerTest {
                     .andExpect(
                             jsonPath("$.result.content[1].imageUrl")
                                     .value("https://img.com/img2.jpg"))
+                    .andExpect(jsonPath("$.result.isLast").value(false));
+        }
+    }
+
+    @Nested
+    class 좋아요한_유저_조회_시 {
+        @Test
+        void 유효한_요청이면_좋아요한_유저를_반환한다() throws Exception {
+            // given
+            List<LikedMembersResponse.LikedMemberPreview> previews =
+                    List.of(
+                            new LikedMembersResponse.LikedMemberPreview(
+                                    1L, "codive1", "https://img.com/img1.jpg", "nickname1", true),
+                            new LikedMembersResponse.LikedMemberPreview(
+                                    2L, "codive2", "https://img.com/img2.jpg", "nickname2", false));
+
+            SliceResponse<LikedMembersResponse.LikedMemberPreview> sliceResponse =
+                    new SliceResponse<>(previews, true);
+
+            given(likeService.getLikedMembers(any(), any(), anyInt())).willReturn(sliceResponse);
+
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/likes/users")
+                                    .param("historyId", "1")
+                                    .param("size", "10")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.content[0].id").value(1L))
+                    .andExpect(jsonPath("$.result.content[0].codiveId").value("codive1"))
+                    .andExpect(
+                            jsonPath("$.result.content[0].imageUrl")
+                                    .value("https://img.com/img1.jpg"))
+                    .andExpect(jsonPath("$.result.content[0].nickname").value("nickname1"))
+                    .andExpect(jsonPath("$.result.content[0].followStatus").value(true))
+                    .andExpect(jsonPath("$.result.content[1].id").value(2L))
+                    .andExpect(jsonPath("$.result.content[1].codiveId").value("codive2"))
+                    .andExpect(
+                            jsonPath("$.result.content[1].imageUrl")
+                                    .value("https://img.com/img2.jpg"))
+                    .andExpect(jsonPath("$.result.content[1].nickname").value("nickname2"))
+                    .andExpect(jsonPath("$.result.content[1].followStatus").value(false))
+                    .andExpect(jsonPath("$.result.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<LikedMembersResponse.LikedMemberPreview> previews =
+                    List.of(
+                            new LikedMembersResponse.LikedMemberPreview(
+                                    1L, "codive1", "https://img.com/img1.jpg", "nickname1", true),
+                            new LikedMembersResponse.LikedMemberPreview(
+                                    2L, "codive2", "https://img.com/img2.jpg", "nickname2", false));
+
+            SliceResponse<LikedMembersResponse.LikedMemberPreview> sliceResponse =
+                    new SliceResponse<>(previews, false);
+
+            given(likeService.getLikedMembers(any(), any(), anyInt())).willReturn(sliceResponse);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/likes/users")
+                                    .param("historyId", "1")
+                                    .param("size", "10")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.content[0].id").value(1L))
+                    .andExpect(jsonPath("$.result.content[0].codiveId").value("codive1"))
+                    .andExpect(
+                            jsonPath("$.result.content[0].imageUrl")
+                                    .value("https://img.com/img1.jpg"))
+                    .andExpect(jsonPath("$.result.content[0].nickname").value("nickname1"))
+                    .andExpect(jsonPath("$.result.content[0].followStatus").value(true))
+                    .andExpect(jsonPath("$.result.content[1].id").value(2L))
+                    .andExpect(jsonPath("$.result.content[1].codiveId").value("codive2"))
+                    .andExpect(
+                            jsonPath("$.result.content[1].imageUrl")
+                                    .value("https://img.com/img2.jpg"))
+                    .andExpect(jsonPath("$.result.content[1].nickname").value("nickname2"))
+                    .andExpect(jsonPath("$.result.content[1].followStatus").value(false))
                     .andExpect(jsonPath("$.result.isLast").value(false));
         }
     }
