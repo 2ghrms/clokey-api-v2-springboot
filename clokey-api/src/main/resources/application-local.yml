@@ -88,3 +88,7 @@ logging:
 
 firebase:
   credentials-path: ${FIREBASE_CREDENTIALS_PATH}
+
+app:
+  oauth:
+    redirect-scheme: codive
