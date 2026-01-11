@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.auth.dto.request.DeviceTokenRenewRequest;
 import org.clokey.domain.auth.dto.request.TokenReissueRequest;
+import org.clokey.domain.auth.dto.request.UserStatusUpdateRequest;
 import org.clokey.domain.auth.dto.response.TokenResponse;
 import org.clokey.domain.auth.dto.response.UserStatusResponse;
 import org.clokey.domain.auth.service.AuthService;
@@ -62,6 +63,27 @@ public class AuthController {
             description = "Redis에 저장된 사용자의 리프레시 토큰을 삭제합니다.")
     public BaseResponse<Void> logoutUser() {
         authService.logoutUser();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @PatchMapping("/user-status")
+    @Operation(
+            operationId = "Auth_updateUserStatus",
+            summary = "회원 활성화/비활성화",
+            description = "true: 활성화, false: 비활성화 (15일 뒤 회원 탈퇴)")
+    public BaseResponse<Void> updateUserStatus(
+            @Valid @RequestBody UserStatusUpdateRequest request) {
+        authService.updateUserStatus(request);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
+    }
+
+    @DeleteMapping
+    @Operation(
+            operationId = "Auth_withdrawMember",
+            summary = "회원 탈퇴",
+            description = "(개발용) 회원과 관련된 모든 데이터를 즉시 삭제합니다.")
+    public BaseResponse<Void> withdrawMember() {
+        authService.withdrawMember();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 }

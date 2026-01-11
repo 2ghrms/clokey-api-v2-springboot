@@ -152,4 +152,14 @@ public class Member extends BaseEntity {
     public void updateDeviceToken(String deviceToken) {
         this.deviceToken = deviceToken;
     }
+
+    public void activate() {
+        this.memberStatus = MemberStatus.ACTIVE;
+        this.inactiveDate = null;
+    }
+
+    public void deactivate() {
+        this.memberStatus = MemberStatus.INACTIVE;
+        this.inactiveDate = LocalDate.now();
+    }
 }
