@@ -56,9 +56,6 @@ public class S3Util {
                         .withContentType("image/" + imageFileExtension)
                         .withExpiration(getPresignedUrlExpiration());
 
-        generatePresignedUrlRequest.addRequestParameter(
-                Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
-
         generatePresignedUrlRequest.addRequestParameter("x-amz-tagging", "status=pending");
 
         generatePresignedUrlRequest.setContentMd5(md5Hash);
