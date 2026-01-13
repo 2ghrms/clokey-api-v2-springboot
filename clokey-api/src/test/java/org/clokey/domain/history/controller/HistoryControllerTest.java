@@ -82,37 +82,6 @@ public class HistoryControllerTest {
                     .andExpect(jsonPath("$.result.historyId").value(1L));
         }
 
-        @ParameterizedTest
-        @NullSource
-        @EmptySource
-        @ValueSource(strings = {" "})
-        void 내용이_null_또는_공백이면_예외가_발생한다(String content) throws Exception {
-            HistoryCreateRequest request =
-                    new HistoryCreateRequest(
-                            content,
-                            1L,
-                            List.of(1L, 2L),
-                            List.of("testHashtag1", "testHashtag2"),
-                            List.of(
-                                    new HistoryCreateRequest.Payload(
-                                            "testUrl",
-                                            List.of(
-                                                    new HistoryCreateRequest.ClothTag(
-                                                            1L, 0.42, 0.73)))));
-
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/histories")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.isSuccess").value(false))
-                    .andExpect(jsonPath("$.code").value("COMMON400"))
-                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                    .andExpect(jsonPath("$.result.content").value("기록의 내용은 비워둘 수 없습니다."));
-        }
-
         @Test
         void 내용이_120자를_초과하면_예외가_발생한다() throws Exception {
             String longContent = "a".repeat(121);

@@ -9,7 +9,6 @@ import java.util.List;
 @Schema(description = "기록 생성 요청")
 public record HistoryCreateRequest(
         @Size(max = 120, message = "기록의 내용은 최대 120자까지 가능합니다.")
-                @NotBlank(message = "기록의 내용은 비워둘 수 없습니다.")
                 @Schema(
                         description = "기록의 내용",
                         example = "안녕 오늘 오지게 덥다 ㄷㄷ;; 근데 한달 뒤면 가을임 벌써 가을 기대 만발ㅋ")

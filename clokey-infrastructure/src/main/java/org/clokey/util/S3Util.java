@@ -3,7 +3,6 @@ package org.clokey.util;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.*;
 import java.util.Date;
 import java.util.List;
