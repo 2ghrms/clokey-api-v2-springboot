@@ -89,7 +89,8 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
                                         cloth.id,
                                         cloth.clothImageUrl,
                                         cloth.brand,
-                                        cloth.name))
+                                        cloth.name,
+                                        cloth.category.name))
                         .from(cloth)
                         .where(
                                 cloth.member.id.eq(memberId),

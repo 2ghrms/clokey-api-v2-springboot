@@ -363,8 +363,18 @@ class ClothControllerTest {
             // given
             List<ClothListResponse> clothListResponses =
                     List.of(
-                            new ClothListResponse(1L, "testImageUrl1", "testBrand1", "testName1"),
-                            new ClothListResponse(2L, "testImageUrl2", "testBrand2", "testName2"));
+                            new ClothListResponse(
+                                    1L,
+                                    "testImageUrl1",
+                                    "testBrand1",
+                                    "testName1",
+                                    "testCategory1"),
+                            new ClothListResponse(
+                                    2L,
+                                    "testImageUrl2",
+                                    "testBrand2",
+                                    "testName2",
+                                    "testCategory2"));
 
             given(clothService.getClothes(null, 2, SortDirection.ASC, 1L, List.of(Season.SPRING)))
                     .willReturn(new SliceResponse<>(clothListResponses, true));
