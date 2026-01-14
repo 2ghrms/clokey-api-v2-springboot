@@ -6,10 +6,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
+import org.clokey.domain.history.dto.request.HistoryImagesUploadRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.DailyHistoryResponse;
 import org.clokey.domain.history.dto.response.HistoryClothTagListResponse;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.HistoryImagesPresignedUrlResponse;
 import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
@@ -27,6 +29,18 @@ import org.springframework.web.bind.annotation.*;
 public class HistoryController {
 
     private final HistoryService historyService;
+
+    @PostMapping("/images")
+    @Operation(
+            operationId = "History_getHistoryUploadPresignedUrl",
+            summary = "기록 이미지 업로드용 presignedUrl 발급",
+            description = "기록 이미지 업로드용 presignedUrl을 발급합니다.")
+    public BaseResponse<HistoryImagesPresignedUrlResponse> getHistoryUploadPresignedUrl(
+            @Valid @RequestBody HistoryImagesUploadRequest request) {
+        HistoryImagesPresignedUrlResponse response =
+                historyService.getHistoryUploadPresignedUrls(request);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, response);
+    }
 
     @PostMapping
     @Operation(
@@ -111,5 +125,15 @@ public class HistoryController {
             @PathVariable Long historyId) {
         HistoryOwnershipCheckResponse response = historyService.checkHistoryOwnership(historyId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @DeleteMapping("/{historyId}")
+    @Operation(
+            operationId = "History_deleteHistory",
+            summary = "기록 삭제",
+            description = "기록 ID를 통해 기록을 삭제합니다.")
+    public BaseResponse<Void> deleteHistory(@PathVariable Long historyId) {
+        historyService.deleteHistory(historyId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 }

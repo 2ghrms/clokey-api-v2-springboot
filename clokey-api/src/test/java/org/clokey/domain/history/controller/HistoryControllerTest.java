@@ -1,6 +1,7 @@
 package org.clokey.domain.history.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -8,15 +9,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
+import org.clokey.domain.history.dto.request.HistoryImagesUploadRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.DailyHistoryResponse;
 import org.clokey.domain.history.dto.response.HistoryClothTagListResponse;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.HistoryImagesPresignedUrlResponse;
 import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
 import org.clokey.domain.history.service.HistoryService;
+import org.clokey.enums.FileExtension;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,6 +43,40 @@ public class HistoryControllerTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private HistoryService historyService;
+
+    @Nested
+    class 옷_업로드_presigned_url_발급_요청_시 {
+
+        @Test
+        void 유효한_요청이면_기록_이미지_업로드_Presigned_URL들을_반환한다() throws Exception {
+            // given
+            HistoryImagesUploadRequest request =
+                    new HistoryImagesUploadRequest(
+                            List.of(
+                                    new HistoryImagesUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1"),
+                                    new HistoryImagesUploadRequest.Payload(
+                                            FileExtension.PNG, "testMd5Hash2")));
+
+            HistoryImagesPresignedUrlResponse response =
+                    new HistoryImagesPresignedUrlResponse(List.of("testUrl1", "testUrl2"));
+
+            given(historyService.getHistoryUploadPresignedUrls(request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/histories/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON201"))
+                    .andExpect(jsonPath("$.result.urls[0]").value("testUrl1"))
+                    .andExpect(jsonPath("$.result.urls[1]").value("testUrl2"));
+        }
+    }
 
     @Nested
     class 기록_생성_요청_시 {
@@ -843,6 +881,23 @@ public class HistoryControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.isOwner").value(true));
+        }
+    }
+
+    @Nested
+    class 기록_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_기록을_삭제한다() throws Exception {
+            // given
+            willDoNothing().given(historyService).deleteHistory(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/histories/1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON204"));
         }
     }
 }

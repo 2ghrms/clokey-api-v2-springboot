@@ -1,6 +1,9 @@
 package org.clokey.domain.history.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDate;
@@ -10,6 +13,7 @@ import org.clokey.TransactionUtil;
 import org.clokey.category.entity.Category;
 import org.clokey.cloth.entity.Cloth;
 import org.clokey.cloth.enums.Season;
+import org.clokey.comment.entitiy.Comment;
 import org.clokey.domain.category.repository.CategoryRepository;
 import org.clokey.domain.cloth.exception.ClothErrorCode;
 import org.clokey.domain.cloth.repository.ClothRepository;
@@ -17,10 +21,12 @@ import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest.ClothTag;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest.Payload;
+import org.clokey.domain.history.dto.request.HistoryImagesUploadRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.DailyHistoryResponse;
 import org.clokey.domain.history.dto.response.HistoryClothTagListResponse;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.HistoryImagesPresignedUrlResponse;
 import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
@@ -29,20 +35,27 @@ import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
 import org.clokey.domain.history.repository.*;
+import org.clokey.domain.image.event.ImagesDeleteEvent;
 import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
+import org.clokey.enums.FileExtension;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.*;
+import org.clokey.like.entity.MemberLike;
 import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
+import org.clokey.util.S3Util;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 class HistoryServiceImplTest extends IntegrationTest {
 
     @Autowired private TransactionUtil transactionUtil;
@@ -64,6 +77,48 @@ class HistoryServiceImplTest extends IntegrationTest {
     @Autowired private BlockRepository blockRepository;
 
     @MockitoBean private MemberUtil memberUtil;
+    @MockitoBean private S3Util s3Util;
+    @Autowired private ApplicationEvents applicationEvents;
+
+    @Nested
+    class 기록_업로드_presigned_url를_발급할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            "testEmail",
+                            "testClokeyId",
+                            "testNickName",
+                            OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
+
+        @Test
+        void 유효한_요청이면_기록을_생성한다() {
+            // given
+            HistoryImagesUploadRequest request =
+                    new HistoryImagesUploadRequest(
+                            List.of(
+                                    new HistoryImagesUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1"),
+                                    new HistoryImagesUploadRequest.Payload(
+                                            FileExtension.PNG, "testMd5Hash2")));
+
+            given(s3Util.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash1")))
+                    .willReturn("testUrl1");
+            given(s3Util.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash2")))
+                    .willReturn("testUrl2");
+
+            // when
+            HistoryImagesPresignedUrlResponse response =
+                    historyService.getHistoryUploadPresignedUrls(request);
+
+            // then
+            assertThat(response.urls()).containsExactly("testUrl1", "testUrl2");
+        }
+    }
 
     @Nested
     class 기록을_생성할_때 {
@@ -1020,6 +1075,130 @@ class HistoryServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> historyService.getDailyHistory(3L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(HistoryErrorCode.BLOCKED_AUTHORITY.getMessage());
+        }
+    }
+
+    @Nested
+    class 기록을_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testClokeyId1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testClokeyId2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
+
+            Style style1 = Style.createStyle("testStyle1");
+            Style style2 = Style.createStyle("testStyle2");
+            styleRepository.saveAll(List.of(style1, style2));
+
+            Hashtag hashtag1 = Hashtag.createHashtag("tag1");
+            Hashtag hashtag2 = Hashtag.createHashtag("tag2");
+            hashtagRepository.saveAll(List.of(hashtag1, hashtag2));
+
+            Category category = Category.createCategory("testCategory", null);
+            categoryRepository.save(category);
+
+            Cloth cloth =
+                    Cloth.createCloth(
+                            "testImageUrl",
+                            null,
+                            "testName",
+                            "testBrand",
+                            Season.SPRING,
+                            category,
+                            member1);
+            clothRepository.save(cloth);
+
+            History history1 =
+                    History.createHistory(LocalDate.now(), "testContent", member1, situation);
+            History history2 =
+                    History.createHistory(LocalDate.now(), "testContent", member2, situation);
+            historyRepository.saveAll(List.of(history1, history2));
+
+            HistoryImage image1 = HistoryImage.createHistoryImage("image1", history1);
+            HistoryImage image2 = HistoryImage.createHistoryImage("image2", history1);
+            HistoryImage image3 = HistoryImage.createHistoryImage("image3", history2);
+            historyImageRepository.saveAll(List.of(image1, image2, image3));
+
+            HistoryClothTag tag1 = HistoryClothTag.createHistoryClothTag(image1, cloth, 0.1, 0.2);
+            HistoryClothTag tag2 = HistoryClothTag.createHistoryClothTag(image2, cloth, 0.3, 0.4);
+            HistoryClothTag tag3 = HistoryClothTag.createHistoryClothTag(image3, cloth, 0.3, 0.4);
+            historyClothTagRepository.saveAll(List.of(tag1, tag2, tag3));
+
+            HistoryStyle historyStyle1 = HistoryStyle.createHistoryStyle(history1, style1);
+            HistoryStyle historyStyle2 = HistoryStyle.createHistoryStyle(history2, style2);
+            historyStyleRepository.saveAll(List.of(historyStyle1, historyStyle2));
+
+            HistoryHashtag historyHashtag1 =
+                    HistoryHashtag.createHistoryHashtag(history1, hashtag1);
+            HistoryHashtag historyHashtag2 =
+                    HistoryHashtag.createHistoryHashtag(history1, hashtag2);
+            historyHashtagRepository.saveAll(List.of(historyHashtag1, historyHashtag2));
+
+            MemberLike memberLike = MemberLike.createMemberLike(member2, history1);
+            memberLikeRepository.save(memberLike);
+
+            Comment comment = Comment.createParentComment("testComment", member2, history1);
+            Comment comment2 = Comment.createParentComment("testComment2", member2, history2);
+            Comment reply = Comment.createReply("testReply", member1, history2, comment2);
+            commentRepository.save(comment);
+            commentRepository.save(comment2);
+            commentRepository.save(reply);
+        }
+
+        @Test
+        void 유효한_요청이면_기록을_삭제하고_관련_매핑테이블을_모두_삭제하고_기록의_이미지를_삭제하는_이벤트를_발생한다() {
+            // when
+            historyService.deleteHistory(1L);
+
+            // then
+            var events = applicationEvents.stream(ImagesDeleteEvent.class).toList();
+
+            // then
+            assertThat(historyRepository.findById(1L)).isEmpty();
+            assertThat(historyImageRepository.findByHistoryId(1L)).isEmpty();
+            assertThat(historyStyleRepository.findByHistoryId(1L)).isEmpty();
+            assertThat(historyHashtagRepository.findByHistoryId(1L)).isEmpty();
+            assertThat(memberLikeRepository.findByMemberIdAndHistoryId(2L, 1L)).isEmpty();
+            assertThat(commentRepository.countByHistoryIdAndBannedFalse(1L)).isZero();
+            assertThat(commentRepository.countByHistoryIdAndBannedFalse(2L)).isEqualTo(2);
+            assertThat(historyClothTagRepository.findByHistoryImageId(1L)).isEmpty();
+            assertThat(historyClothTagRepository.findByHistoryImageId(2L)).isEmpty();
+            assertThat(historyClothTagRepository.findByHistoryImageId(3L)).hasSize(1);
+            assertThat(events)
+                    .singleElement()
+                    .satisfies(
+                            event ->
+                                    assertThat(event.imageUrls())
+                                            .containsExactlyInAnyOrder("image1", "image2"));
+        }
+
+        @Test
+        void 기록이_존재하지_않는_경우_예외가_발생한다() {
+            assertThatThrownBy(() -> historyService.deleteHistory(999L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 나의_기록이_아닌_경우_예외가_발생한다() {
+            assertThatThrownBy(() -> historyService.deleteHistory(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
 }

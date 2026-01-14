@@ -1,6 +1,7 @@
 package org.clokey.domain.history.service;
 
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
+import org.clokey.domain.history.dto.request.HistoryImagesUploadRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.*;
 
@@ -20,4 +21,9 @@ public interface HistoryService {
     MonthlyHistoryResponse getMonthlyHistory(Long memberId, int year, int month);
 
     HistoryOwnershipCheckResponse checkHistoryOwnership(Long historyId);
+
+    void deleteHistory(Long historyId);
+
+    HistoryImagesPresignedUrlResponse getHistoryUploadPresignedUrls(
+            HistoryImagesUploadRequest request);
 }
