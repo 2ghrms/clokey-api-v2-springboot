@@ -10,10 +10,12 @@ import org.clokey.domain.cloth.exception.ClothErrorCode;
 import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
+import org.clokey.domain.history.dto.request.HistoryImagesUploadRequest;
 import org.clokey.domain.history.dto.request.HistoryUpdateRequest;
 import org.clokey.domain.history.dto.response.DailyHistoryResponse;
 import org.clokey.domain.history.dto.response.HistoryClothTagListResponse;
 import org.clokey.domain.history.dto.response.HistoryCreateResponse;
+import org.clokey.domain.history.dto.response.HistoryImagesPresignedUrlResponse;
 import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
@@ -22,15 +24,20 @@ import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
 import org.clokey.domain.history.repository.*;
+import org.clokey.domain.image.event.ImagesDeleteEvent;
 import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.report.repository.ReportRepository;
+import org.clokey.enums.ImageType;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.*;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.Visibility;
+import org.clokey.report.enums.TargetType;
+import org.clokey.util.S3Util;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +62,8 @@ public class HistoryServiceImpl implements HistoryService {
     private final BlockRepository blockRepository;
     private final ReportRepository reportRepository;
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final S3Util s3Util;
 
     @Override
     @Transactional
@@ -311,6 +320,55 @@ public class HistoryServiceImpl implements HistoryService {
         return HistoryOwnershipCheckResponse.of(isOwner);
     }
 
+    @Override
+    @Transactional
+    public void deleteHistory(Long historyId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final History history = getHistoryById(historyId);
+
+        validateHistoryOwner(history, currentMember.getId());
+
+        List<HistoryImage> images = historyImageRepository.findByHistoryId(historyId);
+        List<Long> imageIds = images.stream().map(HistoryImage::getId).toList();
+
+        if (!imageIds.isEmpty()) {
+            deleteClothTagsByHistoryImageIds(imageIds);
+            historyImageRepository.deleteAll(images);
+        }
+
+        clearStylesAndHashtags(historyId);
+        memberLikeRepository.deleteAllByHistoryId(historyId);
+        commentRepository.deleteAllByHistoryId(historyId);
+        reportRepository.deleteAllByTargetTypeAndTargetId(TargetType.HISTORY, historyId);
+
+        historyRepository.delete(history);
+
+        List<String> imageUrls =
+                images.stream().map(HistoryImage::getImageUrl).filter(Objects::nonNull).toList();
+        if (!imageUrls.isEmpty()) {
+            eventPublisher.publishEvent(ImagesDeleteEvent.of(imageUrls));
+        }
+    }
+
+    @Override
+    public HistoryImagesPresignedUrlResponse getHistoryUploadPresignedUrls(
+            HistoryImagesUploadRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        List<String> presignedUrls =
+                request.payloads().stream()
+                        .map(
+                                payload ->
+                                        s3Util.createPresignedUrl(
+                                                ImageType.HISTORY_IMAGE,
+                                                currentMember.getId(),
+                                                payload.fileExtension(),
+                                                payload.md5Hashes()))
+                        .toList();
+
+        return HistoryImagesPresignedUrlResponse.of(presignedUrls);
+    }
+
     private HistoryImage getHistoryImageById(Long historyImageId) {
         return historyImageRepository
                 .findById(historyImageId)
@@ -484,12 +542,12 @@ public class HistoryServiceImpl implements HistoryService {
     private void clearStylesAndHashtags(Long historyId) {
         List<HistoryStyle> styles = historyStyleRepository.findByHistoryId(historyId);
         if (!styles.isEmpty()) {
-            historyStyleRepository.deleteAllInBatch(styles);
+            historyStyleRepository.deleteAll(styles);
         }
 
         List<HistoryHashtag> hashtags = historyHashtagRepository.findByHistoryId(historyId);
         if (!hashtags.isEmpty()) {
-            historyHashtagRepository.deleteAllInBatch(hashtags);
+            historyHashtagRepository.deleteAll(hashtags);
         }
     }
 
@@ -497,18 +555,7 @@ public class HistoryServiceImpl implements HistoryService {
         if (historyImageIds == null || historyImageIds.isEmpty()) {
             return;
         }
-        List<HistoryClothTag> historyClothTags =
-                historyImageIds.stream()
-                        .flatMap(
-                                imageId ->
-                                        historyClothTagRepository
-                                                .findByHistoryImageId(imageId)
-                                                .stream())
-                        .toList();
-
-        if (!historyClothTags.isEmpty()) {
-            historyClothTagRepository.deleteAllInBatch(historyClothTags);
-        }
+        historyClothTagRepository.deleteAllByHistoryImageIdIn(historyImageIds);
     }
 
     private Member getMemberById(Long memberId) {
