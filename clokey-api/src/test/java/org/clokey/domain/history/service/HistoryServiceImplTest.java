@@ -154,13 +154,31 @@ class HistoryServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl3", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl3",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
 
             clothRepository.saveAll(List.of(cloth1, cloth2, cloth3));
 
@@ -394,13 +412,31 @@ class HistoryServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
             clothRepository.saveAll(List.of(cloth1, cloth2, cloth3));
 
             Hashtag hashtag1 = Hashtag.createHashtag("testhashtag1");
@@ -699,7 +735,7 @@ class HistoryServiceImplTest extends IntegrationTest {
                             null,
                             "testClothName1",
                             "testBrand1",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             member1);
             Cloth cloth2 =
@@ -708,7 +744,7 @@ class HistoryServiceImplTest extends IntegrationTest {
                             null,
                             "testClothName2",
                             "testBrand2",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             member1);
             clothRepository.saveAll(List.of(cloth1, cloth2));

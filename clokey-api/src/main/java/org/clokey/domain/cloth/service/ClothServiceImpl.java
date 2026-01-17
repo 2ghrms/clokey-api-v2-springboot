@@ -92,7 +92,7 @@ public class ClothServiceImpl implements ClothService {
                                             cr.clothUrl(),
                                             cr.name(),
                                             cr.brand(),
-                                            cr.season(),
+                                            cr.seasons(),
                                             category,
                                             currentMember);
                                 })
@@ -166,7 +166,7 @@ public class ClothServiceImpl implements ClothService {
                 request.clothUrl(),
                 request.name(),
                 request.brand(),
-                request.season(),
+                request.seasons(),
                 category);
     }
 
