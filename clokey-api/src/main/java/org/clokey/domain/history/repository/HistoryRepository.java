@@ -22,4 +22,17 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
             order by h.historyDate asc
             """)
     List<History> findByMemberIdAndYearAndMonthNotBanned(Long memberId, int year, int month);
+
+    @Query(
+            """
+        select new org.clokey.domain.history.repository.HistoryRepository$HistorySituationInfo(
+            h.id, s.id, s.name
+        )
+        from History h
+        join h.situation s
+        where h.id in :historyIds
+    """)
+    List<HistorySituationInfo> findSituationInfoByHistoryIds(List<Long> historyIds);
+
+    record HistorySituationInfo(Long historyId, Long situationId, String situationName) {}
 }

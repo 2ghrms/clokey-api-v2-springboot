@@ -18,7 +18,6 @@ import org.clokey.domain.cloth.dto.response.*;
 import org.clokey.domain.cloth.exception.ClothErrorCode;
 import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
-import org.clokey.domain.folder.repository.ClothFolderRepository;
 import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.enums.ImageType;
@@ -43,7 +42,6 @@ public class ClothServiceImpl implements ClothService {
 
     private final ClothRepository clothRepository;
     private final CategoryRepository categoryRepository;
-    private final ClothFolderRepository clothFolderRepository;
     private final HistoryClothTagRepository historyClothTagRepository;
 
     private final ApplicationEventPublisher eventPublisher;
@@ -184,7 +182,6 @@ public class ClothServiceImpl implements ClothService {
         validateClothOwnership(cloth, currentMember.getId());
 
         coordinateClothRepository.deleteAllByClothId(cloth.getId());
-        clothFolderRepository.deleteAllByClothId(cloth.getId());
         historyClothTagRepository.deleteAllByClothId(cloth.getId());
 
         eventPublisher.publishEvent(ImageDeleteEvent.of(cloth.getClothImageUrl()));

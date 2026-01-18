@@ -20,8 +20,6 @@ import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateRepository;
-import org.clokey.domain.folder.repository.ClothFolderRepository;
-import org.clokey.domain.folder.repository.FolderRepository;
 import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.history.repository.HistoryHashtagRepository;
 import org.clokey.domain.history.repository.HistoryImageRepository;
@@ -72,8 +70,6 @@ public class AuthServiceImpl implements AuthService {
     private final CoordinateClothRepository coordinateClothRepository;
     private final LookBookRepository lookBookRepository;
     private final ClothRepository clothRepository;
-    private final ClothFolderRepository clothFolderRepository;
-    private final FolderRepository folderRepository;
     private final CodiveNotificationRepository codiveNotificationRepository;
     private final FollowRepository followRepository;
     private final PendingFollowRepository pendingFollowRepository;
@@ -256,9 +252,6 @@ public class AuthServiceImpl implements AuthService {
         List<Long> clothIds = clothes.stream().map(Cloth::getId).collect(Collectors.toList());
 
         if (!clothIds.isEmpty()) {
-            // ClothFolder 삭제
-            clothIds.forEach(clothFolderRepository::deleteAllByClothId);
-
             // Cloth 이미지 URL 수집 및 삭제
             clothes.forEach(
                     c -> {
@@ -268,11 +261,6 @@ public class AuthServiceImpl implements AuthService {
                     });
             clothRepository.deleteAll(clothes);
         }
-
-        // 5. Folder 삭제
-        folderRepository.findAll().stream()
-                .filter(f -> f.getMember().getId().equals(memberId))
-                .forEach(folderRepository::delete);
 
         // 6. MemberTerm 삭제
         memberTermRepository.findAll().stream()

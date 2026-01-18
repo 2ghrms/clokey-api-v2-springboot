@@ -33,8 +33,6 @@ import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateRepository;
-import org.clokey.domain.folder.repository.ClothFolderRepository;
-import org.clokey.domain.folder.repository.FolderRepository;
 import org.clokey.domain.history.repository.HashtagRepository;
 import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.history.repository.HistoryHashtagRepository;
@@ -55,8 +53,6 @@ import org.clokey.domain.report.repository.ReportRepository;
 import org.clokey.domain.term.repository.MemberTermRepository;
 import org.clokey.domain.term.repository.TermRepository;
 import org.clokey.exception.BaseCustomException;
-import org.clokey.folder.entity.ClothFolder;
-import org.clokey.folder.entity.Folder;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.Hashtag;
 import org.clokey.history.entity.History;
@@ -115,8 +111,6 @@ class AuthServiceTest extends IntegrationTest {
     @Autowired private CoordinateClothRepository coordinateClothRepository;
     @Autowired private LookBookRepository lookBookRepository;
     @Autowired private ClothRepository clothRepository;
-    @Autowired private ClothFolderRepository clothFolderRepository;
-    @Autowired private FolderRepository folderRepository;
     @Autowired private CodiveNotificationRepository codiveNotificationRepository;
     @Autowired private FollowRepository followRepository;
     @Autowired private PendingFollowRepository pendingFollowRepository;
@@ -486,12 +480,6 @@ class AuthServiceTest extends IntegrationTest {
                             targetMember);
             clothRepository.save(cloth3);
 
-            Folder folder = Folder.createFolder("testFolder", targetMember);
-            folderRepository.save(folder);
-
-            ClothFolder clothFolder = ClothFolder.createClothFolder(cloth3, folder);
-            clothFolderRepository.save(clothFolder);
-
             // MemberTerm 생성
             MemberTerm memberTerm = MemberTerm.createMemberTerm(targetMember, term, true);
             memberTermRepository.save(memberTerm);
@@ -597,10 +585,6 @@ class AuthServiceTest extends IntegrationTest {
 
                     // Cloth 관련 데이터 삭제 확인
                     () -> assertThat(clothRepository.findAll()).isEmpty(),
-                    () -> assertThat(clothFolderRepository.findAll()).isEmpty(),
-
-                    // Folder 삭제 확인
-                    () -> assertThat(folderRepository.findAll()).isEmpty(),
 
                     // MemberTerm 삭제 확인
                     () -> assertThat(memberTermRepository.findAll()).isEmpty(),
