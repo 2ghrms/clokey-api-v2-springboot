@@ -101,6 +101,17 @@ public class CoordinateController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
+    @GetMapping("/daily/today")
+    @Operation(
+            operationId = "Coordinate_getTodayDailyCoordinateClothes",
+            summary = "오늘의 코디 옷 정보 조회",
+            description = "오늘의 코디에 포함된 옷 정보를 조회하는 API입니다.")
+    public BaseResponse<List<DailyCoordinateClothResponse>> getTodayDailyCoordinateClothes() {
+        List<DailyCoordinateClothResponse> response =
+                coordinateService.getTodayDailyCoordinateClothes();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
     @GetMapping("/{coordinateId}/preview")
     @Operation(
             operationId = "Coordinate_getCoordinatePreview",

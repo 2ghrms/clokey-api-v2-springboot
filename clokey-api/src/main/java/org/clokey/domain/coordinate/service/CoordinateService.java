@@ -24,6 +24,8 @@ public interface CoordinateService {
     SliceResponse<DailyCoordinateListResponse> getDailyCoordinates(
             Long lastCoordinateId, int size, SortDirection direction);
 
+    List<DailyCoordinateClothResponse> getTodayDailyCoordinateClothes();
+
     CoordinatePreviewResponse getCoordinatePreview(Long coordinateId);
 
     List<CoordinateDetailsListResponse> getCoordinateDetails(Long coordinateId);

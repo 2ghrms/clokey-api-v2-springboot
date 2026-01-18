@@ -19,6 +19,7 @@ import org.clokey.domain.history.repository.HistoryImageRepository;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.history.repository.SituationRepository;
 import org.clokey.domain.like.repository.MemberLikeRepository;
+import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
@@ -27,6 +28,7 @@ import org.clokey.history.entity.History;
 import org.clokey.history.entity.HistoryImage;
 import org.clokey.history.entity.Situation;
 import org.clokey.like.entity.MemberLike;
+import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Follow;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
@@ -45,6 +47,7 @@ public class FeedServiceTest extends IntegrationTest {
     @Autowired private HistoryRepository historyRepository;
     @Autowired private HistoryImageRepository historyImageRepository;
     @Autowired private MemberLikeRepository memberLikeRepository;
+    @Autowired private BlockRepository blockRepository;
     @Autowired private FollowRepository followRepository;
 
     @MockitoBean private MemberUtil memberUtil;
@@ -103,6 +106,7 @@ public class FeedServiceTest extends IntegrationTest {
 
         @Test
         void 전체_피드를_조회하면_작성자별로_분산되고_스킵된_피드가_커서에_포함된다() {
+            // when
             FeedListResponse response =
                     feedService.getFeeds(FollowScope.ALL, List.of(), List.of(), 3, null);
 
@@ -118,7 +122,7 @@ public class FeedServiceTest extends IntegrationTest {
             Long history2_3 = historyIds.get("A3");
             Long history3_1 = historyIds.get("B1");
             Long history3_2 = historyIds.get("B2");
-
+            // then
             assertThat(response.items()).hasSize(3);
             List<Long> feedIds =
                     response.items().stream()
@@ -135,6 +139,7 @@ public class FeedServiceTest extends IntegrationTest {
 
         @Test
         void 다음_페이지에서_스킵된_피드를_먼저_반환한다() {
+            // when
             FeedListResponse first =
                     feedService.getFeeds(FollowScope.ALL, List.of(), List.of(), 3, null);
 
@@ -151,7 +156,7 @@ public class FeedServiceTest extends IntegrationTest {
                                             (left, right) -> left));
             Long history2_1 = historyIds.get("A1");
             Long history2_2 = historyIds.get("A2");
-
+            // then
             assertThat(second.items()).hasSize(2);
             assertThat(second.items())
                     .extracting(FeedListResponse.FeedItemResponse::feedId)
@@ -162,6 +167,7 @@ public class FeedServiceTest extends IntegrationTest {
 
         @Test
         void 존재하지_않는_스타일_ID면_예외가_발생한다() {
+            // given
             assertThatThrownBy(
                             () ->
                                     feedService.getFeeds(
@@ -172,12 +178,44 @@ public class FeedServiceTest extends IntegrationTest {
 
         @Test
         void 존재하지_않는_상황_ID면_예외가_발생한다() {
+            // given
             assertThatThrownBy(
                             () ->
                                     feedService.getFeeds(
                                             FollowScope.ALL, List.of(), List.of(999L), 3, null))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(SituationErrorCode.SITUATION_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 차단한_사용자의_피드는_노출되지_않는다() {
+            // given
+            Member member1 = memberRepository.findByClokeyId("testClokeyId10").orElseThrow();
+            Member member2 = memberRepository.findByClokeyId("testClokeyId20").orElseThrow();
+            blockRepository.save(Block.createBlock(member1, member2));
+            // when
+            FeedListResponse response =
+                    feedService.getFeeds(FollowScope.ALL, List.of(), List.of(), 3, null);
+
+            Map<String, Long> historyIds =
+                    historyRepository.findAll().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            History::getContent,
+                                            History::getId,
+                                            (left, right) -> left));
+            Long history2_1 = historyIds.get("A1");
+            Long history2_2 = historyIds.get("A2");
+            Long history2_3 = historyIds.get("A3");
+
+            List<Long> feedIds =
+                    response.items().stream()
+                            .map(FeedListResponse.FeedItemResponse::feedId)
+                            .toList();
+            // then
+            assertThat(feedIds).doesNotContain(history2_1, history2_2, history2_3);
+            assertThat(response.items()).hasSize(2);
+            assertThat(response.hasNext()).isFalse();
         }
     }
 
@@ -242,6 +280,7 @@ public class FeedServiceTest extends IntegrationTest {
 
         @Test
         void 팔로잉_피드를_조회하면_최신순으로_반환된다() {
+            // given
             FeedListResponse response =
                     feedService.getFeeds(FollowScope.FOLLOWING, List.of(), List.of(), 3, null);
 
@@ -256,6 +295,7 @@ public class FeedServiceTest extends IntegrationTest {
             Long history3_1 = historyIds.get("B1");
             Long history3_2 = historyIds.get("B2");
 
+            // then
             assertThat(response.items()).hasSize(3);
             List<Long> feedIds =
                     response.items().stream()
@@ -271,6 +311,7 @@ public class FeedServiceTest extends IntegrationTest {
 
         @Test
         void 다음_페이지에서_나머지_피드를_조회한다() {
+            // when
             FeedListResponse first =
                     feedService.getFeeds(FollowScope.FOLLOWING, List.of(), List.of(), 3, null);
 
@@ -287,7 +328,7 @@ public class FeedServiceTest extends IntegrationTest {
                                             (left, right) -> left));
             Long history2_1 = historyIds.get("A1");
             Long history2_2 = historyIds.get("A2");
-
+            // then
             assertThat(second.items()).hasSize(2);
             assertThat(second.items())
                     .extracting(FeedListResponse.FeedItemResponse::feedId)

@@ -73,7 +73,8 @@ public class FeedServiceImpl implements FeedService {
             int takeCount = Math.min(pageSize, basePendingIds.size());
             List<Long> takeIds = basePendingIds.subList(0, takeCount);
             remainingPendingIds = basePendingIds.subList(takeCount, basePendingIds.size());
-            List<History> pendingHistories = feedQueryRepository.findFeedsByIds(takeIds);
+            List<History> pendingHistories =
+                    feedQueryRepository.findFeedsByIds(currentMember.getId(), takeIds);
             Map<Long, History> pendingMap =
                     pendingHistories.stream()
                             .collect(Collectors.toMap(History::getId, history -> history));

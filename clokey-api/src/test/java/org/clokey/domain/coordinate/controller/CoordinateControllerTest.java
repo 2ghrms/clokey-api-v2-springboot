@@ -1657,4 +1657,49 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"));
         }
     }
+
+    @Nested
+    class 오늘의_코디_조회_요청_시 {
+
+        @Test
+        void 유효한_요청이면_오늘의_코디_정보를_반환한다() throws Exception {
+            // given
+            List<DailyCoordinateClothResponse> response =
+                    List.of(
+                            new DailyCoordinateClothResponse(
+                                    "https://image.example/cloth1.jpg",
+                                    "brand1",
+                                    "name1",
+                                    "category1",
+                                    "parent1"),
+                            new DailyCoordinateClothResponse(
+                                    "https://image.example/cloth2.jpg",
+                                    "brand2",
+                                    "name2",
+                                    "category2",
+                                    "parent2"));
+
+            given(coordinateService.getTodayDailyCoordinateClothes()).willReturn(response);
+
+            ResultActions perform = mockMvc.perform(get("/coordinate/daily/today"));
+            // when & then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(
+                            jsonPath("$.result[0].imageUrl")
+                                    .value("https://image.example/cloth1.jpg"))
+                    .andExpect(jsonPath("$.result[0].brand").value("brand1"))
+                    .andExpect(jsonPath("$.result[0].name").value("name1"))
+                    .andExpect(jsonPath("$.result[0].category").value("category1"))
+                    .andExpect(jsonPath("$.result[0].parentCategory").value("parent1"))
+                    .andExpect(
+                            jsonPath("$.result[1].imageUrl")
+                                    .value("https://image.example/cloth2.jpg"))
+                    .andExpect(jsonPath("$.result[1].brand").value("brand2"))
+                    .andExpect(jsonPath("$.result[1].name").value("name2"))
+                    .andExpect(jsonPath("$.result[1].category").value("category2"))
+                    .andExpect(jsonPath("$.result[1].parentCategory").value("parent2"));
+        }
+    }
 }
