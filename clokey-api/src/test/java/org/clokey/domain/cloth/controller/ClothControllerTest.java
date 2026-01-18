@@ -373,12 +373,14 @@ class ClothControllerTest {
                                     "testImageUrl1",
                                     "testBrand1",
                                     "testName1",
+                                    "testParentCategory1",
                                     "testCategory1"),
                             new ClothListResponse(
                                     2L,
                                     "testImageUrl2",
                                     "testBrand2",
                                     "testName2",
+                                    "testParentCategory2",
                                     "testCategory2"));
 
             given(clothService.getClothes(null, 2, SortDirection.ASC, 1L, List.of(Season.SPRING)))
@@ -469,7 +471,8 @@ class ClothControllerTest {
                             "testCategory",
                             "testName",
                             "testBrand",
-                            "testClothUrl");
+                            "testClothUrl",
+                            List.of(Season.SPRING, Season.SUMMER));
 
             given(clothService.getClothDetails(1L)).willReturn(response);
 
@@ -484,7 +487,10 @@ class ClothControllerTest {
                     .andExpect(jsonPath("$.result.category").value("testCategory"))
                     .andExpect(jsonPath("$.result.name").value("testName"))
                     .andExpect(jsonPath("$.result.brand").value("testBrand"))
-                    .andExpect(jsonPath("$.result.clothUrl").value("testClothUrl"));
+                    .andExpect(jsonPath("$.result.clothUrl").value("testClothUrl"))
+                    .andExpect(jsonPath("$.result.seasons").isArray())
+                    .andExpect(jsonPath("$.result.seasons[0]").value("SPRING"))
+                    .andExpect(jsonPath("$.result.seasons[1]").value("SUMMER"));
         }
     }
 

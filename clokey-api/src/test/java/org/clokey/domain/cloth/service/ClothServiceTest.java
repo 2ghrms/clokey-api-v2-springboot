@@ -573,6 +573,8 @@ class ClothServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
+            clothRepository.deleteAllInBatch();
+
             Member member1 =
                     Member.createMember(
                             "testEmail1",
@@ -626,14 +628,16 @@ class ClothServiceTest extends IntegrationTest {
                             "category",
                             "name",
                             "brand",
-                            "clothUrl")
+                            "clothUrl",
+                            "seasons")
                     .containsExactly(
                             "testImageUrl1",
                             "testParentCategory",
                             "testCategory",
                             null,
                             null,
-                            null);
+                            null,
+                            List.of(Season.SPRING));
         }
 
         @Test

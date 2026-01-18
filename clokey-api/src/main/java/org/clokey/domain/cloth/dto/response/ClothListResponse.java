@@ -7,4 +7,5 @@ public record ClothListResponse(
         @Schema(description = "옷 이미지 url", example = "https://example.jpg") String ImageUrl,
         @Schema(description = "옷 브랜드 이름", example = "나이키") String brand,
         @Schema(description = "옷 이름", example = "파란색 후드") String name,
-        @Schema(description = "옷 카테고리", example = "후드티") String category) {}
+        @Schema(description = "상위 카테고리 이름", example = "상의") String parentCategory,
+        @Schema(description = "하위 카테고리 이름", example = "후드티") String category) {}

@@ -1154,7 +1154,7 @@ class HistoryServiceImplTest extends IntegrationTest {
                             null,
                             "testName",
                             "testBrand",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             member1);
             clothRepository.save(cloth);
