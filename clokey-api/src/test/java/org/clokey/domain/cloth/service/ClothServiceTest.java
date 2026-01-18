@@ -28,8 +28,6 @@ import org.clokey.domain.cloth.exception.ClothErrorCode;
 import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateRepository;
-import org.clokey.domain.folder.repository.ClothFolderRepository;
-import org.clokey.domain.folder.repository.FolderRepository;
 import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.history.repository.HistoryImageRepository;
 import org.clokey.domain.history.repository.HistoryRepository;
@@ -39,8 +37,6 @@ import org.clokey.domain.lookbook.repository.LookBookRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.enums.FileExtension;
 import org.clokey.exception.BaseCustomException;
-import org.clokey.folder.entity.ClothFolder;
-import org.clokey.folder.entity.Folder;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.History;
@@ -77,11 +73,9 @@ class ClothServiceTest extends IntegrationTest {
     @Autowired private LookBookRepository lookBookRepository;
     @Autowired private CoordinateRepository coordinateRepository;
     @Autowired private CoordinateClothRepository coordinateClothRepository;
-    @Autowired private FolderRepository folderRepository;
     @Autowired private HistoryRepository historyRepository;
     @Autowired private HistoryClothTagRepository historyClothTagRepository;
     @Autowired private HistoryImageRepository historyImageRepository;
-    @Autowired private ClothFolderRepository clothFolderRepository;
     @Autowired private SituationRepository situationRepository;
 
     @MockitoBean private MemberUtil memberUtil;
@@ -883,13 +877,6 @@ class ClothServiceTest extends IntegrationTest {
                             1.0, 1.0, 1.0, 30.0, 1, coordinate, cloth1);
             coordinateClothRepository.save(coordinateCloth);
 
-            // folder 관련 매핑 테이블 세팅
-            Folder folder = Folder.createFolder("testName", member1);
-            folderRepository.save(folder);
-
-            ClothFolder clothFolder = ClothFolder.createClothFolder(cloth1, folder);
-            clothFolderRepository.save(clothFolder);
-
             // history 관련 매핑 테이블 세팅
             Situation situation = Situation.createSituation("testName");
             situationRepository.save(situation);
@@ -919,7 +906,6 @@ class ClothServiceTest extends IntegrationTest {
                     () -> assertThat(events).hasSize(1),
                     () -> assertThat(events.getFirst().imageUrl()).isEqualTo("testImageUrl1"),
                     () -> assertThat(coordinateClothRepository.findById(1L).isPresent()).isFalse(),
-                    () -> assertThat(clothFolderRepository.findById(1L).isPresent()).isFalse(),
                     () -> assertThat(historyClothTagRepository.findById(1L).isPresent()).isFalse());
         }
 

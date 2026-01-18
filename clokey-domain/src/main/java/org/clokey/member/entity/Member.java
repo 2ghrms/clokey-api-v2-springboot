@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import org.clokey.cloth.entity.Cloth;
 import org.clokey.comment.entitiy.Comment;
 import org.clokey.common.model.BaseEntity;
-import org.clokey.folder.entity.Folder;
 import org.clokey.history.entity.History;
 import org.clokey.like.entity.MemberLike;
 import org.clokey.member.enums.MemberRole;
@@ -78,9 +77,6 @@ public class Member extends BaseEntity {
 
     @OneToMany(mappedBy = "member")
     private List<Comment> comments = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member")
-    private List<Folder> folders = new ArrayList<>();
 
     @OneToMany(mappedBy = "member")
     private List<MemberLike> memberLikes = new ArrayList<>();
