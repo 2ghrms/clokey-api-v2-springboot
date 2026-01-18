@@ -416,7 +416,7 @@ class AuthServiceTest extends IntegrationTest {
                             null,
                             null,
                             null,
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             targetMember);
             Cloth cloth2 =
@@ -425,7 +425,7 @@ class AuthServiceTest extends IntegrationTest {
                             null,
                             null,
                             null,
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             targetMember);
             clothRepository.saveAll(List.of(cloth1, cloth2));
@@ -481,7 +481,7 @@ class AuthServiceTest extends IntegrationTest {
                             null,
                             null,
                             null,
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             targetMember);
             clothRepository.save(cloth3);

@@ -61,7 +61,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         return queryFactory
                 .select(cloth.id.count())
                 .from(cloth)
-                .where(cloth.member.id.eq(memberId), cloth.season.eq(season))
+                .where(cloth.member.id.eq(memberId), cloth.seasons.contains(season))
                 .fetchOne();
     }
 
@@ -76,7 +76,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
                         .from(historyClothTag)
                         .where(
                                 historyClothTag.cloth.member.id.eq(memberId),
-                                historyClothTag.cloth.season.eq(season))
+                                historyClothTag.cloth.seasons.contains(season))
                         .distinct()
                         .fetch();
         utilizedClothIds.addAll(historyClothIds);
@@ -91,7 +91,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
                                 coordinate.member.id.eq(memberId),
                                 coordinate.coordinateType.eq(CoordinateType.DAILY),
                                 coordinateCloth.cloth.member.id.eq(memberId),
-                                coordinateCloth.cloth.season.eq(season))
+                                coordinateCloth.cloth.seasons.contains(season))
                         .distinct()
                         .fetch();
         utilizedClothIds.addAll(coordinateClothIds);
@@ -104,7 +104,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
             Long memberId, Season season) {
         return queryFactory
                 .selectFrom(cloth)
-                .where(cloth.member.id.eq(memberId), cloth.season.eq(season))
+                .where(cloth.member.id.eq(memberId), cloth.seasons.contains(season))
                 .fetch();
     }
 }
