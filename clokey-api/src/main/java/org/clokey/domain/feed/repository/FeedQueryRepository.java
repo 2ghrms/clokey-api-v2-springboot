@@ -6,6 +6,7 @@ import static org.clokey.member.entity.QFollow.follow;
 import static org.clokey.member.entity.QMember.member;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.clokey.domain.feed.query.FeedCursor;
 import org.clokey.domain.feed.query.FollowScope;
 import org.clokey.history.entity.History;
+import org.clokey.member.entity.QBlock;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -41,6 +43,7 @@ public class FeedQueryRepository {
                 .where(
                         history.banned.isFalse(),
                         followScopeCondition(currentMemberId, followScope),
+                        notBlockedCondition(currentMemberId),
                         styleFilterCondition(styleIds),
                         situationFilterCondition(situationIds),
                         cursorCondition(cursor))
@@ -49,7 +52,7 @@ public class FeedQueryRepository {
                 .fetch();
     }
 
-    public List<History> findFeedsByIds(List<Long> historyIds) {
+    public List<History> findFeedsByIds(Long currentMemberId, List<Long> historyIds) {
         if (historyIds == null || historyIds.isEmpty()) {
             return List.of();
         }
@@ -57,7 +60,10 @@ public class FeedQueryRepository {
                 .selectFrom(history)
                 .join(history.member, member)
                 .fetchJoin()
-                .where(history.banned.isFalse(), history.id.in(historyIds))
+                .where(
+                        history.banned.isFalse(),
+                        history.id.in(historyIds),
+                        notBlockedCondition(currentMemberId))
                 .fetch();
     }
 
@@ -104,5 +110,29 @@ public class FeedQueryRepository {
         return history.createdAt
                 .lt(createdAt)
                 .or(history.createdAt.eq(createdAt).and(history.id.lt(feedId)));
+    }
+
+    private BooleanExpression notBlockedCondition(Long currentMemberId) {
+        if (currentMemberId == null) {
+            return null;
+        }
+
+        QBlock blockCheck = new QBlock("blockCheck");
+        BooleanExpression blockCondition =
+                blockCheck
+                        .blocker
+                        .id
+                        .eq(currentMemberId)
+                        .and(blockCheck.blocked.id.eq(history.member.id))
+                        .or(
+                                blockCheck
+                                        .blocker
+                                        .id
+                                        .eq(history.member.id)
+                                        .and(blockCheck.blocked.id.eq(currentMemberId)));
+
+        return Expressions.asBoolean(
+                        JPAExpressions.selectOne().from(blockCheck).where(blockCondition).exists())
+                .not();
     }
 }

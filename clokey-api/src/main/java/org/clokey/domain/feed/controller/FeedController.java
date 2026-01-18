@@ -1,5 +1,7 @@
 package org.clokey.domain.feed.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
@@ -15,14 +17,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequiredArgsConstructor
-@Validated
 @RequestMapping("/feeds")
+@RequiredArgsConstructor
+@Tag(name = "06. 피드 API", description = "피드 관련 API입니다.")
+@Validated
 public class FeedController {
 
     private final FeedService feedService;
 
     @GetMapping
+    @Operation(
+            operationId = "Feed_getFeeds",
+            summary = "피드 조회(전체/팔로잉)",
+            description = "필터링을 통해 피드를 조회합니다.")
     public BaseResponse<FeedListResponse> getFeeds(
             @RequestParam(defaultValue = "ALL") FollowScope followScope,
             @RequestParam(required = false) String styleIds,

@@ -33,6 +33,7 @@ public class FeedControllerTest {
 
         @Test
         void 유효한_요청이면_피드_리스트를_반환한다() throws Exception {
+            // given
             FeedListResponse response =
                     FeedListResponse.of(
                             List.of(
@@ -57,7 +58,7 @@ public class FeedControllerTest {
                                     eq(10),
                                     eq("cursorValue")))
                     .willReturn(response);
-
+            // when
             ResultActions perform =
                     mockMvc.perform(
                             get("/feeds")
@@ -66,7 +67,7 @@ public class FeedControllerTest {
                                     .param("situationIds", "3")
                                     .param("size", "10")
                                     .param("cursor", "cursorValue"));
-
+            // then
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON200"))
