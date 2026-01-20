@@ -15,7 +15,9 @@ public record DailyHistoryResponse(
         @Schema(description = "기록 날짜", example = "2025-01-01") LocalDate historyDate,
         @Schema(description = "상황 ID", example = "1") Long situationId,
         @Schema(description = "상황 이름", example = "데일리") String situationName,
-        @Schema(description = "스타일 목록") List<DailyHistoryResponse.StylePayload> styles) {
+        @Schema(description = "본문 내용", example = "오늘 날씨가 좋아서 산책을 다녀왔어요") String content,
+        @Schema(description = "스타일 목록") List<DailyHistoryResponse.StylePayload> styles,
+        @Schema(description = "해시태그 목록", example = "[\"데일리룩\", \"오늘의코디\"]") List<String> hashtags) {
 
     public static DailyHistoryResponse of(
             Long memberId,
@@ -27,7 +29,9 @@ public record DailyHistoryResponse(
             LocalDate historyDate,
             Long situationId,
             String situationName,
-            List<StylePayload> styles) {
+            String content,
+            List<StylePayload> styles,
+            List<String> hashtags) {
         return new DailyHistoryResponse(
                 memberId,
                 profileImageUrl,
@@ -38,7 +42,9 @@ public record DailyHistoryResponse(
                 historyDate,
                 situationId,
                 situationName,
-                styles);
+                content,
+                styles,
+                hashtags);
     }
 
     @Schema(name = "DailyHistoryResponseImagePayload", description = "기록 이미지 정보")
