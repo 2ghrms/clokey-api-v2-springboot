@@ -77,7 +77,7 @@ public class FeedControllerTest {
                                     .value("https://image.test/10.png"))
                     .andExpect(jsonPath("$.result.items[0].isLiked").value(true))
                     .andExpect(jsonPath("$.result.items[0].author.memberId").value(2L))
-                    .andExpect(jsonPath("$.result.items[0].author.clokeyId").value("clokey2"))
+                    .andExpect(jsonPath("$.result.items[0].author.nickname").value("clokey2"))
                     .andExpect(
                             jsonPath("$.result.items[0].author.profileImageUrl")
                                     .value("https://image.test/p2.png"))

@@ -213,6 +213,7 @@ public class FeedServiceTest extends IntegrationTest {
                             .map(FeedListResponse.FeedItemResponse::feedId)
                             .toList();
             // then
+            assertThat(feedIds).isNotEmpty();
             assertThat(feedIds).doesNotContain(history2_1, history2_2, history2_3);
             assertThat(response.items()).hasSize(2);
             assertThat(response.hasNext()).isFalse();
