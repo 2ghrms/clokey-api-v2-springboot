@@ -168,7 +168,7 @@ public class FeedServiceImpl implements FeedService {
     private FeedListResponse.FeedAuthorResponse toAuthorResponse(
             Member member, boolean isFollowing) {
         return new FeedListResponse.FeedAuthorResponse(
-                member.getId(), member.getClokeyId(), member.getProfileImageUrl(), isFollowing);
+                member.getId(), member.getNickname(), member.getProfileImageUrl(), isFollowing);
     }
 
     private Map<Long, String> getImageUrls(List<Long> feedIds) {

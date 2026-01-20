@@ -26,7 +26,7 @@ public record FeedListResponse(
     @Schema(name = "FeedAuthorResponse", description = "피드 작성자 정보")
     public record FeedAuthorResponse(
             @Schema(description = "작성자 ID", example = "1") Long memberId,
-            @Schema(description = "클로키 ID", example = "clokey123") String clokeyId,
+            @Schema(description = "닉네임", example = "codive123") String nickname,
             @Schema(description = "프로필 이미지 URL", example = "https://example.com/profile.jpg")
                     String profileImageUrl,
             @Schema(description = "팔로잉 여부", example = "true") boolean isFollowing) {}
