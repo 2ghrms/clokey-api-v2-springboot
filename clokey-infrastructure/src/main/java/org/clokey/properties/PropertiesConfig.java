@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
     RedisProperties.class,
     JwtProperties.class,
     S3Properties.class,
-    AwsProperties.class
+    AwsProperties.class,
+    FirebaseProperties.class,
+    MeilisearchProperties.class
 })
 public class PropertiesConfig {}
