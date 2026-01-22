@@ -729,9 +729,11 @@ public class HistoryControllerTest {
                             java.time.LocalDate.of(2025, 1, 1),
                             1L,
                             "testSituation",
+                            "testContent",
                             List.of(
                                     new DailyHistoryResponse.StylePayload(1L, "testStyle1"),
-                                    new DailyHistoryResponse.StylePayload(2L, "testStyle2")));
+                                    new DailyHistoryResponse.StylePayload(2L, "testStyle2")),
+                            List.of("testHashtag1", "testHashtag2"));
 
             given(historyService.getDailyHistory(1L)).willReturn(testDailyHistoryResponse);
 
@@ -755,10 +757,15 @@ public class HistoryControllerTest {
                     .andExpect(jsonPath("$.result.historyDate").value("2025-01-01"))
                     .andExpect(jsonPath("$.result.situationId").value(1L))
                     .andExpect(jsonPath("$.result.situationName").value("testSituation"))
+                    .andExpect(jsonPath("$.result.content").value("testContent"))
                     .andExpect(jsonPath("$.result.styles").isArray())
                     .andExpect(jsonPath("$.result.styles.length()").value(2))
                     .andExpect(jsonPath("$.result.styles[0].styleId").value(1L))
-                    .andExpect(jsonPath("$.result.styles[0].styleName").value("testStyle1"));
+                    .andExpect(jsonPath("$.result.styles[0].styleName").value("testStyle1"))
+                    .andExpect(jsonPath("$.result.hashtags").isArray())
+                    .andExpect(jsonPath("$.result.hashtags.length()").value(2))
+                    .andExpect(jsonPath("$.result.hashtags[0]").value("testHashtag1"))
+                    .andExpect(jsonPath("$.result.hashtags[1]").value("testHashtag2"));
         }
     }
 

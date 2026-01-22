@@ -54,15 +54,6 @@ CREATE TABLE category (
                           CONSTRAINT fk_category_parent FOREIGN KEY (parent_id) REFERENCES category(id)
 );
 
-CREATE TABLE folder (
-                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                        name VARCHAR(30) NOT NULL,
-                        member_id BIGINT NOT NULL,
-                        created_at DATETIME(6) NOT NULL,
-                        updated_at DATETIME(6) NOT NULL,
-                        CONSTRAINT fk_folder_member FOREIGN KEY (member_id) REFERENCES member(id)
-);
-
 
 CREATE TABLE cloth (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -70,9 +61,6 @@ CREATE TABLE cloth (
                        cloth_url VARCHAR(1000),
                        name VARCHAR(255),
                        brand VARCHAR(255),
-                       season VARCHAR(255) NOT NULL CHECK (
-                           season IN ('SPRING', 'SUMMER', 'FALL', 'WINTER')
-                           ),
                        category_id BIGINT NOT NULL,
                        member_id BIGINT NOT NULL,
                        created_at DATETIME(6) NOT NULL,
@@ -118,15 +106,16 @@ CREATE TABLE comment (
                         CONSTRAINT fk_comment_parent FOREIGN KEY (parent_id) REFERENCES comment(id)
 );
 
-CREATE TABLE cloth_folder (
-                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                              cloth_id BIGINT NOT NULL,
-                              folder_id BIGINT NOT NULL,
-                              created_at DATETIME(6) NOT NULL,
-                              updated_at DATETIME(6) NOT NULL,
-                              CONSTRAINT fk_cloth_folder_cloth FOREIGN KEY (cloth_id) REFERENCES cloth(id),
-                              CONSTRAINT fk_cloth_folder_folder FOREIGN KEY (folder_id) REFERENCES folder(id)
+
+CREATE TABLE cloth_season (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        cloth_id BIGINT NOT NULL,
+                        season_name VARCHAR(255) NOT NULL,
+                        UNIQUE (cloth_id, season_name),
+                        CONSTRAINT ck_season_name CHECK (season_name IN ('SPRING', 'SUMMER', 'FALL', 'WINTER')),
+                        CONSTRAINT fk_cloth_season_cloth FOREIGN KEY (cloth_id) REFERENCES cloth(id)
 );
+
 
 
 CREATE TABLE situation (

@@ -28,4 +28,17 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 
     @Query("SELECT h.id FROM History h")
     List<Long> findAllIds();
+
+    @Query(
+            """
+        select new org.clokey.domain.history.repository.HistoryRepository$HistorySituationInfo(
+            h.id, s.id, s.name
+        )
+        from History h
+        join h.situation s
+        where h.id in :historyIds
+    """)
+    List<HistorySituationInfo> findSituationInfoByHistoryIds(List<Long> historyIds);
+
+    record HistorySituationInfo(Long historyId, Long situationId, String situationName) {}
 }

@@ -24,6 +24,7 @@ import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
 import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
 import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
+import org.clokey.domain.coordinate.dto.response.DailyCoordinateClothResponse;
 import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
 import org.clokey.domain.coordinate.dto.response.FavoriteCoordinateResponse;
 import org.clokey.domain.coordinate.exception.CoordinateErrorCode;
@@ -92,41 +93,113 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl3", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl3",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
 
             Cloth cloth4 =
                     Cloth.createCloth(
-                            "testImageUrl4", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl4",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth5 =
                     Cloth.createCloth(
-                            "testImageUrl5", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl5",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth6 =
                     Cloth.createCloth(
-                            "testImageUrl6", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl6",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth7 =
                     Cloth.createCloth(
-                            "testImageUrl7", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl7",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth8 =
                     Cloth.createCloth(
-                            "testImageUrl8", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl8",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth9 =
                     Cloth.createCloth(
-                            "testImageUrl9", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl9",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth10 =
                     Cloth.createCloth(
-                            "testImageUrl10", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl10",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth11 =
                     Cloth.createCloth(
-                            "testImageUrl11", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl11",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth12 =
                     Cloth.createCloth(
-                            "testImageUrl12", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl12",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             clothRepository.saveAll(
                     List.of(
                             cloth1, cloth2, cloth3, cloth4, cloth5, cloth6, cloth7, cloth8, cloth9,
@@ -330,41 +403,113 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl3", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl3",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
 
             Cloth cloth4 =
                     Cloth.createCloth(
-                            "testImageUrl4", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl4",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth5 =
                     Cloth.createCloth(
-                            "testImageUrl5", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl5",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth6 =
                     Cloth.createCloth(
-                            "testImageUrl6", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl6",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth7 =
                     Cloth.createCloth(
-                            "testImageUrl7", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl7",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth8 =
                     Cloth.createCloth(
-                            "testImageUrl8", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl8",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth9 =
                     Cloth.createCloth(
-                            "testImageUrl9", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl9",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth10 =
                     Cloth.createCloth(
-                            "testImageUrl10", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl10",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth11 =
                     Cloth.createCloth(
-                            "testImageUrl11", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl11",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth12 =
                     Cloth.createCloth(
-                            "testImageUrl12", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl12",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             clothRepository.saveAll(
                     List.of(
                             cloth1, cloth2, cloth3, cloth4, cloth5, cloth6, cloth7, cloth8, cloth9,
@@ -681,41 +826,113 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl3", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl3",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth4 =
                     Cloth.createCloth(
-                            "testImageUrl4", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl4",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
 
             Cloth cloth5 =
                     Cloth.createCloth(
-                            "testImageUrl5", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl5",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth6 =
                     Cloth.createCloth(
-                            "testImageUrl6", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl6",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth7 =
                     Cloth.createCloth(
-                            "testImageUrl7", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl7",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth8 =
                     Cloth.createCloth(
-                            "testImageUrl8", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl8",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth9 =
                     Cloth.createCloth(
-                            "testImageUrl9", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl9",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth10 =
                     Cloth.createCloth(
-                            "testImageUrl10", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl10",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth11 =
                     Cloth.createCloth(
-                            "testImageUrl11", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl11",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth12 =
                     Cloth.createCloth(
-                            "testImageUrl12", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl12",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             clothRepository.saveAll(
                     List.of(
                             cloth1, cloth2, cloth3, cloth4, cloth5, cloth6, cloth7, cloth8, cloth9,
@@ -1062,16 +1279,40 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl3", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl3",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth4 =
                     Cloth.createCloth(
-                            "testImageUrl4", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl4",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
 
             clothRepository.saveAll(List.of(cloth1, cloth2, cloth3, cloth4));
 
@@ -1400,10 +1641,22 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             clothRepository.saveAll(List.of(cloth1, cloth2));
 
             CoordinateCloth coordinateCloth1 =
@@ -1679,6 +1932,94 @@ class CoordinateServiceImplTest extends IntegrationTest {
             // when
             List<FavoriteCoordinateResponse> responses = coordinateService.getFavoriteCoordinates();
 
+            // then
+            assertThat(responses).isEmpty();
+        }
+    }
+
+    @Nested
+    class 오늘의_코디를_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "todayEmail1",
+                            "todayClokeyId1",
+                            "todayNickName1",
+                            OauthInfo.createOauthInfo("todayOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "todayEmail2",
+                            "todayClokeyId2",
+                            "todayNickName2",
+                            OauthInfo.createOauthInfo("todayOauthId2", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Category parentCategory = Category.createCategory("parentCategory", null);
+            Category category = Category.createCategory("category", parentCategory);
+            categoryRepository.saveAll(List.of(parentCategory, category));
+
+            Cloth cloth1 =
+                    Cloth.createCloth(
+                            "imageUrl1",
+                            null,
+                            "name1",
+                            "brand1",
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
+            Cloth cloth2 =
+                    Cloth.createCloth(
+                            "imageUrl2",
+                            null,
+                            "name2",
+                            "brand2",
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
+            clothRepository.saveAll(List.of(cloth1, cloth2));
+
+            Coordinate coordinate = Coordinate.createDailyCoordinate("coordImage", member1);
+            coordinateRepository.save(coordinate);
+
+            CoordinateCloth coordinateCloth1 =
+                    CoordinateCloth.createCoordinateCloth(
+                            10.0, 20.0, 1.0, 30.0, 1, coordinate, cloth1);
+            CoordinateCloth coordinateCloth2 =
+                    CoordinateCloth.createCoordinateCloth(
+                            11.0, 21.0, 1.0, 31.0, 2, coordinate, cloth2);
+            coordinateClothRepository.saveAll(List.of(coordinateCloth1, coordinateCloth2));
+        }
+
+        @Test
+        void 유효한_요청이면_오늘의_코디를_반환한다() {
+            // when
+            List<DailyCoordinateClothResponse> responses =
+                    coordinateService.getTodayDailyCoordinateClothes();
+
+            // then
+            assertThat(responses)
+                    .extracting(
+                            DailyCoordinateClothResponse::imageUrl,
+                            DailyCoordinateClothResponse::brand,
+                            DailyCoordinateClothResponse::name,
+                            DailyCoordinateClothResponse::category,
+                            DailyCoordinateClothResponse::parentCategory)
+                    .containsExactly(
+                            tuple("imageUrl1", "brand1", "name1", "category", "parentCategory"),
+                            tuple("imageUrl2", "brand2", "name2", "category", "parentCategory"));
+        }
+
+        @Test
+        void 오늘의_코디가_없으면_빈_리스트를_반환한다() {
+            // given
+            Member member = memberRepository.findByClokeyId("todayClokeyId2").orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member);
+            // when
+            List<DailyCoordinateClothResponse> responses =
+                    coordinateService.getTodayDailyCoordinateClothes();
             // then
             assertThat(responses).isEmpty();
         }

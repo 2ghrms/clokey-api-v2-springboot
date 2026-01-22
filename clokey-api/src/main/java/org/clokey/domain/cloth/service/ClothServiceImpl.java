@@ -18,7 +18,6 @@ import org.clokey.domain.cloth.dto.response.*;
 import org.clokey.domain.cloth.exception.ClothErrorCode;
 import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
-import org.clokey.domain.folder.repository.ClothFolderRepository;
 import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.search.event.ClothDeleteEvent;
@@ -45,7 +44,6 @@ public class ClothServiceImpl implements ClothService {
 
     private final ClothRepository clothRepository;
     private final CategoryRepository categoryRepository;
-    private final ClothFolderRepository clothFolderRepository;
     private final HistoryClothTagRepository historyClothTagRepository;
 
     private final ApplicationEventPublisher eventPublisher;
@@ -94,7 +92,7 @@ public class ClothServiceImpl implements ClothService {
                                             cr.clothUrl(),
                                             cr.name(),
                                             cr.brand(),
-                                            cr.season(),
+                                            cr.seasons(),
                                             category,
                                             currentMember);
                                 })
@@ -171,7 +169,7 @@ public class ClothServiceImpl implements ClothService {
                 request.clothUrl(),
                 request.name(),
                 request.brand(),
-                request.season(),
+                request.seasons(),
                 category);
 
         // Category 변경 시 해당 Cloth를 사용하는 History들 검색엔진 동기화
@@ -201,7 +199,6 @@ public class ClothServiceImpl implements ClothService {
         List<Long> historyIds = historyClothTagRepository.findHistoryIdsByClothId(clothId);
 
         coordinateClothRepository.deleteAllByClothId(cloth.getId());
-        clothFolderRepository.deleteAllByClothId(cloth.getId());
         historyClothTagRepository.deleteAllByClothId(cloth.getId());
 
         eventPublisher.publishEvent(ImageDeleteEvent.of(cloth.getClothImageUrl()));

@@ -311,6 +311,28 @@ public class CoordinateServiceImpl implements CoordinateService {
     }
 
     @Override
+    public List<DailyCoordinateClothResponse> getTodayDailyCoordinateClothes() {
+        final Member currentMember = memberUtil.getCurrentMember();
+        Optional<Coordinate> coordinate =
+                coordinateRepository.findDailyCoordinateByDateAndMemberId(
+                        LocalDate.now(), currentMember.getId());
+
+        if (coordinate.isEmpty()) {
+            return List.of();
+        }
+
+        List<CoordinateDetailsListResponse> details =
+                coordinateRepository.findAllCoordinateDetailsByCoordinateId(
+                        coordinate.get().getId());
+
+        if (details.isEmpty()) {
+            return List.of();
+        }
+
+        return details.stream().map(DailyCoordinateClothResponse::from).toList();
+    }
+
+    @Override
     public CoordinatePreviewResponse getCoordinatePreview(Long coordinateId) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Coordinate coordinate = getCoordinateById(coordinateId);

@@ -91,14 +91,14 @@ class ClothControllerTest {
                                             null,
                                             null,
                                             null,
-                                            Season.SPRING,
+                                            List.of(Season.SPRING),
                                             1L),
                                     new ClothCreateRequest(
                                             "testClothImageUrl2",
                                             null,
                                             null,
                                             null,
-                                            Season.SPRING,
+                                            List.of(Season.SPRING, Season.FALL),
                                             1L)));
 
             ClothCreateResponse response = new ClothCreateResponse(List.of(1L, 2L));
@@ -149,7 +149,12 @@ class ClothControllerTest {
                     new ClothCreateRequests(
                             List.of(
                                     new ClothCreateRequest(
-                                            clothImageUrl, null, null, null, Season.SPRING, 1L)));
+                                            clothImageUrl,
+                                            null,
+                                            null,
+                                            null,
+                                            List.of(Season.SPRING),
+                                            1L)));
 
             // when & then
             ResultActions perform =
@@ -176,7 +181,7 @@ class ClothControllerTest {
                                             null,
                                             null,
                                             null,
-                                            Season.SPRING,
+                                            List.of(Season.SPRING),
                                             null)));
 
             // when & then
@@ -213,7 +218,7 @@ class ClothControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                    .andExpect(jsonPath("$.result.season").value("옷의 계절은 비워둘 수 없습니다."));
+                    .andExpect(jsonPath("$.result.seasons").value("옷의 계절은 비워둘 수 없습니다."));
         }
     }
 
@@ -368,12 +373,14 @@ class ClothControllerTest {
                                     "testImageUrl1",
                                     "testBrand1",
                                     "testName1",
+                                    "testParentCategory1",
                                     "testCategory1"),
                             new ClothListResponse(
                                     2L,
                                     "testImageUrl2",
                                     "testBrand2",
                                     "testName2",
+                                    "testParentCategory2",
                                     "testCategory2"));
 
             given(clothService.getClothes(null, 2, SortDirection.ASC, 1L, List.of(Season.SPRING)))
@@ -464,7 +471,8 @@ class ClothControllerTest {
                             "testCategory",
                             "testName",
                             "testBrand",
-                            "testClothUrl");
+                            "testClothUrl",
+                            List.of(Season.SPRING, Season.SUMMER));
 
             given(clothService.getClothDetails(1L)).willReturn(response);
 
@@ -479,7 +487,10 @@ class ClothControllerTest {
                     .andExpect(jsonPath("$.result.category").value("testCategory"))
                     .andExpect(jsonPath("$.result.name").value("testName"))
                     .andExpect(jsonPath("$.result.brand").value("testBrand"))
-                    .andExpect(jsonPath("$.result.clothUrl").value("testClothUrl"));
+                    .andExpect(jsonPath("$.result.clothUrl").value("testClothUrl"))
+                    .andExpect(jsonPath("$.result.seasons").isArray())
+                    .andExpect(jsonPath("$.result.seasons[0]").value("SPRING"))
+                    .andExpect(jsonPath("$.result.seasons[1]").value("SUMMER"));
         }
     }
 
@@ -495,7 +506,7 @@ class ClothControllerTest {
                             "testClothUrl",
                             "testName",
                             "testBrand",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             1L);
             willDoNothing().given(clothService).updateCloth(1L, request);
 
@@ -524,7 +535,7 @@ class ClothControllerTest {
                             "testClothUrl",
                             "testName",
                             "testBrand",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             1L);
             ;
 
@@ -561,7 +572,7 @@ class ClothControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                    .andExpect(jsonPath("$.result.season").value("옷의 계절은 비워둘 수 없습니다."));
+                    .andExpect(jsonPath("$.result.seasons").value("옷의 계절은 비워둘 수 없습니다."));
         }
 
         @Test
@@ -573,7 +584,7 @@ class ClothControllerTest {
                             "testClothUrl",
                             "testName",
                             "testBrand",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             null);
             ;
 

@@ -154,13 +154,31 @@ class HistoryServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl3", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl3",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
 
             clothRepository.saveAll(List.of(cloth1, cloth2, cloth3));
 
@@ -394,13 +412,31 @@ class HistoryServiceImplTest extends IntegrationTest {
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "testImageUrl1", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl1",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member1);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member1);
             Cloth cloth3 =
                     Cloth.createCloth(
-                            "testImageUrl2", null, null, null, Season.SPRING, category, member2);
+                            "testImageUrl2",
+                            null,
+                            null,
+                            null,
+                            List.of(Season.SPRING),
+                            category,
+                            member2);
             clothRepository.saveAll(List.of(cloth1, cloth2, cloth3));
 
             Hashtag hashtag1 = Hashtag.createHashtag("testhashtag1");
@@ -699,7 +735,7 @@ class HistoryServiceImplTest extends IntegrationTest {
                             null,
                             "testClothName1",
                             "testBrand1",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             member1);
             Cloth cloth2 =
@@ -708,7 +744,7 @@ class HistoryServiceImplTest extends IntegrationTest {
                             null,
                             "testClothName2",
                             "testBrand2",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             member1);
             clothRepository.saveAll(List.of(cloth1, cloth2));
@@ -978,6 +1014,10 @@ class HistoryServiceImplTest extends IntegrationTest {
             Style style2 = Style.createStyle("testStyle2");
             styleRepository.saveAll(List.of(style1, style2));
 
+            Hashtag hashtag1 = Hashtag.createHashtag("testhashtag1");
+            Hashtag hashtag2 = Hashtag.createHashtag("testhashtag2");
+            hashtagRepository.saveAll(List.of(hashtag1, hashtag2));
+
             History history1 =
                     History.createHistory(LocalDate.now(), "testContent1", member1, situation1);
             History history2 =
@@ -995,6 +1035,11 @@ class HistoryServiceImplTest extends IntegrationTest {
                     List.of(
                             HistoryStyle.createHistoryStyle(history1, style1),
                             HistoryStyle.createHistoryStyle(history1, style2)));
+
+            historyHashtagRepository.bulkInsertHistoryHashtags(
+                    List.of(
+                            HistoryHashtag.createHistoryHashtag(history1, hashtag1),
+                            HistoryHashtag.createHistoryHashtag(history1, hashtag2)));
         }
 
         @Test
@@ -1009,9 +1054,11 @@ class HistoryServiceImplTest extends IntegrationTest {
                             DailyHistoryResponse::historyDate,
                             DailyHistoryResponse::situationId,
                             DailyHistoryResponse::situationName,
+                            DailyHistoryResponse::content,
                             DailyHistoryResponse::likeCount,
                             DailyHistoryResponse::commentCount)
-                    .containsExactly(1L, LocalDate.now(), 1L, "testSituation1", 0L, 0L);
+                    .containsExactly(
+                            1L, LocalDate.now(), 1L, "testSituation1", "testContent1", 0L, 0L);
 
             assertThat(response.images()).hasSize(2);
             assertThat(response.images())
@@ -1027,6 +1074,10 @@ class HistoryServiceImplTest extends IntegrationTest {
                             DailyHistoryResponse.StylePayload::styleId,
                             DailyHistoryResponse.StylePayload::styleName)
                     .containsExactlyInAnyOrder(tuple(1L, "testStyle1"), tuple(2L, "testStyle2"));
+
+            assertThat(response.hashtags()).hasSize(2);
+            assertThat(response.hashtags())
+                    .containsExactlyInAnyOrder("testhashtag1", "testhashtag2");
         }
 
         @Test
@@ -1118,7 +1169,7 @@ class HistoryServiceImplTest extends IntegrationTest {
                             null,
                             "testName",
                             "testBrand",
-                            Season.SPRING,
+                            List.of(Season.SPRING),
                             category,
                             member1);
             clothRepository.save(cloth);

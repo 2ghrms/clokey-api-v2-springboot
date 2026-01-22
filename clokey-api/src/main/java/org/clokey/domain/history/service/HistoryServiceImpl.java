@@ -253,6 +253,11 @@ public class HistoryServiceImpl implements HistoryService {
                                                 historyStyle.getStyle().getName()))
                         .toList();
 
+        List<String> hashtags =
+                historyHashtagRepository.findAllByHistoryIdWithHashtag(historyId).stream()
+                        .map(historyHashtag -> historyHashtag.getHashtag().getName())
+                        .toList();
+
         return DailyHistoryResponse.of(
                 history.getMember().getId(),
                 history.getMember().getProfileImageUrl(),
@@ -263,7 +268,9 @@ public class HistoryServiceImpl implements HistoryService {
                 history.getHistoryDate(),
                 history.getSituation().getId(),
                 history.getSituation().getName(),
-                styles);
+                history.getContent(),
+                styles,
+                hashtags);
     }
 
     @Override
