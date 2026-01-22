@@ -22,4 +22,10 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
             order by h.historyDate asc
             """)
     List<History> findByMemberIdAndYearAndMonthNotBanned(Long memberId, int year, int month);
+
+    @Query("SELECT h.id FROM History h WHERE h.member.id = :memberId")
+    List<Long> findAllIdsByMemberId(Long memberId);
+
+    @Query("SELECT h.id FROM History h")
+    List<Long> findAllIds();
 }
