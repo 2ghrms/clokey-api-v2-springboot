@@ -29,6 +29,8 @@ import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.report.repository.ReportRepository;
+import org.clokey.domain.search.event.HistoryDeleteEvent;
+import org.clokey.domain.search.event.MeiliSearchSyncEvent;
 import org.clokey.enums.ImageType;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
@@ -113,6 +115,9 @@ public class HistoryServiceImpl implements HistoryService {
             }
         }
         saveHistoryRelations(history, styleIds, styleMap, images, clothTags, request.hashtags());
+
+        eventPublisher.publishEvent(
+                MeiliSearchSyncEvent.of(MeiliSearchSyncEvent.EntityType.HISTORY, history.getId()));
 
         return new HistoryCreateResponse(history.getId());
     }
@@ -205,6 +210,9 @@ public class HistoryServiceImpl implements HistoryService {
             }
         }
         saveHistoryRelations(history, styleIds, styleMap, newImages, clothTags, request.hashtags());
+
+        eventPublisher.publishEvent(
+                MeiliSearchSyncEvent.of(MeiliSearchSyncEvent.EntityType.HISTORY, historyId));
     }
 
     @Override
@@ -342,6 +350,8 @@ public class HistoryServiceImpl implements HistoryService {
         reportRepository.deleteAllByTargetTypeAndTargetId(TargetType.HISTORY, historyId);
 
         historyRepository.delete(history);
+
+        eventPublisher.publishEvent(HistoryDeleteEvent.of(historyId));
 
         List<String> imageUrls =
                 images.stream().map(HistoryImage::getImageUrl).filter(Objects::nonNull).toList();
