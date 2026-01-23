@@ -309,7 +309,15 @@ class LookBookServiceTest extends IntegrationTest {
                     lookBookService.getLookBooks(null, 3, SortDirection.ASC);
 
             // then
-            assertThat(response.content()).extracting("lookBookId").containsExactly(1L, 2L, 3L);
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("lookBookId")
+                                    .containsExactly(1L, 2L, 3L),
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("count")
+                                    .containsExactly(1L, 1L, 0L));
         }
 
         @Test

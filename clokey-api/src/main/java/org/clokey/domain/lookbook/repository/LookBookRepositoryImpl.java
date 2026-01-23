@@ -32,6 +32,9 @@ public class LookBookRepositoryImpl implements LookBookRepositoryCustom {
                                         LookBookListResponse.class,
                                         lookBook.id,
                                         lookBook.name,
+                                        JPAExpressions.select(coordinate.count())
+                                                .from(coordinate)
+                                                .where(coordinate.lookBook.id.eq(lookBook.id)),
                                         JPAExpressions.select(coordinate.imageUrl)
                                                 .from(coordinate)
                                                 .where(coordinate.lookBook.id.eq(lookBook.id))

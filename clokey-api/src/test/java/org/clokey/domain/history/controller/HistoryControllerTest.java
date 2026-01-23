@@ -725,6 +725,7 @@ public class HistoryControllerTest {
                                     new DailyHistoryResponse.ImagePayload(1L, "testImageUrl1"),
                                     new DailyHistoryResponse.ImagePayload(2L, "testImageUrl2")),
                             10L,
+                            false,
                             5L,
                             java.time.LocalDate.of(2025, 1, 1),
                             1L,

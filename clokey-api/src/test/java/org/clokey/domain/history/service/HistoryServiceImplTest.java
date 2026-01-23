@@ -1056,9 +1056,17 @@ class HistoryServiceImplTest extends IntegrationTest {
                             DailyHistoryResponse::situationName,
                             DailyHistoryResponse::content,
                             DailyHistoryResponse::likeCount,
+                            DailyHistoryResponse::liked,
                             DailyHistoryResponse::commentCount)
                     .containsExactly(
-                            1L, LocalDate.now(), 1L, "testSituation1", "testContent1", 0L, 0L);
+                            1L,
+                            LocalDate.now(),
+                            1L,
+                            "testSituation1",
+                            "testContent1",
+                            0L,
+                            false,
+                            0L);
 
             assertThat(response.images()).hasSize(2);
             assertThat(response.images())

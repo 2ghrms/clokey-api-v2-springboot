@@ -8,6 +8,9 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
+    meilisearch:
+      url: ${MEILISEARCH_ENDPOINT:http://localhost:7700}
+      api-key: ${MEILISEARCH_KEY:dummy}
 
 aws:
   access-key-id: dummy

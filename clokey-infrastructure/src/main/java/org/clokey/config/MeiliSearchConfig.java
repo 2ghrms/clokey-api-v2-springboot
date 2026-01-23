@@ -7,10 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.clokey.properties.MeilisearchProperties;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
 @RequiredArgsConstructor
 @EnableMeilisearchRepositories(basePackages = {"org.clokey.domain.search.repository"})
+@Profile("!test")
 public class MeiliSearchConfig extends MeilisearchConfiguration {
 
     private final MeilisearchProperties meilisearchProperties;

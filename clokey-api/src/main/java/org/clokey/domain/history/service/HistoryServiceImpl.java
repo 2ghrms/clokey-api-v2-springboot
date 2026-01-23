@@ -241,6 +241,10 @@ public class HistoryServiceImpl implements HistoryService {
                         .toList();
 
         long likeCount = memberLikeRepository.countByHistoryId(historyId);
+        boolean liked =
+                memberLikeRepository
+                        .findByMemberIdAndHistoryId(currentMember.getId(), historyId)
+                        .isPresent();
 
         long commentCount = commentRepository.countByHistoryIdAndBannedFalse(historyId);
 
@@ -264,6 +268,7 @@ public class HistoryServiceImpl implements HistoryService {
                 history.getMember().getNickname(),
                 images,
                 likeCount,
+                liked,
                 commentCount,
                 history.getHistoryDate(),
                 history.getSituation().getId(),
