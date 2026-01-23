@@ -61,7 +61,10 @@ public class LikeController {
     }
 
     @PostMapping
-    @Operation(operationId = "Like_toggleLike", summary = "좋아요 생성", description = "기록에 좋아요를 추가합니다")
+    @Operation(
+            operationId = "Like_toggleLike",
+            summary = "좋아요 추가 및 취소",
+            description = "기록에 좋아요를 추가 및 취소합니다. 토글 방식으로 동작합니다.")
     public BaseResponse<Void> toggleLike(@RequestParam("historyId") Long historyId) {
 
         likeService.toggleLike(historyId);

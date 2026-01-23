@@ -35,6 +35,7 @@ import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.member.repository.PendingFollowRepository;
 import org.clokey.domain.notification.repository.CodiveNotificationRepository;
 import org.clokey.domain.report.repository.ReportRepository;
+import org.clokey.domain.search.event.MemberDeleteEvent;
 import org.clokey.domain.term.repository.MemberTermRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
@@ -322,6 +323,9 @@ public class AuthServiceImpl implements AuthService {
 
         // 15. Member 삭제
         memberRepository.delete(currentMember);
+
+        // 16. MeiliSearch에 동기화
+        eventPublisher.publishEvent(MemberDeleteEvent.of(memberId, historyIds));
     }
 
     private Member getMember(RefreshTokenDto refreshTokenDto) {

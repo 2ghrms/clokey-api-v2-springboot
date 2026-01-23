@@ -98,6 +98,9 @@ jobs:
 
             export SWAGGER_USERNAME=${{ secrets.SWAGGER_USERNAME }}
             export SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
+            
+            export MEILISEARCH_ENDPOINT=${{ secrets.MEILISEARCH_ENDPOINT }}
+            export MEILISEARCH_KEY=${{ secrets.MEILISEARCH_KEY }}
 
             sudo mkdir -p /home/ubuntu/secrets
             echo "${{ secrets.FIREBASE_SA_JSON_B64 }}" | base64 -d | sudo tee /home/ubuntu/secrets/firebase-sa.json > /dev/null
@@ -112,4 +115,4 @@ jobs:
             
             echo "Cleaning up dangling Docker images..."
             docker image prune -f
-
+            

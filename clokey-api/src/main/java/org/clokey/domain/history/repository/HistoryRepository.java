@@ -23,6 +23,12 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
             """)
     List<History> findByMemberIdAndYearAndMonthNotBanned(Long memberId, int year, int month);
 
+    @Query("SELECT h.id FROM History h WHERE h.member.id = :memberId")
+    List<Long> findAllIdsByMemberId(Long memberId);
+
+    @Query("SELECT h.id FROM History h")
+    List<Long> findAllIds();
+
     @Query(
             """
         select new org.clokey.domain.history.repository.HistoryRepository$HistorySituationInfo(
