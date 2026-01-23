@@ -26,6 +26,10 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
 
+    meilisearch:
+      url: ${MEILISEARCH_ENDPOINT}
+      api-key: ${MEILISEARCH_KEY}
+
   security:
     oauth2:
       client:

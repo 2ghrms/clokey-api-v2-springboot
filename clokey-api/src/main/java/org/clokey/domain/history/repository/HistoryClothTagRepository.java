@@ -11,8 +11,6 @@ public interface HistoryClothTagRepository
         extends JpaRepository<HistoryClothTag, Long>, HistoryClothTagRepositoryCustom {
     List<HistoryClothTag> findByHistoryImageId(Long historyImageId);
 
-    List<HistoryClothTag> findAllByClothId(Long clothId);
-
     @Modifying
     @Query("DELETE FROM HistoryClothTag hct WHERE hct.cloth.id = :clothId")
     void deleteAllByClothId(Long clothId);
@@ -26,4 +24,8 @@ public interface HistoryClothTagRepository
                     + "join fetch hct.cloth "
                     + "where hct.historyImage.id = :historyImageId")
     List<HistoryClothTag> findAllByHistoryImageIdWithCloth(Long historyImageId);
+
+    @Query(
+            "SELECT DISTINCT hct.historyImage.history.id FROM HistoryClothTag hct WHERE hct.cloth.id = :clothId")
+    List<Long> findHistoryIdsByClothId(@Param("clothId") Long clothId);
 }

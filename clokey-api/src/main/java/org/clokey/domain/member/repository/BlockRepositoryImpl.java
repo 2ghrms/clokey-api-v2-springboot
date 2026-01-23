@@ -53,6 +53,16 @@ public class BlockRepositoryImpl implements BlockRepositoryCustom {
         return direction == SortDirection.DESC ? block.id.lt(blockId) : block.id.gt(blockId);
     }
 
+    @Override
+    public List<Long> findBlockedMemberIdsByBlockerId(Long blockerId) {
+        return queryFactory
+                .select(block.blocked.id)
+                .from(block)
+                .where(block.blocker.id.eq(blockerId))
+                .distinct()
+                .fetch();
+    }
+
     private <T> Slice<T> checkLastPage(int pageSize, List<T> results) {
         boolean hasNext = false;
 

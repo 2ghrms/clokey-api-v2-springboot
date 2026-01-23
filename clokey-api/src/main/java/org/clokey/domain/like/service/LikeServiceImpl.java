@@ -16,12 +16,14 @@ import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.like.repository.MemberLikeRepositoryCustom;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.FollowRepository;
+import org.clokey.domain.search.event.MeiliSearchSyncEvent;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.history.entity.History;
 import org.clokey.like.entity.MemberLike;
 import org.clokey.member.entity.Member;
 import org.clokey.response.SliceResponse;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class LikeServiceImpl implements LikeService {
     private final BlockRepository blockRepository;
     private final FollowRepository followRepository;
     private final MemberLikeRepositoryCustom memberLikeRepositoryCustom;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public SliceResponse<LikedHistoriesResponse.LikedHistoryPreview> getLikedHistories(
@@ -107,6 +110,9 @@ public class LikeServiceImpl implements LikeService {
             MemberLike newLike = MemberLike.createMemberLike(currentMember, history);
             memberLikeRepository.save(newLike);
         }
+
+        eventPublisher.publishEvent(
+                MeiliSearchSyncEvent.of(MeiliSearchSyncEvent.EntityType.HISTORY, historyId));
     }
 
     private boolean isBlockedByOrBlocking(Long fromId, Long toId) {

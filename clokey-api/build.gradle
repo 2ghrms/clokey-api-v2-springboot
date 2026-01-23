@@ -19,4 +19,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'io.vanslog:spring-data-meilisearch:0.7.3'
 }

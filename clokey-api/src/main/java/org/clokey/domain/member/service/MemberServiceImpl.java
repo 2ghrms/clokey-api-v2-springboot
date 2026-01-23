@@ -1,7 +1,9 @@
 package org.clokey.domain.member.service;
 
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.*;
@@ -12,6 +14,7 @@ import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.member.repository.PendingFollowRepository;
+import org.clokey.domain.search.event.MeiliSearchSyncEvent;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
@@ -32,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberUtil memberUtil;
-
+    private final HistoryRepository historyRepository;
     private final MemberRepository memberRepository;
     private final FollowRepository followRepository;
     private final PendingFollowRepository pendingFollowRepository;
@@ -57,6 +60,18 @@ public class MemberServiceImpl implements MemberService {
                 request.profileBackImageUrl(),
                 request.bio(),
                 request.visibility());
+
+        // Member 동기화
+        eventPublisher.publishEvent(
+                MeiliSearchSyncEvent.of(
+                        MeiliSearchSyncEvent.EntityType.MEMBER, currentMember.getId()));
+
+        // Member의 모든 History 동기화
+        List<Long> historyIds = historyRepository.findAllIdsByMemberId(currentMember.getId());
+        for (Long historyId : historyIds) {
+            eventPublisher.publishEvent(
+                    MeiliSearchSyncEvent.of(MeiliSearchSyncEvent.EntityType.HISTORY, historyId));
+        }
     }
 
     @Override

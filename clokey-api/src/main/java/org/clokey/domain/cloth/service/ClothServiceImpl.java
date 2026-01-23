@@ -20,6 +20,8 @@ import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
+import org.clokey.domain.search.event.ClothDeleteEvent;
+import org.clokey.domain.search.event.MeiliSearchSyncEvent;
 import org.clokey.enums.ImageType;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
@@ -159,6 +161,9 @@ public class ClothServiceImpl implements ClothService {
             eventPublisher.publishEvent(ImageDeleteEvent.of(cloth.getClothImageUrl()));
         }
 
+        // Category 변경 여부 확인
+        boolean categoryChanged = !cloth.getCategory().getId().equals(category.getId());
+
         cloth.updateCloth(
                 request.clothImageUrl(),
                 request.clothUrl(),
@@ -166,6 +171,16 @@ public class ClothServiceImpl implements ClothService {
                 request.brand(),
                 request.seasons(),
                 category);
+
+        // Category 변경 시 해당 Cloth를 사용하는 History들 검색엔진 동기화
+        if (categoryChanged) {
+            List<Long> historyIds = historyClothTagRepository.findHistoryIdsByClothId(clothId);
+            for (Long historyId : historyIds) {
+                eventPublisher.publishEvent(
+                        MeiliSearchSyncEvent.of(
+                                MeiliSearchSyncEvent.EntityType.HISTORY, historyId));
+            }
+        }
     }
 
     /**
@@ -181,11 +196,17 @@ public class ClothServiceImpl implements ClothService {
 
         validateClothOwnership(cloth, currentMember.getId());
 
+        List<Long> historyIds = historyClothTagRepository.findHistoryIdsByClothId(clothId);
+
         coordinateClothRepository.deleteAllByClothId(cloth.getId());
         historyClothTagRepository.deleteAllByClothId(cloth.getId());
 
         eventPublisher.publishEvent(ImageDeleteEvent.of(cloth.getClothImageUrl()));
         clothRepository.delete(cloth);
+
+        if (!historyIds.isEmpty()) {
+            eventPublisher.publishEvent(ClothDeleteEvent.of(clothId, historyIds));
+        }
     }
 
     private Map<Long, Category> getCategoryMapByIds(Set<Long> ids) {
