@@ -151,9 +151,9 @@ class LookBookControllerTest {
             // given
             List<LookBookListResponse> responses =
                     List.of(
-                            new LookBookListResponse(1L, "testName", "testImageUrl"),
-                            new LookBookListResponse(2L, "testName", "testImageUrl"),
-                            new LookBookListResponse(3L, "testName", "testImageUrl"));
+                            new LookBookListResponse(1L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(2L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(3L, "testName", 0L, "testImageUrl"));
 
             given(lookBookService.getLookBooks(null, 3, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(responses, true));
@@ -176,9 +176,9 @@ class LookBookControllerTest {
             // given
             List<LookBookListResponse> responses =
                     List.of(
-                            new LookBookListResponse(3L, "testName", "testImageUrl"),
-                            new LookBookListResponse(2L, "testName", "testImageUrl"),
-                            new LookBookListResponse(1L, "testName", "testImageUrl"));
+                            new LookBookListResponse(3L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(2L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(1L, "testName", 0L, "testImageUrl"));
 
             given(lookBookService.getLookBooks(null, 3, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(responses, true));
@@ -201,9 +201,9 @@ class LookBookControllerTest {
             // given
             List<LookBookListResponse> responses =
                     List.of(
-                            new LookBookListResponse(1L, "testName", "testImageUrl"),
-                            new LookBookListResponse(2L, "testName", "testImageUrl"),
-                            new LookBookListResponse(3L, "testName", "testImageUrl"));
+                            new LookBookListResponse(1L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(2L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(3L, "testName", 0L, "testImageUrl"));
 
             given(lookBookService.getLookBooks(null, 3, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(responses, true));
@@ -223,9 +223,9 @@ class LookBookControllerTest {
             // given
             List<LookBookListResponse> responses =
                     List.of(
-                            new LookBookListResponse(1L, "testName", "testImageUrl"),
-                            new LookBookListResponse(2L, "testName", "testImageUrl"),
-                            new LookBookListResponse(3L, "testName", "testImageUrl"));
+                            new LookBookListResponse(1L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(2L, "testName", 0L, "testImageUrl"),
+                            new LookBookListResponse(3L, "testName", 0L, "testImageUrl"));
 
             given(lookBookService.getLookBooks(null, 4, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(responses, false));

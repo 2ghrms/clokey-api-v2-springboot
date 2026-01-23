@@ -73,7 +73,7 @@ public class SearchRepositoryCustomImpl implements SearchRepositoryCustom {
         if (seasons == null || seasons.isEmpty()) {
             return null;
         }
-        return cloth.season.in(seasons);
+        return cloth.seasons.any().in(seasons);
     }
 
     private BooleanExpression lastClothIdCursor(Long lastClothId, SortDirection direction) {
