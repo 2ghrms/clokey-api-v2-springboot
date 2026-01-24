@@ -111,7 +111,7 @@ public class MemberController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, blockedMembersSlice);
     }
 
-    @GetMapping("follows")
+    @GetMapping("/follows")
     @Operation(
             operationId = "Member_getFollows",
             summary = "팔로잉/팔로워 멤버 조회",

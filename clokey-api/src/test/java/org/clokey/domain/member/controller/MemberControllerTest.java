@@ -556,12 +556,13 @@ class MemberControllerTest {
             // given
             MemberInfoResponse result =
                     new MemberInfoResponse(
-                            "codive123",
+                            1L,
                             "nickname123",
                             "한줄소개입니다~",
                             123L,
                             321L,
                             "https://img.example.com/bg.jpg",
+                            true,
                             true,
                             false);
             given(memberService.getMemberInfo(1L)).willReturn(result);
@@ -573,7 +574,8 @@ class MemberControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON200"))
-                    .andExpect(jsonPath("$.result.codiveId").value("codive123"));
+                    .andExpect(jsonPath("$.result.memberId").value(1L))
+                    .andExpect(jsonPath("$.result.isPublic").value(true));
         }
     }
 
@@ -585,12 +587,13 @@ class MemberControllerTest {
             // given
             MemberInfoResponse result =
                     new MemberInfoResponse(
-                            "myCodiveId",
+                            1L,
                             "myNickname",
                             "내 한줄소개",
                             10L,
                             5L,
                             "https://img.example.com/me.jpg",
+                            true,
                             false,
                             true);
             given(memberService.getMyInfo()).willReturn(result);
@@ -603,8 +606,9 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
-                    .andExpect(jsonPath("$.result.codiveId").value("myCodiveId"))
+                    .andExpect(jsonPath("$.result.memberId").value(1L))
                     .andExpect(jsonPath("$.result.nickname").value("myNickname"))
+                    .andExpect(jsonPath("$.result.isPublic").value(true))
                     .andExpect(jsonPath("$.result.isMe").value(true))
                     .andExpect(jsonPath("$.result.isFollowing").value(false));
         }
