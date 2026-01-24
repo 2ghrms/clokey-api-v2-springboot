@@ -68,7 +68,9 @@ public class LikeServiceImpl implements LikeService {
                         .map(
                                 preview ->
                                         new LikedHistoriesResponse.LikedHistoryPreview(
-                                                preview.getId(), imageMap.get(preview.getId())))
+                                                preview.getId(),
+                                                imageMap.get(preview.getId()),
+                                                preview.getHistoryDate()))
                         .toList();
 
         return new SliceResponse<>(previews, likedHistoriesSlice.isLast());

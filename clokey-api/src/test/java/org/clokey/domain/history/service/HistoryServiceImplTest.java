@@ -860,8 +860,11 @@ class HistoryServiceImplTest extends IntegrationTest {
             assertThat(response.payloads())
                     .extracting(
                             MonthlyHistoryResponse.Payload::historyId,
-                            MonthlyHistoryResponse.Payload::firstImageUrl)
-                    .containsExactly(tuple(1L, "testImageUrl1"), tuple(2L, "testImageUrl2"));
+                            MonthlyHistoryResponse.Payload::firstImageUrl,
+                            MonthlyHistoryResponse.Payload::historyDate)
+                    .containsExactly(
+                            tuple(1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                            tuple(2L, "testImageUrl2", LocalDate.of(2025, 1, 15)));
         }
 
         @Test

@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.lookbook.dto.response.LookBookListResponse;
 import org.clokey.global.paging.SortDirection;
+import org.clokey.lookbook.entity.QLookBook;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -25,6 +26,8 @@ public class LookBookRepositoryImpl implements LookBookRepositoryCustom {
     @Override
     public Slice<LookBookListResponse> findAllLookBookByMemberId(
             Long currentMemberId, Long lastLookBookId, int size, SortDirection direction) {
+        QLookBook lookBookSub = new QLookBook("lookBookSub");
+
         List<LookBookListResponse> results =
                 queryFactory
                         .select(
@@ -32,9 +35,9 @@ public class LookBookRepositoryImpl implements LookBookRepositoryCustom {
                                         LookBookListResponse.class,
                                         lookBook.id,
                                         lookBook.name,
-                                        JPAExpressions.select(coordinate.count())
-                                                .from(coordinate)
-                                                .where(coordinate.lookBook.id.eq(lookBook.id)),
+                                        JPAExpressions.select(lookBookSub.count())
+                                                .from(lookBookSub)
+                                                .where(lookBookSub.member.id.eq(currentMemberId)),
                                         JPAExpressions.select(coordinate.imageUrl)
                                                 .from(coordinate)
                                                 .where(coordinate.lookBook.id.eq(lookBook.id))

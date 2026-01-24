@@ -34,7 +34,8 @@ public class MemberLikeRepositoryImpl implements MemberLikeRepositoryCustom {
                                 Projections.constructor(
                                         LikedHistoriesResponse.LikedHistoryPreview.class,
                                         memberLike.history.id,
-                                        memberLike.id))
+                                        memberLike.id,
+                                        memberLike.history.historyDate))
                         .from(memberLike)
                         .where(
                                 memberLike.member.id.eq(memberId),

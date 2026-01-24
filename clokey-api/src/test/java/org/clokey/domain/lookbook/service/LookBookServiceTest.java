@@ -317,7 +317,7 @@ class LookBookServiceTest extends IntegrationTest {
                     () ->
                             assertThat(response.content())
                                     .extracting("count")
-                                    .containsExactly(1L, 1L, 0L));
+                                    .containsExactly(3L, 3L, 3L));
         }
 
         @Test

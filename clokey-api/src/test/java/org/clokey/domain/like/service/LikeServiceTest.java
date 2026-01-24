@@ -182,9 +182,10 @@ public class LikeServiceTest extends IntegrationTest {
             assertThat(response.isLast()).isTrue();
 
             assertThat(response.content())
-                    .extracting("id", "imageUrl")
+                    .extracting("id", "imageUrl", "historyDate")
                     .containsExactly(
-                            tuple(2L, "http://image2.url"), tuple(1L, "http://image1.url"));
+                            tuple(2L, "http://image2.url", LocalDate.of(2024, 12, 26)),
+                            tuple(1L, "http://image1.url", LocalDate.of(2024, 12, 25)));
         }
 
         @Test
