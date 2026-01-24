@@ -1,6 +1,7 @@
 package org.clokey.domain.like.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
 import java.util.List;
 
 @Schema(description = "좋아요 히스토리 조회 결과 (Slice 기반)")
@@ -18,19 +19,24 @@ public record LikedHistoriesResponse(
                 example = "https://clokeybucket.s3.ap-northeast-2.amazonaws.com/example.jpg")
         private String imageUrl;
 
+        @Schema(description = "기록 날짜", example = "2025-01-01")
+        private final LocalDate historyDate;
+
         @Schema(description = "다음 페이지 조회를 위한 커서 ID (MemberLike ID)", example = "100")
         private final Long lastLikeId;
 
-        public LikedHistoryPreview(Long id, Long lastLikeId) {
+        public LikedHistoryPreview(Long id, Long lastLikeId, LocalDate historyDate) {
             this.id = id;
             this.lastLikeId = lastLikeId;
             this.imageUrl = null;
+            this.historyDate = historyDate;
         }
 
-        public LikedHistoryPreview(Long id, String imageUrl) {
+        public LikedHistoryPreview(Long id, String imageUrl, LocalDate historyDate) {
             this.id = id;
             this.imageUrl = imageUrl;
             this.lastLikeId = null;
+            this.historyDate = historyDate;
         }
 
         public Long getId() {
@@ -43,6 +49,10 @@ public record LikedHistoriesResponse(
 
         public Long getLastLikeId() {
             return lastLikeId;
+        }
+
+        public LocalDate getHistoryDate() {
+            return historyDate;
         }
     }
 }

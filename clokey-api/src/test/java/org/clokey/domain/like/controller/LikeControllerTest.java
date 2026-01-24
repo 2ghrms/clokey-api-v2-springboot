@@ -64,9 +64,13 @@ public class LikeControllerTest {
             List<LikedHistoriesResponse.LikedHistoryPreview> previews =
                     List.of(
                             new LikedHistoriesResponse.LikedHistoryPreview(
-                                    1L, "https://img.com/img1.jpg"),
+                                    1L,
+                                    "https://img.com/img1.jpg",
+                                    java.time.LocalDate.of(2025, 1, 1)),
                             new LikedHistoriesResponse.LikedHistoryPreview(
-                                    2L, "https://img.com/img2.jpg"));
+                                    2L,
+                                    "https://img.com/img2.jpg",
+                                    java.time.LocalDate.of(2025, 1, 2)));
 
             SliceResponse<LikedHistoriesResponse.LikedHistoryPreview> sliceResponse =
                     new SliceResponse<>(previews, true);
@@ -87,10 +91,12 @@ public class LikeControllerTest {
                     .andExpect(
                             jsonPath("$.result.content[0].imageUrl")
                                     .value("https://img.com/img1.jpg"))
+                    .andExpect(jsonPath("$.result.content[0].historyDate").value("2025-01-01"))
                     .andExpect(jsonPath("$.result.content[1].id").value(2L))
                     .andExpect(
                             jsonPath("$.result.content[1].imageUrl")
                                     .value("https://img.com/img2.jpg"))
+                    .andExpect(jsonPath("$.result.content[1].historyDate").value("2025-01-02"))
                     .andExpect(jsonPath("$.result.isLast").value(true));
         }
 
@@ -100,9 +106,13 @@ public class LikeControllerTest {
             List<LikedHistoriesResponse.LikedHistoryPreview> previews =
                     List.of(
                             new LikedHistoriesResponse.LikedHistoryPreview(
-                                    1L, "https://img.com/img1.jpg"),
+                                    1L,
+                                    "https://img.com/img1.jpg",
+                                    java.time.LocalDate.of(2025, 1, 1)),
                             new LikedHistoriesResponse.LikedHistoryPreview(
-                                    2L, "https://img.com/img2.jpg"));
+                                    2L,
+                                    "https://img.com/img2.jpg",
+                                    java.time.LocalDate.of(2025, 1, 2)));
 
             SliceResponse<LikedHistoriesResponse.LikedHistoryPreview> sliceResponse =
                     new SliceResponse<>(previews, false);
@@ -124,10 +134,12 @@ public class LikeControllerTest {
                     .andExpect(
                             jsonPath("$.result.content[0].imageUrl")
                                     .value("https://img.com/img1.jpg"))
+                    .andExpect(jsonPath("$.result.content[0].historyDate").value("2025-01-01"))
                     .andExpect(jsonPath("$.result.content[1].id").value(2L))
                     .andExpect(
                             jsonPath("$.result.content[1].imageUrl")
                                     .value("https://img.com/img2.jpg"))
+                    .andExpect(jsonPath("$.result.content[1].historyDate").value("2025-01-02"))
                     .andExpect(jsonPath("$.result.isLast").value(false));
         }
     }
