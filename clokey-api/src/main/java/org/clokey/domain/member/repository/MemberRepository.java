@@ -21,4 +21,7 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     @Query("SELECT m FROM Member m WHERE m.memberStatus = :status AND m.updatedAt < :cutoffDate")
     List<Member> findInactiveMembersBefore(
             @Param("status") MemberStatus status, @Param("cutoffDate") LocalDateTime cutoffDate);
+
+    @Query("SELECT m.id FROM Member m")
+    List<Long> findAllIds();
 }

@@ -19,15 +19,19 @@ public interface SearchService {
             Long categoryId,
             List<Season> seasons);
 
+    SliceResponse<SearchedHistoryResponse> searchHistoryByHashtagsAndCategories(
+            String keyword, Long page, Integer size, HistorySearchSortType sort);
+
     void syncAllHistories();
 
     void unSyncAllHistories();
 
-    SliceResponse<SearchedHistoryResponse> searchHistoryByHashtagsAndCategories(
-            String keyword, Long page, Integer size, HistorySearchSortType sort);
-
     SliceResponse<SearchedMemberResponse> searchUserByClokeyIdAndNickname(
             String keyword, Long page, Integer size);
+
+    void syncAllMembers();
+
+    void unSyncAllMembers();
 
     // TODO : 추천 검색어 기능 구현 후 주석 해제
     //    List<SearchingRecommendResponse> recommendInSearching();
