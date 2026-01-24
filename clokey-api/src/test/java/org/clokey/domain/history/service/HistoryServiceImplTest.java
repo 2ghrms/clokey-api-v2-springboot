@@ -88,7 +88,6 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             memberRepository.save(member);
@@ -128,14 +127,12 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -385,14 +382,12 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -717,7 +712,6 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             memberRepository.save(member1);
@@ -812,14 +806,12 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
@@ -827,7 +819,6 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member3 =
                     Member.createMember(
                             "testEmail3",
-                            "testClokeyId3",
                             "testNickName3",
                             OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
 
@@ -926,14 +917,12 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
 
@@ -988,14 +977,12 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
@@ -1003,7 +990,6 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member3 =
                     Member.createMember(
                             "testEmail3",
-                            "testClokeyId3",
                             "testNickName3",
                             OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
 
@@ -1150,13 +1136,11 @@ class HistoryServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));

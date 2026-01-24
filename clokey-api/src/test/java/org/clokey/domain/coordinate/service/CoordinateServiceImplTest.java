@@ -75,14 +75,12 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -385,14 +383,12 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -714,14 +710,12 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -804,14 +798,12 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -1257,14 +1249,12 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -1405,13 +1395,11 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
 
@@ -1533,13 +1521,11 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
 
@@ -1607,13 +1593,11 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
 
@@ -1750,14 +1734,12 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -1861,13 +1843,11 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
 
@@ -1945,13 +1925,11 @@ class CoordinateServiceImplTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "todayEmail1",
-                            "todayClokeyId1",
                             "todayNickName1",
                             OauthInfo.createOauthInfo("todayOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "todayEmail2",
-                            "todayClokeyId2",
                             "todayNickName2",
                             OauthInfo.createOauthInfo("todayOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -2015,7 +1993,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
         @Test
         void 오늘의_코디가_없으면_빈_리스트를_반환한다() {
             // given
-            Member member = memberRepository.findByClokeyId("todayClokeyId2").orElseThrow();
+            Member member = memberRepository.findByNickname("todayNickName2").orElseThrow();
             given(memberUtil.getCurrentMember()).willReturn(member);
             // when
             List<DailyCoordinateClothResponse> responses =

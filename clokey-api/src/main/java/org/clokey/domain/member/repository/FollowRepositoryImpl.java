@@ -37,7 +37,6 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                                         follow.id,
                                         member.id,
                                         member.nickname,
-                                        member.clokeyId,
                                         member.profileImageUrl,
                                         JPAExpressions.selectOne()
                                                 .from(followSub)
@@ -72,7 +71,6 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                                         follow.id,
                                         member.id,
                                         member.nickname,
-                                        member.clokeyId,
                                         member.profileImageUrl,
                                         JPAExpressions.selectOne()
                                                 .from(followSub)

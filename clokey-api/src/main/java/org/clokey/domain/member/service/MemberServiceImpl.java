@@ -55,7 +55,6 @@ public class MemberServiceImpl implements MemberService {
 
         currentMember.updateProfile(
                 request.nickname(),
-                request.clokeyId(),
                 request.profileImageUrl(),
                 request.profileBackImageUrl(),
                 request.bio(),
@@ -75,12 +74,12 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public DuplicatedIdCheckResponse checkDuplicateClokeyId(DuplicatedIdCheckRequest request) {
+    public DuplicatedIdCheckResponse checkDuplicateNickname(DuplicatedIdCheckRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         boolean duplicated =
-                !request.clokeyId().equals(currentMember.getClokeyId())
-                        && memberRepository.existsByClokeyId(request.clokeyId());
+                !request.nickname().equals(currentMember.getNickname())
+                        && memberRepository.existsByNickname(request.nickname());
 
         return DuplicatedIdCheckResponse.of(duplicated);
     }
@@ -105,11 +104,11 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public MyselfCheckResponse checkIsMyself(String clokeyId) {
-        validateExistsClokeyId(clokeyId);
+    public MyselfCheckResponse checkIsMyself(String nickname) {
+        validateExistsNickname(nickname);
         Member currentMember = memberUtil.getCurrentMember();
 
-        boolean isMyself = currentMember.getClokeyId().equals(clokeyId);
+        boolean isMyself = currentMember.getNickname().equals(nickname);
 
         return MyselfCheckResponse.of(isMyself);
     }
@@ -232,9 +231,9 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
-    private void validateExistsClokeyId(String clokeyId) {
-        if (!memberRepository.existsByClokeyId(clokeyId)) {
-            throw new BaseCustomException(MemberErrorCode.CLOKEY_ID_NOT_FOUND);
+    private void validateExistsNickname(String nickname) {
+        if (!memberRepository.existsByNickname(nickname)) {
+            throw new BaseCustomException(MemberErrorCode.NICKNAME_NOT_FOUND);
         }
     }
 
@@ -280,9 +279,9 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
-    private Member getMemberByCodiveId(String codiveId) {
+    private Member getMemberByNickname(String nickname) {
         return memberRepository
-                .findByClokeyId(codiveId)
+                .findByNickname(nickname)
                 .orElseThrow(() -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 

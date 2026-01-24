@@ -79,20 +79,13 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "followFrom",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             member1.updateProfile(
-                    "followFrom",
-                    "testCodiveId1",
-                    "example.com",
-                    "example2.com",
-                    "한줄소개~",
-                    Visibility.PUBLIC);
+                    "followFrom", "example.com", "example2.com", "한줄소개~", Visibility.PUBLIC);
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testCodiveId2",
                             "followTo",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.updateDeviceToken("test-device-token-for-member2");
@@ -142,20 +135,13 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "followFrom",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             member1.updateProfile(
-                    "followFrom",
-                    "testCodiveId1",
-                    "example.com",
-                    "example2.com",
-                    "한줄소개~",
-                    Visibility.PUBLIC);
+                    "followFrom", "example.com", "example2.com", "한줄소개~", Visibility.PUBLIC);
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testCodiveId2",
                             "followTo",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.updateDeviceToken("test-device-token-for-member2");
@@ -207,20 +193,13 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "commenter",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             member1.updateProfile(
-                    "commenter",
-                    "testCodiveId1",
-                    "example.com",
-                    "example2.com",
-                    "한줄소개~",
-                    Visibility.PUBLIC);
+                    "commenter", "example.com", "example2.com", "한줄소개~", Visibility.PUBLIC);
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testCodiveId2",
                             "receiver",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.updateDeviceToken("test-device-token-for-member2");
@@ -287,20 +266,13 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "replier",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             member1.updateProfile(
-                    "replier",
-                    "testCodiveId1",
-                    "example.com",
-                    "example2.com",
-                    "한줄소개~",
-                    Visibility.PUBLIC);
+                    "replier", "example.com", "example2.com", "한줄소개~", Visibility.PUBLIC);
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testCodiveId2",
                             "receiver",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.updateDeviceToken("test-device-token-for-member2");
@@ -369,13 +341,11 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "nickname1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testCodiveId2",
                             "nickname2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -450,13 +420,11 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "nickname1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testCodiveId2",
                             "nickname2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -531,7 +499,6 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             memberRepository.save(member1);
@@ -573,7 +540,6 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             memberRepository.save(member1);
@@ -632,7 +598,6 @@ public class NotificationServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testCodiveId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             member1.updateDeviceToken("test-device-token-for-temp");

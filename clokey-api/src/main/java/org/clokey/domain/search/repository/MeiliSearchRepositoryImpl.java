@@ -83,8 +83,7 @@ public class MeiliSearchRepositoryImpl implements SearchRepository {
                                         return new SearchedMemberResponse(
                                                 Long.valueOf(document.getId()),
                                                 document.getProfileImageUrl(),
-                                                document.getNickname(),
-                                                document.getClokeyId());
+                                                document.getNickname());
                                     })
                             .collect(Collectors.toList());
 

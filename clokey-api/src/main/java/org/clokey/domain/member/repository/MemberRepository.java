@@ -12,11 +12,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
-    boolean existsByClokeyId(String clokeyId);
+    boolean existsByNickname(String nickname);
 
     Optional<Member> findByOauthInfo(OauthInfo oauthInfo);
 
-    Optional<Member> findByClokeyId(String clokeyId);
+    Optional<Member> findByNickname(String nickname);
 
     @Query("SELECT m FROM Member m WHERE m.memberStatus = :status AND m.updatedAt < :cutoffDate")
     List<Member> findInactiveMembersBefore(

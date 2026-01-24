@@ -65,14 +65,12 @@ class CommentServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
@@ -163,14 +161,12 @@ class CommentServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
@@ -326,14 +322,12 @@ class CommentServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
@@ -455,14 +449,12 @@ class CommentServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
@@ -585,14 +577,12 @@ class CommentServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -667,26 +657,22 @@ class CommentServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
             member1.updateProfile(
                     "testNickName1",
-                    "testClokeyId1",
                     "testProfileImageUrl1",
                     "testProfileBackImageUrl1",
                     "testBio1",
                     Visibility.PUBLIC);
             member2.updateProfile(
                     "testNickName2",
-                    "testClokeyId2",
                     "testProfileImageUrl2",
                     "testProfileBackImageUrl2",
                     "testBio2",
@@ -753,7 +739,6 @@ class CommentServiceTest extends IntegrationTest {
                                             MyCommentListResponse::historyId,
                                             MyCommentListResponse::imageUrl,
                                             MyCommentListResponse::nickname,
-                                            MyCommentListResponse::codiveId,
                                             MyCommentListResponse::historyDate,
                                             MyCommentListResponse::content,
                                             r ->
@@ -769,7 +754,6 @@ class CommentServiceTest extends IntegrationTest {
                                                     1L,
                                                     "testHistoryImageURl1_1",
                                                     "testNickName1",
-                                                    "testClokeyId1",
                                                     LocalDate.of(2025, 1, 1),
                                                     "testContent1",
                                                     List.of(1L, 2L),
@@ -778,7 +762,6 @@ class CommentServiceTest extends IntegrationTest {
                                                     2L,
                                                     "testHistoryImageURl2_1",
                                                     "testNickName1",
-                                                    "testClokeyId1",
                                                     LocalDate.of(2025, 1, 2),
                                                     "testContent2",
                                                     List.of(3L, 4L),

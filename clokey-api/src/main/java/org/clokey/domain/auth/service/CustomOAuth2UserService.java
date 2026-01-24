@@ -46,7 +46,6 @@ public class CustomOAuth2UserService extends OidcUserService {
                                     Member newMember =
                                             Member.createMember(
                                                     email,
-                                                    uniqueUtil.generateRandomId(),
                                                     uniqueUtil.generateRandomNickname(),
                                                     oauthInfo);
                                     memberRepository.save(newMember);

@@ -152,9 +152,9 @@ public class LikeControllerTest {
             List<LikedMembersResponse.LikedMemberPreview> previews =
                     List.of(
                             new LikedMembersResponse.LikedMemberPreview(
-                                    1L, "codive1", "https://img.com/img1.jpg", "nickname1", true),
+                                    1L, "https://img.com/img1.jpg", "nickname1", true),
                             new LikedMembersResponse.LikedMemberPreview(
-                                    2L, "codive2", "https://img.com/img2.jpg", "nickname2", false));
+                                    2L, "https://img.com/img2.jpg", "nickname2", false));
 
             SliceResponse<LikedMembersResponse.LikedMemberPreview> sliceResponse =
                     new SliceResponse<>(previews, true);
@@ -173,14 +173,12 @@ public class LikeControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.content[0].id").value(1L))
-                    .andExpect(jsonPath("$.result.content[0].codiveId").value("codive1"))
                     .andExpect(
                             jsonPath("$.result.content[0].imageUrl")
                                     .value("https://img.com/img1.jpg"))
                     .andExpect(jsonPath("$.result.content[0].nickname").value("nickname1"))
                     .andExpect(jsonPath("$.result.content[0].followStatus").value(true))
                     .andExpect(jsonPath("$.result.content[1].id").value(2L))
-                    .andExpect(jsonPath("$.result.content[1].codiveId").value("codive2"))
                     .andExpect(
                             jsonPath("$.result.content[1].imageUrl")
                                     .value("https://img.com/img2.jpg"))
@@ -195,9 +193,9 @@ public class LikeControllerTest {
             List<LikedMembersResponse.LikedMemberPreview> previews =
                     List.of(
                             new LikedMembersResponse.LikedMemberPreview(
-                                    1L, "codive1", "https://img.com/img1.jpg", "nickname1", true),
+                                    1L, "https://img.com/img1.jpg", "nickname1", true),
                             new LikedMembersResponse.LikedMemberPreview(
-                                    2L, "codive2", "https://img.com/img2.jpg", "nickname2", false));
+                                    2L, "https://img.com/img2.jpg", "nickname2", false));
 
             SliceResponse<LikedMembersResponse.LikedMemberPreview> sliceResponse =
                     new SliceResponse<>(previews, false);
@@ -217,14 +215,12 @@ public class LikeControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.content[0].id").value(1L))
-                    .andExpect(jsonPath("$.result.content[0].codiveId").value("codive1"))
                     .andExpect(
                             jsonPath("$.result.content[0].imageUrl")
                                     .value("https://img.com/img1.jpg"))
                     .andExpect(jsonPath("$.result.content[0].nickname").value("nickname1"))
                     .andExpect(jsonPath("$.result.content[0].followStatus").value(true))
                     .andExpect(jsonPath("$.result.content[1].id").value(2L))
-                    .andExpect(jsonPath("$.result.content[1].codiveId").value("codive2"))
                     .andExpect(
                             jsonPath("$.result.content[1].imageUrl")
                                     .value("https://img.com/img2.jpg"))

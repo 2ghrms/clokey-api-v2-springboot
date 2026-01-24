@@ -133,7 +133,6 @@ class AuthServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
@@ -178,7 +177,6 @@ class AuthServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             member.updateDeviceToken("testDeviceToken");
@@ -210,7 +208,6 @@ class AuthServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             memberRepository.save(member);
@@ -262,7 +259,6 @@ class AuthServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
@@ -293,7 +289,6 @@ class AuthServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
@@ -348,12 +343,10 @@ class AuthServiceTest extends IntegrationTest {
             Member targetMember =
                     Member.createMember(
                             "targetEmail",
-                            "targetClokeyId",
                             "targetNickName",
                             OauthInfo.createOauthInfo("targetOauthId", OauthProvider.KAKAO));
             targetMember.updateProfile(
                     "targetNickName",
-                    "targetClokeyId",
                     "profileImageUrl",
                     "profileBackImageUrl",
                     "한줄소개",
@@ -362,7 +355,6 @@ class AuthServiceTest extends IntegrationTest {
             Member otherMember =
                     Member.createMember(
                             "otherEmail",
-                            "otherClokeyId",
                             "otherNickName",
                             OauthInfo.createOauthInfo("otherOauthId", OauthProvider.KAKAO));
 

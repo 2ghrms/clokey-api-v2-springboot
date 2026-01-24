@@ -60,19 +60,16 @@ public class FeedServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail10",
-                            "testClokeyId10",
                             "testNickName10",
                             OauthInfo.createOauthInfo("oauth-current-10", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail20",
-                            "testClokeyId20",
                             "testNickName20",
                             OauthInfo.createOauthInfo("oauth-a-20", OauthProvider.KAKAO));
             Member member3 =
                     Member.createMember(
                             "testEmail30",
-                            "testClokeyId30",
                             "testNickName30",
                             OauthInfo.createOauthInfo("oauth-b-30", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2, member3));
@@ -190,8 +187,8 @@ public class FeedServiceTest extends IntegrationTest {
         @Test
         void 차단한_사용자의_피드는_노출되지_않는다() {
             // given
-            Member member1 = memberRepository.findByClokeyId("testClokeyId10").orElseThrow();
-            Member member2 = memberRepository.findByClokeyId("testClokeyId20").orElseThrow();
+            Member member1 = memberRepository.findByNickname("testNickName10").orElseThrow();
+            Member member2 = memberRepository.findByNickname("testNickName20").orElseThrow();
             blockRepository.save(Block.createBlock(member1, member2));
             // when
             FeedListResponse response =
@@ -228,19 +225,16 @@ public class FeedServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("oauth-current", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("oauth-a", OauthProvider.KAKAO));
             Member member3 =
                     Member.createMember(
                             "testEmail3",
-                            "testClokeyId3",
                             "testNickName3",
                             OauthInfo.createOauthInfo("oauth-b", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2, member3));
