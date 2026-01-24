@@ -769,9 +769,10 @@ class MemberServiceTest extends IntegrationTest {
             MemberInfoResponse response = memberService.getMemberInfo(2L);
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId2"),
+                    () -> assertThat(response.memberId()).isEqualTo(2L),
                     () -> assertThat(response.nickname()).isEqualTo("testNickName2"),
                     () -> assertThat(response.followerCount()).isOne(),
+                    () -> assertThat(response.isPublic()).isTrue(),
                     () -> assertThat(response.isMe()).isFalse());
         }
 
@@ -781,9 +782,10 @@ class MemberServiceTest extends IntegrationTest {
             MemberInfoResponse response = memberService.getMemberInfo(1L);
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId1"),
+                    () -> assertThat(response.memberId()).isEqualTo(1L),
                     () -> assertThat(response.nickname()).isEqualTo("testNickName1"),
                     () -> assertThat(response.followerCount()).isOne(),
+                    () -> assertThat(response.isPublic()).isTrue(),
                     () -> assertThat(response.isMe()).isTrue());
         }
 
@@ -794,9 +796,10 @@ class MemberServiceTest extends IntegrationTest {
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId4"),
+                    () -> assertThat(response.memberId()).isEqualTo(4L),
                     () -> assertThat(response.nickname()).isEqualTo("testNickName4"),
                     () -> assertThat(response.followerCount()).isZero(),
+                    () -> assertThat(response.isPublic()).isTrue(),
                     () -> assertThat(response.isMe()).isFalse());
         }
 
@@ -807,9 +810,10 @@ class MemberServiceTest extends IntegrationTest {
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId4"),
+                    () -> assertThat(response.memberId()).isEqualTo(4L),
                     () -> assertThat(response.nickname()).isEqualTo("testNickName4"),
                     () -> assertThat(response.followingCount()).isOne(),
+                    () -> assertThat(response.isPublic()).isTrue(),
                     () -> assertThat(response.isMe()).isFalse());
         }
 
@@ -865,8 +869,9 @@ class MemberServiceTest extends IntegrationTest {
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.codiveId()).isEqualTo("testCodiveId1"),
+                    () -> assertThat(response.memberId()).isEqualTo(1L),
                     () -> assertThat(response.nickname()).isEqualTo("testNickName1"),
+                    () -> assertThat(response.isPublic()).isTrue(),
                     () -> assertThat(response.isMe()).isTrue(),
                     () -> assertThat(response.isFollowing()).isFalse());
         }

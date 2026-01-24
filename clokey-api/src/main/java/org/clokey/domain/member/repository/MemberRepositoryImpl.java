@@ -5,6 +5,7 @@ import static org.clokey.member.entity.QMember.member;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.JPAExpressions;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.clokey.domain.member.dto.response.MemberInfoResponse;
 import org.clokey.member.entity.QBlock;
 import org.clokey.member.entity.QFollow;
+import org.clokey.member.enums.Visibility;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -28,7 +30,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                 .select(
                         Projections.constructor(
                                 MemberInfoResponse.class,
-                                member.clokeyId,
+                                member.id,
                                 member.nickname,
                                 member.bio,
                                 JPAExpressions.select(follow.count())
@@ -42,6 +44,10 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                                                 follow.followFrom.id.eq(member.id),
                                                 isNotBlocked(currentId, follow.followTo.id)),
                                 member.profileImageUrl,
+                                new CaseBuilder()
+                                        .when(member.visibility.eq(Visibility.PUBLIC))
+                                        .then(true)
+                                        .otherwise(false),
                                 JPAExpressions.selectOne()
                                         .from(followSub)
                                         .where(
@@ -60,7 +66,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                 .select(
                         Projections.constructor(
                                 MemberInfoResponse.class,
-                                member.clokeyId,
+                                member.id,
                                 member.nickname,
                                 member.bio,
                                 JPAExpressions.select(follow.count())
@@ -74,6 +80,10 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                                                 follow.followFrom.id.eq(member.id),
                                                 isNotBlocked(memberId, follow.followTo.id)),
                                 member.profileImageUrl,
+                                new CaseBuilder()
+                                        .when(member.visibility.eq(Visibility.PUBLIC))
+                                        .then(true)
+                                        .otherwise(false),
                                 Expressions.FALSE,
                                 Expressions.TRUE))
                 .from(member)
