@@ -576,4 +576,37 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.result.codiveId").value("codive123"));
         }
     }
+
+    @Nested
+    class 내_정보_조회_요청_시 {
+
+        @Test
+        void 유효한_요청이면_내_정보를_반환한다() throws Exception {
+            // given
+            MemberInfoResponse result =
+                    new MemberInfoResponse(
+                            "myCodiveId",
+                            "myNickname",
+                            "내 한줄소개",
+                            10L,
+                            5L,
+                            "https://img.example.com/me.jpg",
+                            false,
+                            true);
+            given(memberService.getMyInfo()).willReturn(result);
+
+            // when
+            ResultActions perform = mockMvc.perform(get("/users/me"));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.codiveId").value("myCodiveId"))
+                    .andExpect(jsonPath("$.result.nickname").value("myNickname"))
+                    .andExpect(jsonPath("$.result.isMe").value(true))
+                    .andExpect(jsonPath("$.result.isFollowing").value(false));
+        }
+    }
 }

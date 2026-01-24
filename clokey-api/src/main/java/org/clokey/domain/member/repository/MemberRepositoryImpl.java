@@ -54,6 +54,33 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                 .fetchOne();
     }
 
+    @Override
+    public MemberInfoResponse findMyInfoById(Long memberId) {
+        return queryFactory
+                .select(
+                        Projections.constructor(
+                                MemberInfoResponse.class,
+                                member.clokeyId,
+                                member.nickname,
+                                member.bio,
+                                JPAExpressions.select(follow.count())
+                                        .from(follow)
+                                        .where(
+                                                follow.followTo.id.eq(member.id),
+                                                isNotBlocked(memberId, follow.followFrom.id)),
+                                JPAExpressions.select(follow.count())
+                                        .from(follow)
+                                        .where(
+                                                follow.followFrom.id.eq(member.id),
+                                                isNotBlocked(memberId, follow.followTo.id)),
+                                member.profileImageUrl,
+                                Expressions.FALSE,
+                                Expressions.TRUE))
+                .from(member)
+                .where(member.id.eq(memberId))
+                .fetchOne();
+    }
+
     private BooleanExpression isNotBlocked(Long currentId, NumberPath<Long> targetMemberId) {
         if (currentId == null) {
             return null;
