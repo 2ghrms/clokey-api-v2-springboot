@@ -105,7 +105,6 @@ public class SearchDocumentServiceImpl implements SearchDocumentService {
         document.setMemberStatus(member.getMemberStatus().name());
         document.setProfileImageUrl(member.getProfileImageUrl());
         document.setNickname(member.getNickname());
-        document.setClokeyId(member.getClokeyId());
 
         return document;
     }

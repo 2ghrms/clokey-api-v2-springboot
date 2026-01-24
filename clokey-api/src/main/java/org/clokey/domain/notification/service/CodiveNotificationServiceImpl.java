@@ -74,7 +74,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             .setToken(followToMember.getDeviceToken())
                             .setNotification(notification)
                             .putData("followFromId", String.valueOf(followFromMember.getId()))
-                            .putData("clokeyId", followFromMember.getClokeyId())
+                            .putData("nickname", followFromMember.getNickname())
                             .putData("redirectType", "MEMBER_PROFILE")
                             .build();
 
@@ -89,7 +89,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             followToMember,
                             content,
                             profileImageUrl,
-                            followToMember.getClokeyId(),
+                            followToMember.getNickname(),
                             RedirectType.MEMBER_REDIRECT);
 
             codiveNotificationRepository.save(codiveNotification);
@@ -115,7 +115,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             .setToken(followToMember.getDeviceToken())
                             .setNotification(notification)
                             .putData("followFromId", String.valueOf(followFromMember.getId()))
-                            .putData("clokeyId", followFromMember.getClokeyId())
+                            .putData("nickname", followFromMember.getNickname())
                             .putData("redirectType", "MEMBER_PROFILE")
                             .build();
 
@@ -130,7 +130,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             followToMember,
                             content,
                             profileImageUrl,
-                            followToMember.getClokeyId(),
+                            followToMember.getNickname(),
                             RedirectType.MEMBER_REDIRECT);
 
             codiveNotificationRepository.save(codiveNotification);

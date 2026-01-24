@@ -31,11 +31,7 @@ public class Member extends BaseEntity {
 
     @NotNull private String email;
 
-    @Column(unique = true)
-    @NotNull
-    private String clokeyId;
-
-    @Column(length = 30)
+    @Column(unique = true, length = 30)
     @NotNull
     private String nickname;
 
@@ -93,14 +89,12 @@ public class Member extends BaseEntity {
     @Builder(access = AccessLevel.PRIVATE)
     private Member(
             String email,
-            String clokeyId,
             String nickname,
             OauthInfo oauthInfo,
             MemberStatus memberStatus,
             MemberRole memberRole,
             Visibility visibility) {
         this.email = email;
-        this.clokeyId = clokeyId;
         this.nickname = nickname;
         this.oauthInfo = oauthInfo;
         this.memberStatus = memberStatus;
@@ -108,11 +102,9 @@ public class Member extends BaseEntity {
         this.visibility = visibility;
     }
 
-    public static Member createMember(
-            String email, String clokeyId, String nickname, OauthInfo oauthInfo) {
+    public static Member createMember(String email, String nickname, OauthInfo oauthInfo) {
         return Member.builder()
                 .email(email)
-                .clokeyId(clokeyId)
                 .nickname(nickname)
                 .oauthInfo(oauthInfo)
                 .memberStatus(MemberStatus.ACTIVE)
@@ -123,13 +115,11 @@ public class Member extends BaseEntity {
 
     public void updateProfile(
             String nickname,
-            String clokeyId,
             String profileImageUrl,
             String profileBackImageUrl,
             String bio,
             Visibility visibility) {
         this.nickname = nickname;
-        this.clokeyId = clokeyId;
         this.profileImageUrl = profileImageUrl;
         this.profileBackImageUrl = profileBackImageUrl;
         this.bio = bio;

@@ -54,14 +54,12 @@ public class LikeServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
 
@@ -130,7 +128,6 @@ public class LikeServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
@@ -207,21 +204,18 @@ public class LikeServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
 
             Member member3 =
                     Member.createMember(
                             "testEmail3",
-                            "testClokeyId3",
                             "testNickName3",
                             OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2, member3));
@@ -265,10 +259,10 @@ public class LikeServiceTest extends IntegrationTest {
             assertThat(response.isLast()).isTrue();
 
             assertThat(response.content())
-                    .extracting("id", "codiveId", "imageUrl", "nickname", "followStatus")
+                    .extracting("id", "imageUrl", "nickname", "followStatus")
                     .containsExactly(
-                            tuple(3L, "testClokeyId3", null, "testNickName3", false),
-                            tuple(2L, "testClokeyId2", null, "testNickName2", true));
+                            tuple(3L, null, "testNickName3", false),
+                            tuple(2L, null, "testNickName2", true));
         }
 
         @Test

@@ -48,7 +48,6 @@ class TermServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             Member savedMember = memberRepository.save(member);
@@ -87,7 +86,6 @@ class TermServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             Member savedMember = memberRepository.save(member);
@@ -176,13 +174,11 @@ class TermServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -232,13 +228,11 @@ class TermServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));

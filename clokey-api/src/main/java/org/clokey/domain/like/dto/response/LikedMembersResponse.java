@@ -15,9 +15,6 @@ public record LikedMembersResponse(
         @Schema(description = "유저 ID", example = "30")
         private final Long id;
 
-        @Schema(description = "클로키 ID", example = "@Clokey_USER1")
-        private final String codiveId;
-
         @Schema(description = "프로필 이미지 URL")
         private final String imageUrl;
 
@@ -30,20 +27,16 @@ public record LikedMembersResponse(
         @Schema(description = "다음 페이지 조회를 위한 커서 ID (MemberLike ID)", example = "100")
         private final Long lastLikeId;
 
-        public LikedMemberPreview(
-                Long id, String codiveId, String imageUrl, String nickname, Long lastLikeId) {
+        public LikedMemberPreview(Long id, String imageUrl, String nickname, Long lastLikeId) {
             this.id = id;
-            this.codiveId = codiveId;
             this.imageUrl = imageUrl;
             this.nickname = nickname;
             this.lastLikeId = lastLikeId;
             this.followStatus = false;
         }
 
-        public LikedMemberPreview(
-                Long id, String codiveId, String imageUrl, String nickname, boolean followStatus) {
+        public LikedMemberPreview(Long id, String imageUrl, String nickname, boolean followStatus) {
             this.id = id;
-            this.codiveId = codiveId;
             this.imageUrl = imageUrl;
             this.nickname = nickname;
             this.followStatus = followStatus;

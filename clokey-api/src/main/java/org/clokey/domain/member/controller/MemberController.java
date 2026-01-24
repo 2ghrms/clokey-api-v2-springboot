@@ -36,15 +36,15 @@ public class MemberController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
-    @PostMapping("/check-duplicate-id")
+    @PostMapping("/check-duplicate-nickname")
     @Operation(
-            operationId = "Member_checkDuplicateClokeyId",
-            summary = "아이디 중복확인",
-            description = "클로키아이디 중복을 확인합니다.")
-    public BaseResponse<DuplicatedIdCheckResponse> checkDuplicateClokeyId(
+            operationId = "Member_checkDuplicateNickname",
+            summary = "닉네임 중복확인",
+            description = "닉네임 중복을 확인합니다.")
+    public BaseResponse<DuplicatedIdCheckResponse> checkDuplicateNickname(
             @Valid @RequestBody DuplicatedIdCheckRequest request) {
 
-        DuplicatedIdCheckResponse response = memberService.checkDuplicateClokeyId(request);
+        DuplicatedIdCheckResponse response = memberService.checkDuplicateNickname(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
@@ -85,12 +85,12 @@ public class MemberController {
     @Operation(
             operationId = "Member_checkIsMySelf",
             summary = "본인인지 여부 확인",
-            description = "클로키 아이디로 본인인지 확인합니다.")
+            description = "닉네임으로 본인인지 확인합니다.")
     public BaseResponse<MyselfCheckResponse> checkIsMySelf(
-            @Parameter(description = "본인인지 확인할 클로키 ID") @RequestParam("clokeyId") String clokeyId) {
+            @Parameter(description = "본인인지 확인할 닉네임") @RequestParam("nickname") String nickname) {
 
         return BaseResponse.onSuccess(
-                GlobalBaseSuccessCode.OK, memberService.checkIsMyself(clokeyId));
+                GlobalBaseSuccessCode.OK, memberService.checkIsMyself(nickname));
     }
 
     @GetMapping("/blocks")

@@ -96,7 +96,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                         new CommentListResponse(
                                                 c.commentId(),
                                                 c.memberId(),
-                                                c.nickName(),
+                                                c.nickname(),
                                                 c.profileImageUrl(),
                                                 c.content(),
                                                 repliedMap.getOrDefault(c.commentId(), false),
@@ -182,8 +182,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                         history.id,
                                         history.historyDate,
                                         history.content,
-                                        member.nickname,
-                                        member.clokeyId))
+                                        member.nickname))
                         .from(history)
                         .join(history.member, member)
                         .where(history.id.in(historyIds))
@@ -253,7 +252,6 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                             hid,
                                             imageUrlMap.get(hid),
                                             info.nickname(),
-                                            info.clokeyId(),
                                             info.historyDate(),
                                             info.content(),
                                             payloads);
@@ -284,11 +282,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     }
 
     public record HistoryInfo(
-            Long historyId,
-            java.time.LocalDate historyDate,
-            String content,
-            String nickname,
-            String clokeyId) {}
+            Long historyId, java.time.LocalDate historyDate, String content, String nickname) {}
 
     public record HistoryImageInfo(Long historyId, String imageUrl) {}
 

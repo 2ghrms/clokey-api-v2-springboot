@@ -10,8 +10,8 @@ import org.springframework.data.annotation.Id;
 @Setter
 @Document(indexUid = "members")
 @Setting(
-        searchableAttributes = {"clokeyId", "nickname"},
-        displayedAttributes = {"id", "memberStatus", "profileImageUrl", "nickname", "clokeyId"},
+        searchableAttributes = {"nickname"},
+        displayedAttributes = {"id", "memberStatus", "profileImageUrl", "nickname"},
         filterableAttributes = {"id", "memberStatus"},
         rankingRules = {"typo", "words", "proximity", "attribute", "exactness"})
 public class MemberDocument {
@@ -23,6 +23,4 @@ public class MemberDocument {
     private String profileImageUrl; // Member.profileUrl
 
     private String nickname; // Member.nickname
-
-    private String clokeyId; // Member.clokeyId
 }

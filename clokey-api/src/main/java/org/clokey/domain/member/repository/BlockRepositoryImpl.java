@@ -31,7 +31,7 @@ public class BlockRepositoryImpl implements BlockRepositoryCustom {
                                         BlockedMemberResponse.class,
                                         block.id,
                                         member.id,
-                                        member.clokeyId,
+                                        member.nickname,
                                         member.profileImageUrl))
                         .from(block)
                         .join(block.blocked, member)

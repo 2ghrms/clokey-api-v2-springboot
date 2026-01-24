@@ -688,7 +688,6 @@ class CommentControllerTest {
                                     1L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 1),
                                     "testContent",
                                     List.of(
@@ -698,7 +697,6 @@ class CommentControllerTest {
                                     2L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 2),
                                     "testContent",
                                     List.of(
@@ -733,7 +731,6 @@ class CommentControllerTest {
                                     2L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 1),
                                     "testContent",
                                     List.of(
@@ -743,7 +740,6 @@ class CommentControllerTest {
                                     1L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 2),
                                     "testContent",
                                     List.of(
@@ -778,7 +774,6 @@ class CommentControllerTest {
                                     1L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 1),
                                     "testContent",
                                     List.of(
@@ -788,7 +783,6 @@ class CommentControllerTest {
                                     2L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 2),
                                     "testContent",
                                     List.of(
@@ -823,7 +817,6 @@ class CommentControllerTest {
                                     1L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 1),
                                     "testContent",
                                     List.of(
@@ -833,7 +826,6 @@ class CommentControllerTest {
                                     2L,
                                     "testImageUrl",
                                     "testNickname",
-                                    "testCodiveId",
                                     LocalDate.of(2025, 1, 2),
                                     "testContent",
                                     List.of(

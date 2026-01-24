@@ -5,8 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record FollowMemberResponse(
         @Schema(description = "팔로우의 ID", example = "1") Long followId,
         @Schema(description = "팔로잉 or 팔로워의 Member의 Id", example = "1") Long memberId,
-        @Schema(description = "팔로잉 or 팔로워의 닉네임", example = "닉네임") String nickname,
-        @Schema(description = "팔로잉 or 팔로워의 Codive ID", example = "Codive123") String codiveId,
+        @Schema(description = "팔로잉 or 팔로워의 닉네임", example = "clokey123") String nickname,
         @Schema(
                         description = "팔로잉 or 팔로워의 PofileImageUrl",
                         example = "https://example.com/profile/john.jpg")

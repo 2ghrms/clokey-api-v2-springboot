@@ -90,7 +90,6 @@ class ClothServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
@@ -133,7 +132,6 @@ class ClothServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail",
-                            "testClokeyId",
                             "testNickName",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
@@ -255,7 +253,6 @@ class ClothServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             memberRepository.save(member);
@@ -396,7 +393,6 @@ class ClothServiceTest extends IntegrationTest {
             Member member =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             memberRepository.save(member);
@@ -578,13 +574,11 @@ class ClothServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -665,13 +659,11 @@ class ClothServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             memberRepository.saveAll(List.of(member1, member2));
@@ -830,13 +822,11 @@ class ClothServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             "testEmail1",
-                            "testClokeyId1",
                             "testNickName1",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
                             "testEmail2",
-                            "testClokeyId2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 

@@ -152,7 +152,6 @@ public class LikeServiceImpl implements LikeService {
                                 preview ->
                                         new LikedMembersResponse.LikedMemberPreview(
                                                 preview.getId(),
-                                                preview.getCodiveId(),
                                                 preview.getImageUrl(),
                                                 preview.getNickname(),
                                                 followedIdSet.contains(preview.getId())))

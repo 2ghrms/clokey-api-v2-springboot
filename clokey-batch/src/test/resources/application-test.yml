@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false;MODE=MYSQL
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+    meilisearch:
+      url: ${MEILISEARCH_ENDPOINT:http://localhost:7700}
+      api-key: ${MEILISEARCH_KEY:dummy}
+
+aws:
+  access-key-id: dummy
+  secret-access-key: dummy
+  region: dummy
+  s3:
+    bucket: dummy
+    endpoint: dummy
+
+firebase:
+  type: dummy
+  project-id: dummy
+  private-key-id: dummy
+  private-key: dummy
+  client-email: dummy
+  client-id: dummy
+  auth-uri: dummy
+  token-uri: dummy
+  auth-provider-x509-cert-url: dummy
+  client-x509-cert-url: dummy
+

@@ -7,8 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class UniqueUtil {
 
-    private static final String CLOKEY_ID_PREFIX = "clokey-user-";
-
     private static final String[] PREFIX_NAMES = {"미니멀한", "모던한", "케주얼한", "스트릿한"};
 
     private static final String[] CLOTHING_CATEGORIES = {
@@ -28,10 +26,5 @@ public class UniqueUtil {
         String uuidPart = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
 
         return prefix + "-" + category + "-" + uuidPart;
-    }
-
-    public String generateRandomId() {
-        String uuidPart = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
-        return CLOKEY_ID_PREFIX + uuidPart;
     }
 }
