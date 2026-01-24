@@ -106,6 +106,26 @@ public class SearchController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
+    @GetMapping("/members/sync-all")
+    @Operation(
+            operationId = "Search_syncAllMembers",
+            summary = "전체 유저 검색 엔진 동기화 (개발용)",
+            description = "전체 유저 검색 엔진 동기화 API입니다.")
+    public BaseResponse<Void> syncAllMembers() {
+        searchService.syncAllMembers();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, null);
+    }
+
+    @GetMapping("/members/unsync-all")
+    @Operation(
+            operationId = "Search_unSyncAllMembers",
+            summary = "전체 유저 검색 엔진 삭제 (개발용)",
+            description = "전체 유저 검색 엔진 삭제 API입니다.")
+    public BaseResponse<Void> unSyncAllMembers() {
+        searchService.unSyncAllMembers();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, null);
+    }
+
     /* :TODO: 검색 탭 추천 API 추후 구현
     @GetMapping("/recommendations")
     @Operation(

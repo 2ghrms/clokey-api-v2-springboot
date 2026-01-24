@@ -11,7 +11,9 @@ import org.clokey.domain.category.repository.CategoryRepository;
 import org.clokey.domain.cloth.dto.response.ClothListResponse;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.search.document.HistoryDocument;
+import org.clokey.domain.search.document.MemberDocument;
 import org.clokey.domain.search.dto.response.SearchedHistoryResponse;
 import org.clokey.domain.search.dto.response.SearchedMemberResponse;
 import org.clokey.domain.search.enums.HistorySearchSortType;
@@ -37,6 +39,7 @@ public class SearchServiceImpl implements SearchService {
     private final SearchRepository searchRepository;
     private final BlockRepository blockRepository;
     private final HistoryRepository historyRepository;
+    private final MemberRepository memberRepository;
     private final SearchDocumentService searchDocumentService;
 
     @Override
@@ -63,6 +66,19 @@ public class SearchServiceImpl implements SearchService {
                         seasons);
 
         return SliceResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceResponse<SearchedHistoryResponse> searchHistoryByHashtagsAndCategories(
+            String keyword, Long page, Integer size, HistorySearchSortType sort) {
+        Member currentMember = memberUtil.getCurrentMember();
+
+        List<Long> excludedMemberIds =
+                blockRepository.findBlockedMemberIdsByBlockerId(currentMember.getId());
+
+        return searchRepository.findHistoriesByKeyword(
+                keyword, page, size, sort, excludedMemberIds);
     }
 
     @Override
@@ -124,19 +140,6 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     @Transactional(readOnly = true)
-    public SliceResponse<SearchedHistoryResponse> searchHistoryByHashtagsAndCategories(
-            String keyword, Long page, Integer size, HistorySearchSortType sort) {
-        Member currentMember = memberUtil.getCurrentMember();
-
-        List<Long> excludedMemberIds =
-                blockRepository.findBlockedMemberIdsByBlockerId(currentMember.getId());
-
-        return searchRepository.findHistoriesByKeyword(
-                keyword, page, size, sort, excludedMemberIds);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public SliceResponse<SearchedMemberResponse> searchUserByClokeyIdAndNickname(
             String keyword, Long page, Integer size) {
         Member currentMember = memberUtil.getCurrentMember();
@@ -145,6 +148,61 @@ public class SearchServiceImpl implements SearchService {
                 blockRepository.findBlockedMemberIdsByBlockerId(currentMember.getId());
 
         return searchRepository.findUsersByKeyword(keyword, page, size, excludedMemberIds);
+    }
+
+    @Override
+    public void syncAllMembers() {
+        try {
+            List<Long> memberIds = memberRepository.findAllIds();
+            if (memberIds.isEmpty()) {
+                log.info("[search] 동기화할 Member가 없습니다.");
+                return;
+            }
+
+            List<MemberDocument> documents = new ArrayList<>();
+            for (Long memberId : memberIds) {
+                try {
+                    MemberDocument document = searchDocumentService.toMemberDocument(memberId);
+                    documents.add(document);
+                } catch (Exception e) {
+                    log.warn("[search] MemberDocument 변환 실패 - memberId: {}", memberId, e);
+                }
+            }
+
+            if (!documents.isEmpty()) {
+                searchRepository.saveAllMembers(documents);
+                log.info(
+                        "[search] 전체 Member 검색엔진 동기화 완료 - totalCount: {}, syncedCount: {}",
+                        memberIds.size(),
+                        documents.size());
+            }
+        } catch (Exception e) {
+            log.error("[search] 전체 Member 검색엔진 동기화 실패", e);
+            throw new RuntimeException("전체 Member 검색엔진 동기화 실패", e);
+        }
+    }
+
+    @Override
+    public void unSyncAllMembers() {
+        try {
+            List<Long> memberIds = memberRepository.findAllIds();
+            if (memberIds.isEmpty()) {
+                log.info("[search] 삭제할 MemberDocument가 없습니다.");
+                return;
+            }
+
+            for (Long memberId : memberIds) {
+                try {
+                    searchRepository.deleteMember(memberId.toString());
+                } catch (Exception e) {
+                    log.warn("[search] MemberDocument 삭제 실패 - memberId: {}", memberId, e);
+                }
+            }
+            log.info("[search] 전체 MemberDocument 검색엔진에서 삭제 완료 - memberCount: {}", memberIds.size());
+        } catch (Exception e) {
+            log.error("[search] 전체 MemberDocument 검색엔진 삭제 실패", e);
+            throw new RuntimeException("전체 MemberDocument 검색엔진 삭제 실패", e);
+        }
     }
 
     /* :TODO 추천 메소드 구현
