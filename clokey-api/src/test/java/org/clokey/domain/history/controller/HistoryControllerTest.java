@@ -721,6 +721,7 @@ public class HistoryControllerTest {
                             1L,
                             "testProfileImageUrl",
                             "testNickname",
+                            true,
                             List.of(
                                     new DailyHistoryResponse.ImagePayload(1L, "testImageUrl1"),
                                     new DailyHistoryResponse.ImagePayload(2L, "testImageUrl2")),
@@ -749,6 +750,7 @@ public class HistoryControllerTest {
                     .andExpect(jsonPath("$.result.memberId").value(1L))
                     .andExpect(jsonPath("$.result.profileImageUrl").value("testProfileImageUrl"))
                     .andExpect(jsonPath("$.result.nickname").value("testNickname"))
+                    .andExpect(jsonPath("$.result.isMine").value(true))
                     .andExpect(jsonPath("$.result.images").isArray())
                     .andExpect(jsonPath("$.result.images.length()").value(2))
                     .andExpect(jsonPath("$.result.images[0].imageId").value(1L))
