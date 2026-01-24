@@ -9,6 +9,7 @@ public record DailyHistoryResponse(
         @Schema(description = "프로필 이미지 URL", example = "https://example.com/profile.jpg")
                 String profileImageUrl,
         @Schema(description = "닉네임", example = "포테토남") String nickname,
+        @Schema(description = "작성자 본인 여부", example = "true") Boolean isMine,
         @Schema(description = "기록 이미지 목록") List<DailyHistoryResponse.ImagePayload> images,
         @Schema(description = "좋아요 개수", example = "10") Long likeCount,
         @Schema(description = "좋아요 여부", example = "true") Boolean liked,
@@ -24,6 +25,7 @@ public record DailyHistoryResponse(
             Long memberId,
             String profileImageUrl,
             String nickname,
+            Boolean isMine,
             List<ImagePayload> images,
             Long likeCount,
             boolean liked,
@@ -38,6 +40,7 @@ public record DailyHistoryResponse(
                 memberId,
                 profileImageUrl,
                 nickname,
+                isMine,
                 images,
                 likeCount,
                 liked,

@@ -266,6 +266,7 @@ public class HistoryServiceImpl implements HistoryService {
                 history.getMember().getId(),
                 history.getMember().getProfileImageUrl(),
                 history.getMember().getNickname(),
+                history.getMember().getId().equals(currentMember.getId()),
                 images,
                 likeCount,
                 liked,

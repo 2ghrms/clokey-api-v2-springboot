@@ -1054,6 +1054,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             assertThat(response)
                     .extracting(
                             DailyHistoryResponse::memberId,
+                            DailyHistoryResponse::isMine,
                             DailyHistoryResponse::historyDate,
                             DailyHistoryResponse::situationId,
                             DailyHistoryResponse::situationName,
@@ -1063,6 +1064,7 @@ class HistoryServiceImplTest extends IntegrationTest {
                             DailyHistoryResponse::commentCount)
                     .containsExactly(
                             1L,
+                            true,
                             LocalDate.now(),
                             1L,
                             "testSituation1",
