@@ -27,4 +27,6 @@ public interface MemberService {
             Long memberId, Long lastFollowId, boolean isFollowing, Integer size);
 
     MemberInfoResponse getMemberInfo(Long memberId);
+
+    MemberInfoResponse getMyInfo();
 }

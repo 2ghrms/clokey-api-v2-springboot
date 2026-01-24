@@ -156,6 +156,12 @@ public class MemberServiceImpl implements MemberService {
         return memberRepository.findMemberInfoById(currentMember.getId(), memberId);
     }
 
+    @Override
+    public MemberInfoResponse getMyInfo() {
+        Member currentMember = memberUtil.getCurrentMember();
+        return memberRepository.findMyInfoById(currentMember.getId());
+    }
+
     private void validateVisualizeBannedMember(Member member, ProfileUpdateRequest request) {
         boolean banned = member.getMemberStatus().equals(MemberStatus.BANNED);
         boolean changeToPublic = request.visibility().equals(Visibility.PUBLIC);
