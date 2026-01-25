@@ -55,7 +55,6 @@
 Member member =
         Member.createMember(
                 "testEmail1",
-                "testClokeyId1",
                 "testNickName1",
                 OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
 memberRepository.save(member);

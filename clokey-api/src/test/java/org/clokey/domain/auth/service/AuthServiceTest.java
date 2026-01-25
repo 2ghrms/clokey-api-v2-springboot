@@ -346,11 +346,7 @@ class AuthServiceTest extends IntegrationTest {
                             "targetNickName",
                             OauthInfo.createOauthInfo("targetOauthId", OauthProvider.KAKAO));
             targetMember.updateProfile(
-                    "targetNickName",
-                    "profileImageUrl",
-                    "profileBackImageUrl",
-                    "한줄소개",
-                    Visibility.PUBLIC);
+                    "targetNickName", "profileImageUrl", "한줄소개", Visibility.PUBLIC);
 
             Member otherMember =
                     Member.createMember(
@@ -607,7 +603,6 @@ class AuthServiceTest extends IntegrationTest {
                             assertThat(events.getFirst().imageUrls())
                                     .containsExactlyInAnyOrder(
                                             "profileImageUrl",
-                                            "profileBackImageUrl",
                                             "historyImageUrl1",
                                             "historyImageUrl2",
                                             "coordinateImageUrl",

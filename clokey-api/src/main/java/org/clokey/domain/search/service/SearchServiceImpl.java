@@ -163,7 +163,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     @Transactional(readOnly = true)
-    public SliceResponse<SearchedMemberResponse> searchUserByClokeyIdAndNickname(
+    public SliceResponse<SearchedMemberResponse> searchUserByNickname(
             String keyword, Long page, Integer size) {
         Member currentMember = memberUtil.getCurrentMember();
 

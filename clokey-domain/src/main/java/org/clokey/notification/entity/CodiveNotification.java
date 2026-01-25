@@ -23,7 +23,7 @@ public class CodiveNotification extends BaseEntity {
 
     @NotNull private String notificationImageUrl;
 
-    // ex) historyId, clokeyId
+    // ex) historyId
     @NotNull private String redirectInfo;
 
     @NotNull

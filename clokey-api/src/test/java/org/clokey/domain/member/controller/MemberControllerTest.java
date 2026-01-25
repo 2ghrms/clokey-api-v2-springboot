@@ -51,7 +51,6 @@ class MemberControllerTest {
                             "testNickname",
                             "testBio",
                             Visibility.PUBLIC,
-                            "https://img.example.com/bg.jpg",
                             "https://img.example.com/bg.jpg");
 
             willDoNothing().given(memberService).updateProfile(any(ProfileUpdateRequest.class));
@@ -81,7 +80,6 @@ class MemberControllerTest {
                             nickname,
                             "testBio",
                             Visibility.PRIVATE,
-                            "https://img.example.com/bg.jpg",
                             "https://img.example.com/bg.jpg");
 
             // when
@@ -109,7 +107,6 @@ class MemberControllerTest {
                             nickname,
                             "testBio",
                             Visibility.PRIVATE,
-                            "https://img.example.com/bg.jpg",
                             "https://img.example.com/bg.jpg");
 
             // when
@@ -136,7 +133,6 @@ class MemberControllerTest {
                             "testNickname",
                             longBio,
                             Visibility.PRIVATE,
-                            "https://img.example.com/bg.jpg",
                             "https://img.example.com/bg.jpg");
 
             // when

@@ -14,6 +14,4 @@ public record ProfileUpdateRequest(
                 String bio,
         @NotNull(message = "공개여부는 비워둘 수 없습니다.") @Schema(description = "계정 공개여부", example = "PUBLIC")
                 Visibility visibility,
-        @Schema(description = "사용자 프로필 이미지", example = "profile.jpg") String profileImageUrl,
-        @Schema(description = "사용자 배경 이미지", example = "background.jpg")
-                String profileBackImageUrl) {}
+        @Schema(description = "사용자 프로필 이미지", example = "profile.jpg") String profileImageUrl) {}

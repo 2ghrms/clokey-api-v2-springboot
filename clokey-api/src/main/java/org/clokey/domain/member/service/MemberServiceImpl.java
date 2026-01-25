@@ -54,11 +54,7 @@ public class MemberServiceImpl implements MemberService {
         // s3 삭제 로직 구현 이후에 반영 필요 -> 배경 및 프로필 이미지를 없애버리는 경우
 
         currentMember.updateProfile(
-                request.nickname(),
-                request.profileImageUrl(),
-                request.profileBackImageUrl(),
-                request.bio(),
-                request.visibility());
+                request.nickname(), request.profileImageUrl(), request.bio(), request.visibility());
 
         // Member 동기화
         eventPublisher.publishEvent(

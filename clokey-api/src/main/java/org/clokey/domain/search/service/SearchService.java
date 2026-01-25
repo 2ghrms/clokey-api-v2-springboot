@@ -27,7 +27,7 @@ public interface SearchService {
 
     void unSyncAllHistories();
 
-    SliceResponse<SearchedMemberResponse> searchUserByClokeyIdAndNickname(
+    SliceResponse<SearchedMemberResponse> searchUserByNickname(
             String keyword, Long page, Integer size);
 
     void syncAllMembers();
