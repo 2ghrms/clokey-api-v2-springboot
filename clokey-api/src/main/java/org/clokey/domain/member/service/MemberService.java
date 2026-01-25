@@ -28,5 +28,5 @@ public interface MemberService {
 
     MemberInfoResponse getMemberInfo(Long memberId);
 
-    MemberInfoResponse getMyInfo();
+    MyInfoResponse getMyInfo();
 }
