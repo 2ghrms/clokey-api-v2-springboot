@@ -156,7 +156,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public MemberInfoResponse getMyInfo() {
+    public MyInfoResponse getMyInfo() {
         Member currentMember = memberUtil.getCurrentMember();
         return memberRepository.findMyInfoById(currentMember.getId());
     }

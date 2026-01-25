@@ -132,7 +132,7 @@ public class MemberController {
     @Operation(
             operationId = "Member_getMemberInfo",
             summary = "회원 조회 API",
-            description = "입력받은 codive ID에 해당하는 회원의 정보를 조회합니다.")
+            description = "입력받은 member ID에 해당하는 회원의 정보를 조회합니다.")
     public BaseResponse<MemberInfoResponse> getMemberInfo(@PathVariable Long memberId) {
         return BaseResponse.onSuccess(
                 GlobalBaseSuccessCode.OK, memberService.getMemberInfo(memberId));
@@ -143,7 +143,7 @@ public class MemberController {
             operationId = "Member_getMyInfo",
             summary = "내 정보 조회 API",
             description = "로그인한 사용자의 본인 정보를 조회합니다.")
-    public BaseResponse<MemberInfoResponse> getMyInfo() {
+    public BaseResponse<MyInfoResponse> getMyInfo() {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, memberService.getMyInfo());
     }
 }

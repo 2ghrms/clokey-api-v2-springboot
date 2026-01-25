@@ -12,6 +12,7 @@ import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.FollowMemberResponse;
 import org.clokey.domain.member.dto.response.MemberInfoResponse;
+import org.clokey.domain.member.dto.response.MyInfoResponse;
 import org.clokey.domain.member.dto.response.MyselfCheckResponse;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
@@ -835,21 +836,21 @@ class MemberServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_내_정보를_반환한다() {
             // when
-            MemberInfoResponse response = memberService.getMyInfo();
+            MyInfoResponse response = memberService.getMyInfo();
 
             // then
             Assertions.assertAll(
                     () -> assertThat(response.memberId()).isEqualTo(1L),
                     () -> assertThat(response.nickname()).isEqualTo("testNickName1"),
+                    () -> assertThat(response.email()).isEqualTo("testEmail1"),
                     () -> assertThat(response.isPublic()).isTrue(),
-                    () -> assertThat(response.isMe()).isTrue(),
-                    () -> assertThat(response.isFollowing()).isFalse());
+                    () -> assertThat(response.isMe()).isTrue());
         }
 
         @Test
         void 차단_관계인_멤버는_팔로워_수에_집계하지_않는다() {
             // when - member1 팔로워: member2, member3. member1이 member3 차단 → 1명만 집계
-            MemberInfoResponse response = memberService.getMyInfo();
+            MyInfoResponse response = memberService.getMyInfo();
 
             // then
             assertThat(response.followerCount()).isOne();
@@ -858,7 +859,7 @@ class MemberServiceTest extends IntegrationTest {
         @Test
         void 차단_관계인_멤버는_팔로잉_수에_집계하지_않는다() {
             // when - member1 팔로잉: member2, member3. member1이 member3 차단 → 1명만 집계
-            MemberInfoResponse response = memberService.getMyInfo();
+            MyInfoResponse response = memberService.getMyInfo();
 
             // then
             assertThat(response.followingCount()).isOne();

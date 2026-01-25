@@ -12,6 +12,7 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.member.dto.response.MemberInfoResponse;
+import org.clokey.domain.member.dto.response.MyInfoResponse;
 import org.clokey.member.entity.QBlock;
 import org.clokey.member.entity.QFollow;
 import org.clokey.member.enums.Visibility;
@@ -61,14 +62,15 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
     }
 
     @Override
-    public MemberInfoResponse findMyInfoById(Long memberId) {
+    public MyInfoResponse findMyInfoById(Long memberId) {
         return queryFactory
                 .select(
                         Projections.constructor(
-                                MemberInfoResponse.class,
+                                MyInfoResponse.class,
                                 member.id,
                                 member.nickname,
                                 member.bio,
+                                member.email,
                                 JPAExpressions.select(follow.count())
                                         .from(follow)
                                         .where(
@@ -84,7 +86,6 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                                         .when(member.visibility.eq(Visibility.PUBLIC))
                                         .then(true)
                                         .otherwise(false),
-                                Expressions.FALSE,
                                 Expressions.TRUE))
                 .from(member)
                 .where(member.id.eq(memberId))

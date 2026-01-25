@@ -576,16 +576,16 @@ class MemberControllerTest {
         @Test
         void 유효한_요청이면_내_정보를_반환한다() throws Exception {
             // given
-            MemberInfoResponse result =
-                    new MemberInfoResponse(
+            MyInfoResponse result =
+                    new MyInfoResponse(
                             1L,
                             "myNickname",
                             "내 한줄소개",
+                            "me@example.com",
                             10L,
                             5L,
                             "https://img.example.com/me.jpg",
                             true,
-                            false,
                             true);
             given(memberService.getMyInfo()).willReturn(result);
 
@@ -599,9 +599,9 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.memberId").value(1L))
                     .andExpect(jsonPath("$.result.nickname").value("myNickname"))
+                    .andExpect(jsonPath("$.result.email").value("me@example.com"))
                     .andExpect(jsonPath("$.result.isPublic").value(true))
-                    .andExpect(jsonPath("$.result.isMe").value(true))
-                    .andExpect(jsonPath("$.result.isFollowing").value(false));
+                    .andExpect(jsonPath("$.result.isMe").value(true));
         }
     }
 }
