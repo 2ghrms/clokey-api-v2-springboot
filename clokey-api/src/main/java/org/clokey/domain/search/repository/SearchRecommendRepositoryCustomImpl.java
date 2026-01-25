@@ -36,7 +36,10 @@ public class SearchRecommendRepositoryCustomImpl implements SearchRecommendRepos
                 queryFactory
                         .select(
                                 Projections.constructor(
-                                        RecommendHistoryRow.class, history.id, style.name.min()))
+                                        RecommendHistoryRow.class,
+                                        history.id,
+                                        style.name.min(),
+                                        member.id))
                         .from(history)
                         .join(history.member, member)
                         .join(historyStyle)
@@ -65,7 +68,8 @@ public class SearchRecommendRepositoryCustomImpl implements SearchRecommendRepos
                                 Projections.constructor(
                                         RecommendHistoryRow.class,
                                         history.id,
-                                        Expressions.constant(categoryName)))
+                                        Expressions.constant(categoryName),
+                                        member.id))
                         .from(history)
                         .join(history.member, member)
                         .join(history.historyImages, historyImage)
@@ -96,7 +100,8 @@ public class SearchRecommendRepositoryCustomImpl implements SearchRecommendRepos
                                 Projections.constructor(
                                         RecommendHistoryRow.class,
                                         history.id,
-                                        Expressions.constant(hashtagName)))
+                                        Expressions.constant(hashtagName),
+                                        member.id))
                         .from(history)
                         .join(history.member, member)
                         .join(historyHashtag)
