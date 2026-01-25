@@ -5,6 +5,7 @@ import org.clokey.cloth.enums.Season;
 import org.clokey.domain.cloth.dto.response.ClothListResponse;
 import org.clokey.domain.search.dto.response.SearchedHistoryResponse;
 import org.clokey.domain.search.dto.response.SearchedMemberResponse;
+import org.clokey.domain.search.dto.response.SearchingRecommendResponse;
 import org.clokey.domain.search.enums.HistorySearchSortType;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.response.SliceResponse;
@@ -33,6 +34,5 @@ public interface SearchService {
 
     void unSyncAllMembers();
 
-    // TODO : 추천 검색어 기능 구현 후 주석 해제
-    //    List<SearchingRecommendResponse> recommendInSearching();
+    List<SearchingRecommendResponse> recommendInSearching();
 }

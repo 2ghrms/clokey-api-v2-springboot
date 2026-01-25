@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.clokey.domain.search.document.HistoryDocument;
 import org.clokey.domain.search.repository.SearchRepository;
 import org.clokey.domain.search.service.SearchDocumentServiceImpl;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,6 +15,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Profile("prod")
 public class ClothDeleteEventListener {
 
     private final SearchRepository searchRepository;

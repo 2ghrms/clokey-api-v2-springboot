@@ -10,6 +10,7 @@ import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.cloth.dto.response.ClothListResponse;
 import org.clokey.domain.search.dto.response.SearchedHistoryResponse;
 import org.clokey.domain.search.dto.response.SearchedMemberResponse;
+import org.clokey.domain.search.dto.response.SearchingRecommendResponse;
 import org.clokey.domain.search.enums.HistorySearchSortType;
 import org.clokey.domain.search.service.SearchService;
 import org.clokey.global.annotation.PageSize;
@@ -126,16 +127,13 @@ public class SearchController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, null);
     }
 
-    /* :TODO: 검색 탭 추천 API 추후 구현
     @GetMapping("/recommendations")
     @Operation(
             operationId = "Search_recommendInSearching",
             summary = "검색 탭 기록 추천",
             description = "검색탭에서 사용자가 시도하지 않은 스타일별/자주 착용한 카테고리/최근 태그한 해시태그별 1개씩의 기록울 추천하는 API입니다.")
     public BaseResponse<List<SearchingRecommendResponse>> recommendInSearching() {
-        List<SearchingRecommendResponse> response =
-                searchService.recommendInSearching();
+        List<SearchingRecommendResponse> response = searchService.recommendInSearching();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
-    */
 }
