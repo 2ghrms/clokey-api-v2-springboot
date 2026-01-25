@@ -14,3 +14,4 @@
   |----------------|------------------------------------|----------------------------------------------------------------------|
   | Refresh Token  | refreshToken:{memberId}            | domain 모듈의 auth 디렉토리의 RefreshToken.java에서 확인              |
   | DailyCoordinate| dailyCoordinate:{memberId}:{date}  | 오늘의 코디 ID를 저장, TTL은 자정까지로 설정되어 자동 만료됨          |
+  | Search Recommend | search:recommend:{memberId}      | 검색 탭 추천(UNTRIED_STYLE, FREQUENTLY_WORN_CATEGORY, RECENTLY_USED_HASHTAG) 결과 캐시. TTL 24시간. SearchServiceImpl.recommendInSearching()에서 사용 |
