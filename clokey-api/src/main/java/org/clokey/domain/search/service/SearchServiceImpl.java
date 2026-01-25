@@ -1,7 +1,13 @@
 package org.clokey.domain.search.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.clokey.category.entity.Category;
@@ -9,22 +15,31 @@ import org.clokey.cloth.enums.Season;
 import org.clokey.domain.category.exception.CategoryErrorCode;
 import org.clokey.domain.category.repository.CategoryRepository;
 import org.clokey.domain.cloth.dto.response.ClothListResponse;
+import org.clokey.domain.history.repository.HistoryImageRepository;
 import org.clokey.domain.history.repository.HistoryRepository;
+import org.clokey.domain.history.repository.HistoryStyleRepository;
+import org.clokey.domain.history.repository.StyleRepository;
 import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.search.document.HistoryDocument;
 import org.clokey.domain.search.document.MemberDocument;
 import org.clokey.domain.search.dto.response.SearchedHistoryResponse;
 import org.clokey.domain.search.dto.response.SearchedMemberResponse;
+import org.clokey.domain.search.dto.response.SearchingRecommendResponse;
 import org.clokey.domain.search.enums.HistorySearchSortType;
+import org.clokey.domain.search.enums.RecommendType;
+import org.clokey.domain.search.repository.RecommendHistoryRow;
+import org.clokey.domain.search.repository.SearchRecommendRepositoryCustom;
 import org.clokey.domain.search.repository.SearchRepository;
 import org.clokey.domain.search.repository.SearchRepositoryCustom;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
+import org.clokey.history.entity.Style;
 import org.clokey.member.entity.Member;
 import org.clokey.response.SliceResponse;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +47,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class SearchServiceImpl implements SearchService {
+
+    private static final String RECOMMEND_CACHE_KEY_PREFIX = "search:recommend:";
+    private static final Duration RECOMMEND_CACHE_TTL = Duration.ofHours(24);
 
     private final MemberUtil memberUtil;
     private final CategoryRepository categoryRepository;
@@ -41,6 +59,11 @@ public class SearchServiceImpl implements SearchService {
     private final HistoryRepository historyRepository;
     private final MemberRepository memberRepository;
     private final SearchDocumentService searchDocumentService;
+    private final SearchRecommendRepositoryCustom searchRecommendRepository;
+    private final HistoryStyleRepository historyStyleRepository;
+    private final StyleRepository styleRepository;
+    private final HistoryImageRepository historyImageRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     @Transactional(readOnly = true)
@@ -205,13 +228,146 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
-    /* :TODO 추천 메소드 구현
     @Override
     @Transactional(readOnly = true)
-    List<SearchingRecommendResponse> recommendInSearching() {
+    public List<SearchingRecommendResponse> recommendInSearching() {
+        Member currentMember = memberUtil.getCurrentMember();
+        Long memberId = currentMember.getId();
+        String cacheKey = RECOMMEND_CACHE_KEY_PREFIX + memberId;
 
+        @SuppressWarnings("unchecked")
+        List<SearchingRecommendResponse> cached =
+                (List<SearchingRecommendResponse>) redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            if (shouldRecomputeFromCache(memberId, cached)) {
+                redisTemplate.delete(cacheKey);
+                return computeAndCacheRecommendations(memberId, cacheKey);
+            }
+            return cached;
+        }
+
+        return computeAndCacheRecommendations(memberId, cacheKey);
     }
-    */
+
+    /** 캐시된 추천 결과에 차단 유저 / 신고된 기록 / 신고된 유저가 포함되어 있으면 재조회해야 함 */
+    private boolean shouldRecomputeFromCache(
+            Long memberId, List<SearchingRecommendResponse> cached) {
+        if (cached.isEmpty()) {
+            return false;
+        }
+        List<Long> excludedMemberIds = blockRepository.findBlockedMemberIdsByBlockerId(memberId);
+        List<Long> historyIds = cached.stream().map(SearchingRecommendResponse::historyId).toList();
+        Set<Long> bannedHistoryIds =
+                historyIds.isEmpty()
+                        ? Set.of()
+                        : historyRepository.findBannedHistoryIdsAmong(historyIds);
+
+        Set<Long> excludedSet = new HashSet<>(excludedMemberIds);
+        for (SearchingRecommendResponse r : cached) {
+            if (excludedSet.contains(r.memberId()) || bannedHistoryIds.contains(r.historyId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<SearchingRecommendResponse> computeAndCacheRecommendations(
+            Long memberId, String cacheKey) {
+        List<Long> excludedMemberIds = blockRepository.findBlockedMemberIdsByBlockerId(memberId);
+        List<Long> userHistoryIds = historyRepository.findAllIdsByMemberId(memberId);
+
+        Set<Long> userUsedStyleIds = new HashSet<>();
+        if (!userHistoryIds.isEmpty()) {
+            userUsedStyleIds =
+                    historyStyleRepository.findStyleInfoByHistoryIds(userHistoryIds).stream()
+                            .map(HistoryStyleRepository.HistoryStyleInfo::styleId)
+                            .collect(Collectors.toSet());
+        }
+        Set<Long> allStyleIds =
+                styleRepository.findAll().stream().map(Style::getId).collect(Collectors.toSet());
+        Set<Long> untriedStyleIds = new HashSet<>(allStyleIds);
+        untriedStyleIds.removeAll(userUsedStyleIds);
+
+        String topCategoryName =
+                searchRecommendRepository
+                        .findTopCategoryNameByHistoryIds(userHistoryIds)
+                        .orElse(null);
+        String recentHashtagName =
+                searchRecommendRepository
+                        .findMostRecentHashtagNameByMemberId(memberId)
+                        .orElse(null);
+
+        List<SearchingRecommendResponse> results = new ArrayList<>();
+
+        if (!untriedStyleIds.isEmpty()) {
+            searchRecommendRepository
+                    .findBestHistoryForUntriedStyle(excludedMemberIds, untriedStyleIds)
+                    .ifPresent(
+                            row ->
+                                    results.add(
+                                            toResponse(RecommendType.UNTRIED_STYLE, row, false)));
+        }
+        if (topCategoryName != null) {
+            searchRecommendRepository
+                    .findBestHistoryForCategory(excludedMemberIds, topCategoryName)
+                    .ifPresent(
+                            row ->
+                                    results.add(
+                                            toResponse(
+                                                    RecommendType.FREQUENTLY_WORN_CATEGORY,
+                                                    row,
+                                                    false)));
+        }
+        if (recentHashtagName != null) {
+            searchRecommendRepository
+                    .findBestHistoryForHashtag(excludedMemberIds, recentHashtagName)
+                    .ifPresent(
+                            row ->
+                                    results.add(
+                                            toResponse(
+                                                    RecommendType.RECENTLY_USED_HASHTAG,
+                                                    row,
+                                                    true)));
+        }
+
+        List<Long> historyIds =
+                results.stream().map(SearchingRecommendResponse::historyId).toList();
+        Map<Long, String> imageUrlByHistoryId = getImageUrlMap(historyIds);
+
+        List<SearchingRecommendResponse> withImages = new ArrayList<>();
+        for (SearchingRecommendResponse r : results) {
+            withImages.add(
+                    new SearchingRecommendResponse(
+                            r.historyId(),
+                            r.memberId(),
+                            r.recommendType(),
+                            r.title(),
+                            r.subTitle(),
+                            imageUrlByHistoryId.getOrDefault(r.historyId(), null)));
+        }
+
+        redisTemplate.opsForValue().set(cacheKey, withImages, RECOMMEND_CACHE_TTL);
+        return withImages;
+    }
+
+    private SearchingRecommendResponse toResponse(
+            RecommendType type, RecommendHistoryRow row, boolean hashtagPrefix) {
+        String subTitle = hashtagPrefix ? "#" + row.subTitle() : row.subTitle();
+        return new SearchingRecommendResponse(
+                row.historyId(), row.memberId(), type.name(), type.getTitle(), subTitle, null);
+    }
+
+    private Map<Long, String> getImageUrlMap(List<Long> historyIds) {
+        if (historyIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Object[]> rows = historyImageRepository.getFirstImageUrlsWithHistoryId(historyIds);
+        Map<Long, String> map = new HashMap<>();
+        for (Object[] row : rows) {
+            map.put((Long) row[0], (String) row[1]);
+        }
+        return map;
+    }
 
     private List<Long> resolveCategoryIds(Long categoryId) {
         if (categoryId == null) {
