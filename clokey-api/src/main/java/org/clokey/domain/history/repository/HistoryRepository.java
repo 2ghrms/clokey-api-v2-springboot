@@ -2,6 +2,7 @@ package org.clokey.domain.history.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.clokey.history.entity.History;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,6 +30,7 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
     @Query("SELECT h.id FROM History h")
     List<Long> findAllIds();
 
+    @Deprecated
     @Query(
             """
         select new org.clokey.domain.history.repository.HistoryRepository$HistorySituationInfo(
@@ -41,4 +43,13 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
     List<HistorySituationInfo> findSituationInfoByHistoryIds(List<Long> historyIds);
 
     record HistorySituationInfo(Long historyId, Long situationId, String situationName) {}
+
+    @Query(
+            """
+            SELECT h.id FROM History h
+            JOIN h.member m
+            WHERE h.id IN :historyIds
+            AND (h.banned = true OR m.memberStatus = 'BANNED')
+            """)
+    Set<Long> findBannedHistoryIdsAmong(List<Long> historyIds);
 }
