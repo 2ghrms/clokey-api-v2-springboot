@@ -25,7 +25,7 @@ sonarqube {
         property 'sonar.test.inclusions', '**/*Test.java'
         property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/** ,**/*Application*.java , **/*Config*.java,' +
                 '**/*Dto*.java, **/*Request*.java, **/*Response*.java ,**/*Exception*.java ,**/*ErrorCode*.java, **/*Util*.java, **/*Filter*.java,' +
-                '**/*Handler*.java, **/*Validator*.java, **/*Principal*.java, **/*Properties*.java, **/clokey-domain/**'
+                '**/*Handler*.java, **/*Validator*.java, **/*Principal*.java, **/*Properties*.java, **/*Listener*.java, **/enums/**, **/clokey-domain/**'
         property 'sonar.java.coveragePlugin', 'jacoco'
     }
 }
@@ -75,7 +75,9 @@ subprojects {
                                         "**/*Request*",
                                         "**/*Response*",
                                         "**/*Interceptor*",
-                                        "**/*Exception*"
+                                        "**/*Exception*",
+                                        "**/*Listener*",
+                                        "**/enums/**"
                                 ] + QDomains)
                     })
             )

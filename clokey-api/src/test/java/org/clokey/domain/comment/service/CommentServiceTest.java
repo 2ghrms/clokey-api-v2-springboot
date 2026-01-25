@@ -666,17 +666,9 @@ class CommentServiceTest extends IntegrationTest {
                             OauthInfo.createOauthInfo("testOauthId", OauthProvider.KAKAO));
 
             member1.updateProfile(
-                    "testNickName1",
-                    "testProfileImageUrl1",
-                    "testProfileBackImageUrl1",
-                    "testBio1",
-                    Visibility.PUBLIC);
+                    "testNickName1", "testProfileImageUrl1", "testBio1", Visibility.PUBLIC);
             member2.updateProfile(
-                    "testNickName2",
-                    "testProfileImageUrl2",
-                    "testProfileBackImageUrl2",
-                    "testBio2",
-                    Visibility.PUBLIC);
+                    "testNickName2", "testProfileImageUrl2", "testBio2", Visibility.PUBLIC);
 
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);

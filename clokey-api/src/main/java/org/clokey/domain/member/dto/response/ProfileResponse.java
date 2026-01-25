@@ -12,8 +12,6 @@ public record ProfileResponse(
         @Schema(description = "닉네임", example = "juwon") String nickname,
         @Schema(description = "프로필 이미지 URL", example = "https://example.com/profile/john.jpg")
                 String profileImageUrl,
-        @Schema(description = "배경 이미지 URL", example = "https://example.com/profile/john.jpg")
-                String profileBackImageUrl,
         @Schema(description = "계정 공개 여부", example = "PUBLIC") Visibility visibility) {
     public static ProfileResponse from(Member member) {
         return new ProfileResponse(
@@ -22,7 +20,6 @@ public record ProfileResponse(
                 member.getEmail(),
                 member.getNickname(),
                 member.getProfileImageUrl(),
-                member.getProfileBackImageUrl(),
                 member.getVisibility());
     }
 }

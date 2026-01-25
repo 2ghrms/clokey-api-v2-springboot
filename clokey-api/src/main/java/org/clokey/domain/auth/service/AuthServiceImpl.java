@@ -312,9 +312,6 @@ public class AuthServiceImpl implements AuthService {
         if (currentMember.getProfileImageUrl() != null) {
             imageUrlsToDelete.add(currentMember.getProfileImageUrl());
         }
-        if (currentMember.getProfileBackImageUrl() != null) {
-            imageUrlsToDelete.add(currentMember.getProfileBackImageUrl());
-        }
 
         // 14. 이미지 삭제 이벤트 발행 (비동기 처리)
         if (!imageUrlsToDelete.isEmpty()) {

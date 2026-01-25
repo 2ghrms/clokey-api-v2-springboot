@@ -79,25 +79,18 @@ class MemberServiceTest extends IntegrationTest {
                             "newNickname",
                             "newBio",
                             Visibility.PUBLIC,
-                            "https://img.example.com/profile.jpg",
-                            "https://img.example.com/back.jpg");
+                            "https://img.example.com/profile.jpg");
 
             // when
             memberService.updateProfile(request);
 
             // then
             assertThat(memberRepository.findById(1L).orElseThrow())
-                    .extracting(
-                            "nickname",
-                            "bio",
-                            "profileImageUrl",
-                            "profileBackImageUrl",
-                            "visibility")
+                    .extracting("nickname", "bio", "profileImageUrl", "visibility")
                     .containsExactly(
                             "newNickname",
                             "newBio",
                             "https://img.example.com/profile.jpg",
-                            "https://img.example.com/back.jpg",
                             Visibility.PUBLIC);
         }
 
@@ -109,11 +102,7 @@ class MemberServiceTest extends IntegrationTest {
             memberRepository.save(current);
             ProfileUpdateRequest request =
                     new ProfileUpdateRequest(
-                            "testNickname",
-                            "testBio",
-                            Visibility.PUBLIC,
-                            "profile.jpg",
-                            "back.jpg");
+                            "testNickname", "testBio", Visibility.PUBLIC, "profile.jpg");
 
             // when & then
             assertThatThrownBy(() -> memberService.updateProfile(request))

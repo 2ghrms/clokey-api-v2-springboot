@@ -50,7 +50,6 @@ public class Member extends BaseEntity {
     private Visibility visibility;
 
     private String profileImageUrl;
-    private String profileBackImageUrl;
 
     @Column(length = 100)
     private String bio;
@@ -114,14 +113,9 @@ public class Member extends BaseEntity {
     }
 
     public void updateProfile(
-            String nickname,
-            String profileImageUrl,
-            String profileBackImageUrl,
-            String bio,
-            Visibility visibility) {
+            String nickname, String profileImageUrl, String bio, Visibility visibility) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
-        this.profileBackImageUrl = profileBackImageUrl;
         this.bio = bio;
         this.visibility = visibility;
     }
