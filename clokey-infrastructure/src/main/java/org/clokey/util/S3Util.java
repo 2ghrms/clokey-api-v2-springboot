@@ -36,6 +36,19 @@ public class S3Util {
         return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
     }
 
+    public String createPresignedUrlWithoutMd5(
+            ImageType imageType, Long memberId, FileExtension fileExtension) {
+        String imageKey = UUID.randomUUID().toString();
+        String fileName = createFileName(imageType, memberId, imageKey, fileExtension);
+        String bucket = s3Properties.bucket();
+
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                generatePresignedUrlRequestWithoutMd5(
+                        bucket, fileName, fileExtension.getExtension());
+
+        return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
+    }
+
     private String createFileName(
             ImageType imageType, Long memberId, String imageKey, FileExtension fileExtension) {
         return memberId
@@ -58,6 +71,19 @@ public class S3Util {
         generatePresignedUrlRequest.addRequestParameter("x-amz-tagging", "status=pending");
 
         generatePresignedUrlRequest.setContentMd5(md5Hash);
+
+        return generatePresignedUrlRequest;
+    }
+
+    private GeneratePresignedUrlRequest generatePresignedUrlRequestWithoutMd5(
+            String bucket, String fileName, String imageFileExtension) {
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.PUT)
+                        .withKey(fileName)
+                        .withContentType("image/" + imageFileExtension)
+                        .withExpiration(getPresignedUrlExpiration());
+
+        generatePresignedUrlRequest.addRequestParameter("x-amz-tagging", "status=pending");
 
         return generatePresignedUrlRequest;
     }

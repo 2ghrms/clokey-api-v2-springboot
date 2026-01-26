@@ -14,6 +14,7 @@ import org.clokey.domain.cloth.dto.request.ClothCreateRequests;
 import org.clokey.domain.cloth.dto.request.ClothImagesUploadRequest;
 import org.clokey.domain.cloth.dto.request.ClothUpdateRequest;
 import org.clokey.domain.cloth.dto.response.*;
+import org.clokey.domain.cloth.service.ClothAiService;
 import org.clokey.domain.cloth.service.ClothService;
 import org.clokey.enums.FileExtension;
 import org.clokey.global.paging.SortDirection;
@@ -32,7 +33,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-@WebMvcTest(ClothController.class)
+@WebMvcTest({ClothController.class, ClothAiController.class})
 @AutoConfigureMockMvc(addFilters = false)
 class ClothControllerTest {
 
@@ -40,6 +41,7 @@ class ClothControllerTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private ClothService clothService;
+    @MockitoBean private ClothAiService clothAiService;
 
     @Nested
     class 옷_업로드_presigned_url_발급_요청_시 {
@@ -59,12 +61,12 @@ class ClothControllerTest {
                     new ClothImagesPresignedUrlResponse(
                             List.of("testPresignedUrl1", "testPresignedUrl2"));
 
-            given(clothService.getClothUploadPresignedUrls(request)).willReturn(response);
+            given(clothAiService.getClothUploadPresignedUrls(request)).willReturn(response);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/clothes/images")
+                            post("/cloth-ai/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
