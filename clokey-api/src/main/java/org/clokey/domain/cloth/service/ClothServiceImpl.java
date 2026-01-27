@@ -21,7 +21,6 @@ import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.search.event.ClothDeleteEvent;
 import org.clokey.domain.search.event.MeiliSearchSyncEvent;
-import org.clokey.enums.ImageType;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
