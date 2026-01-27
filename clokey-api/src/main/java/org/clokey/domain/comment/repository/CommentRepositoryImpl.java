@@ -72,22 +72,20 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
             results = results.subList(0, size);
         }
 
-        // 각 부모 댓글이 대댓글을 가지고 있는지 여부 조회
-        Map<Long, Boolean> repliedMap =
-                results.isEmpty()
-                        ? Map.of()
-                        : queryFactory
-                                .select(comment.comment.id)
-                                .from(comment)
-                                .where(
-                                        comment.comment.id.in(
-                                                results.stream()
-                                                        .map(CommentListResponse::commentId)
-                                                        .toList()))
-                                .groupBy(comment.comment.id)
-                                .transform(
-                                        GroupBy.groupBy(comment.comment.id)
-                                                .as(Expressions.constant(true)));
+        List<Long> parentIdsWithReplies = queryFactory
+        .select(comment.comment.id)
+        .from(comment)
+        .where(comment.comment.id.in(
+                results.stream()
+                        .map(CommentListResponse::commentId)
+                        .toList()
+        ))
+        .groupBy(comment.comment.id)
+        .fetch(); 
+
+
+        Map<Long, Boolean> repliedMap = parentIdsWithReplies.stream()
+                .collect(Collectors.toMap(id -> id, id -> true));
 
         List<CommentListResponse> finalResults =
                 results.stream()
