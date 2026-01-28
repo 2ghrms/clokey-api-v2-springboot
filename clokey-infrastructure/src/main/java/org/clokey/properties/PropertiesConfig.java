@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
     JwtProperties.class,
     S3Properties.class,
     AwsProperties.class,
+    WebClientProperties.class,
     FirebaseProperties.class,
     MeilisearchProperties.class
 })

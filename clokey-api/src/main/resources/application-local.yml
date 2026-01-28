@@ -79,6 +79,13 @@ aws:
     bucket: ${S3_BUCKET}
     endpoint: ${S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
 
+external:
+  api:
+    ai-server-ip: ${AI_SERVER_IP}
+    cloth-inference-path: ${CLOTH_INFERENCE_PATH}
+    style-inference-path: ${STYLE_INFERENCE_PATH}
+    cloth-detect-path: ${CLOTH_DETECT_PATH}
+
 spring-doc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json

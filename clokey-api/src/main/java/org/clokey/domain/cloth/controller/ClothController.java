@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.clokey.cloth.enums.Season;
 import org.clokey.code.GlobalBaseSuccessCode;
 import org.clokey.domain.cloth.dto.request.ClothCreateRequests;
-import org.clokey.domain.cloth.dto.request.ClothImagesUploadRequest;
 import org.clokey.domain.cloth.dto.request.ClothUpdateRequest;
 import org.clokey.domain.cloth.dto.response.*;
 import org.clokey.domain.cloth.service.ClothService;
@@ -28,18 +27,6 @@ import org.springframework.web.bind.annotation.*;
 public class ClothController {
 
     private final ClothService clothService;
-
-    @PostMapping("/images")
-    @Operation(
-            operationId = "Cloth_getClothUploadPresignedUrl",
-            summary = "옷 이미지 업로드용 presignedUrl 발급",
-            description = "옷 이미지 업로드용 presignedUrl을 발급합니다.")
-    public BaseResponse<ClothImagesPresignedUrlResponse> getClothUploadPresignedUrl(
-            @Valid @RequestBody ClothImagesUploadRequest request) {
-        ClothImagesPresignedUrlResponse response =
-                clothService.getClothUploadPresignedUrls(request);
-        return BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, response);
-    }
 
     @PostMapping
     @Operation(operationId = "Cloth_createClothes", summary = "옷 생성", description = "새로운 옷을 생성합니다.")
