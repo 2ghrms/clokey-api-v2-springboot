@@ -5,7 +5,6 @@ import static org.clokey.history.entity.QHistory.history;
 import static org.clokey.history.entity.QHistoryImage.historyImage;
 import static org.clokey.member.entity.QMember.member;
 
-import com.querydsl.core.group.GroupBy;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -72,20 +71,21 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
             results = results.subList(0, size);
         }
 
-        List<Long> parentIdsWithReplies = queryFactory
-        .select(comment.comment.id)
-        .from(comment)
-        .where(comment.comment.id.in(
-                results.stream()
-                        .map(CommentListResponse::commentId)
-                        .toList()
-        ))
-        .groupBy(comment.comment.id)
-        .fetch(); 
+        List<Long> parentIdsWithReplies =
+                queryFactory
+                        .select(comment.comment.id)
+                        .from(comment)
+                        .where(
+                                comment.comment.id.in(
+                                        results.stream()
+                                                .map(CommentListResponse::commentId)
+                                                .toList()))
+                        .groupBy(comment.comment.id)
+                        .fetch();
 
-
-        Map<Long, Boolean> repliedMap = parentIdsWithReplies.stream()
-                .collect(Collectors.toMap(id -> id, id -> true));
+        // 각 부모 댓글이 대댓글을 가지고 있는지 여부 조회
+        Map<Long, Boolean> repliedMap =
+                parentIdsWithReplies.stream().collect(Collectors.toMap(id -> id, id -> true));
 
         List<CommentListResponse> finalResults =
                 results.stream()

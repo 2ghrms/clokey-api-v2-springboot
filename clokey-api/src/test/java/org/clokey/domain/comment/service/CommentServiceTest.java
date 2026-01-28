@@ -351,7 +351,8 @@ class CommentServiceTest extends IntegrationTest {
             Comment comment1 = Comment.createParentComment("testContent1", member1, history1);
             Comment comment2 = Comment.createParentComment("testContent2", member2, history1);
             Comment comment3 = Comment.createParentComment("testContent3", member2, history1);
-            commentRepository.saveAll(List.of(comment1, comment2, comment3));
+            Comment reply1 = Comment.createReply("testContent1", member1, history1, comment1);
+            commentRepository.saveAll(List.of(comment1, comment2, comment3, reply1));
         }
 
         @Test
