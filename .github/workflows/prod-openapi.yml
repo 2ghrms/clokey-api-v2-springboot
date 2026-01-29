@@ -28,6 +28,26 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Wait for production server to be ready
+        env:
+          PROD_OPENAPI_URL: ${{ secrets.PROD_OPENAPI_URL }}
+        run: |
+          set -euo pipefail
+          echo "Waiting for production OpenAPI to be ready..."
+
+          for i in {1..30}; do
+            if curl -fsS --connect-timeout 5 "$PROD_OPENAPI_URL" > /dev/null; then
+              echo "Server is ready."
+              exit 0
+            fi
+            echo "Not ready yet... ($i/30)"
+            sleep 5
+          done
+
+          echo "Server did not become ready in time"
+          exit 1
+
+
       - name: Fetch OpenAPI JSON from production
         env:
           PROD_OPENAPI_URL: ${{ secrets.PROD_OPENAPI_URL }}
