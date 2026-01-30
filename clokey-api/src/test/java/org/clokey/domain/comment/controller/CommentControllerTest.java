@@ -1,6 +1,5 @@
 package org.clokey.domain.comment.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -292,6 +291,7 @@ class CommentControllerTest {
                                     "testProfile",
                                     "testContent1",
                                     false,
+                                    0L,
                                     true),
                             new CommentListResponse(
                                     2L,
@@ -300,6 +300,7 @@ class CommentControllerTest {
                                     "testProfile",
                                     "testContent2",
                                     false,
+                                    0L,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 2, SortDirection.ASC))
@@ -333,6 +334,7 @@ class CommentControllerTest {
                                     "testProfile",
                                     "testContent2",
                                     false,
+                                    0L,
                                     true),
                             new CommentListResponse(
                                     1L,
@@ -341,6 +343,7 @@ class CommentControllerTest {
                                     "testProfile",
                                     "testContent1",
                                     false,
+                                    0L,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 2, SortDirection.DESC))
@@ -374,6 +377,7 @@ class CommentControllerTest {
                                     "testProfile",
                                     "testContent2",
                                     false,
+                                    0L,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 1, SortDirection.ASC))
@@ -406,6 +410,7 @@ class CommentControllerTest {
                                     "testProfile",
                                     "testContent1",
                                     false,
+                                    0L,
                                     true),
                             new CommentListResponse(
                                     2L,
@@ -414,6 +419,7 @@ class CommentControllerTest {
                                     "testProfile",
                                     "testContent2",
                                     false,
+                                    0L,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 1, SortDirection.ASC))

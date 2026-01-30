@@ -363,6 +363,10 @@ class CommentServiceTest extends IntegrationTest {
 
             // then
             assertThat(response.content()).extracting("commentId").containsExactly(1L, 2L, 3L);
+            assertThat(response.content())
+                    .extracting("commentId", "replied", "replyCount")
+                    .containsExactly(
+                            tuple(1L, true, 1L), tuple(2L, false, 0L), tuple(3L, false, 0L));
         }
 
         @Test
