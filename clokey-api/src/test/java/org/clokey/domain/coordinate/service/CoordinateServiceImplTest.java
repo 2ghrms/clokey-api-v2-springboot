@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.mockito.BDDMockito.given;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.clokey.IntegrationTest;
 import org.clokey.RedisCleaner;
@@ -751,6 +753,54 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             assertThat(coordinate)
                                     .extracting("name", "memo", "lookBook.id")
                                     .containsExactly("testName", "testMemo", 1L));
+        }
+
+        @Test
+        void 이름이_비어있으면_날짜_기반으로_자동_생성한다() {
+            // given
+            Coordinate coordinate = coordinateRepository.findById(1L).orElseThrow();
+            LocalDate createdAt = coordinate.getCreatedAt().toLocalDate();
+            String expectedName =
+                    "오늘의 코디 (" + createdAt.format(DateTimeFormatter.ofPattern("MM.dd.yy")) + ")";
+
+            CoordinateAutoCreateRequest request =
+                    new CoordinateAutoCreateRequest(null, "testMemo", 1L, 1L);
+
+            // when
+            coordinateService.createCoordinateAuto(request);
+
+            // then
+            Coordinate result = coordinateRepository.findById(1L).orElseThrow();
+
+            Assertions.assertAll(
+                    () ->
+                            assertThat(result)
+                                    .extracting("name", "memo", "lookBook.id")
+                                    .containsExactly(expectedName, "testMemo", 1L));
+        }
+
+        @Test
+        void 이름이_공백이면_날짜_기반으로_자동_생성한다() {
+            // given
+            Coordinate coordinate = coordinateRepository.findById(1L).orElseThrow();
+            LocalDate createdAt = coordinate.getCreatedAt().toLocalDate();
+            String expectedName =
+                    "오늘의 코디 (" + createdAt.format(DateTimeFormatter.ofPattern("MM.dd.yy")) + ")";
+
+            CoordinateAutoCreateRequest request =
+                    new CoordinateAutoCreateRequest("   ", "testMemo", 1L, 1L);
+
+            // when
+            coordinateService.createCoordinateAuto(request);
+
+            // then
+            Coordinate result = coordinateRepository.findById(1L).orElseThrow();
+
+            Assertions.assertAll(
+                    () ->
+                            assertThat(result)
+                                    .extracting("name", "memo", "lookBook.id")
+                                    .containsExactly(expectedName, "testMemo", 1L));
         }
 
         @Test
