@@ -1,6 +1,7 @@
 package org.clokey.domain.coordinate.service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -182,9 +183,19 @@ public class CoordinateServiceImpl implements CoordinateService {
         validateLookBookOwner(lookBook, currentMember.getId());
         validateDailyCoordinate(dailyCoordinate);
 
-        dailyCoordinate.addToDailyCoordinateToLookBook(request.name(), request.memo(), lookBook);
+        String name = request.name();
+        if (name == null || name.isBlank()) {
+            name = generateDefaultName(dailyCoordinate.getCreatedAt().toLocalDate());
+        }
+
+        dailyCoordinate.addToDailyCoordinateToLookBook(name, request.memo(), lookBook);
 
         return CoordinateCreateResponse.from(dailyCoordinate);
+    }
+
+    private String generateDefaultName(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM.dd.yy");
+        return "오늘의 코디 (" + date.format(formatter) + ")";
     }
 
     @Override
