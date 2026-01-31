@@ -833,14 +833,14 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.result.coordinateId").value(1));
         }
 
-        @ParameterizedTest
-        @NullSource
-        @EmptySource
-        @ValueSource(strings = {" "})
-        void 코디의_이름이_null_또는_공백이면_예외가_발생한다(String name) throws Exception {
+        @Test
+        void 이름이_비어있어도_정상적으로_생성된다() throws Exception {
             // given
             CoordinateAutoCreateRequest request =
-                    new CoordinateAutoCreateRequest(name, "testMemo", 1L, 1L);
+                    new CoordinateAutoCreateRequest(null, "testMemo", 1L, 1L);
+
+            CoordinateCreateResponse response = new CoordinateCreateResponse(1L);
+            given(coordinateService.createCoordinateAuto(request)).willReturn(response);
 
             // when & then
             ResultActions perform =
@@ -849,11 +849,11 @@ class CoordinateControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.isSuccess").value(false))
-                    .andExpect(jsonPath("$.code").value("COMMON400"))
-                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                    .andExpect(jsonPath("$.result.name").value("코디의 이름은 비워둘 수 없습니다."));
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON201"))
+                    .andExpect(jsonPath("$.message").value("요청 성공 및 리소스 생성됨"))
+                    .andExpect(jsonPath("$.result.coordinateId").value(1));
         }
 
         @Test
