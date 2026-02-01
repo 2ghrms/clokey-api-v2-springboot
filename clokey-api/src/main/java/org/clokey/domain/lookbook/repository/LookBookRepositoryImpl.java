@@ -9,6 +9,7 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.clokey.coordinate.entity.QCoordinate;
 import org.clokey.domain.lookbook.dto.response.LookBookListResponse;
 import org.clokey.global.paging.SortDirection;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,8 @@ public class LookBookRepositoryImpl implements LookBookRepositoryCustom {
     @Override
     public Slice<LookBookListResponse> findAllLookBookByMemberId(
             Long currentMemberId, Long lastLookBookId, int size, SortDirection direction) {
+        QCoordinate firstCoordinate = new QCoordinate("firstCoordinate");
+
         List<LookBookListResponse> results =
                 queryFactory
                         .select(
@@ -35,12 +38,15 @@ public class LookBookRepositoryImpl implements LookBookRepositoryCustom {
                                         JPAExpressions.select(coordinate.count())
                                                 .from(coordinate)
                                                 .where(coordinate.lookBook.id.eq(lookBook.id)),
-                                        JPAExpressions.select(coordinate.imageUrl)
-                                                .from(coordinate)
-                                                .where(coordinate.lookBook.id.eq(lookBook.id))
-                                                .orderBy(coordinate.id.asc())
-                                                .limit(1)))
+                                        firstCoordinate.imageUrl))
                         .from(lookBook)
+                        .leftJoin(firstCoordinate)
+                        .on(
+                                firstCoordinate.lookBook.id.eq(lookBook.id),
+                                firstCoordinate.id.eq(
+                                        JPAExpressions.select(coordinate.id.min())
+                                                .from(coordinate)
+                                                .where(coordinate.lookBook.id.eq(lookBook.id))))
                         .where(
                                 lookBook.member.id.eq(currentMemberId),
                                 lastLookBookIdCondition(lastLookBookId, direction))
