@@ -40,17 +40,24 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
         // 우선 순위에 맞게 페이징 합니다.
         // - Category는 고정입니다.
         // - 계절은 요청한 계절에 가까운 순서대로 페이징을 진행합니다.
+        // @ElementCollection에서는 exists 서브쿼리가 더 안정적입니다.
+        BooleanExpression seasonCondition =
+                cloth.seasons
+                        .contains(season)
+                        .or(cloth.seasons.contains(nextSeason))
+                        .or(cloth.seasons.contains(previousSeason))
+                        .or(cloth.seasons.contains(oppositeSeason));
+
         NumberExpression<Integer> seasonPriority =
                 new CaseBuilder()
-                        .when(cloth.seasons.any().in(List.of(season)))
+                        .when(cloth.seasons.contains(season))
                         .then(1)
                         .when(
                                 cloth.seasons
-                                        .any()
-                                        .in(List.of(nextSeason))
-                                        .or(cloth.seasons.any().in(List.of(previousSeason))))
+                                        .contains(nextSeason)
+                                        .or(cloth.seasons.contains(previousSeason)))
                         .then(2)
-                        .when(cloth.seasons.any().in(List.of(oppositeSeason)))
+                        .when(cloth.seasons.contains(oppositeSeason))
                         .then(3)
                         .otherwise(4);
 
@@ -60,7 +67,7 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
                         .where(
                                 cloth.category.id.eq(categoryId),
                                 cloth.member.id.eq(memberId),
-                                cloth.seasons.any().in(targetSeasons))
+                                seasonCondition)
                         .orderBy(seasonPriority.asc(), cloth.id.asc())
                         .fetch();
 
