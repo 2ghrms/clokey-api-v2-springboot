@@ -26,7 +26,7 @@ import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.clokey.response.SliceResponse;
-import org.clokey.util.S3Util;
+import org.clokey.util.StorageUtil;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -44,7 +44,7 @@ public class ClothServiceImpl implements ClothService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final CoordinateClothRepository coordinateClothRepository;
-    private final S3Util s3Util;
+    private final StorageUtil storageUtil;
 
     @Override
     @Transactional
@@ -80,7 +80,7 @@ public class ClothServiceImpl implements ClothService {
         List<String> clothImageUrls =
                 request.content().stream().map(ClothCreateRequest::clothImageUrl).toList();
         // 모든 선택된 url들을 확정하는 로직.
-        s3Util.updateTagsToCompleteByUrls(clothImageUrls);
+        storageUtil.updateTagsToCompleteByUrls(clothImageUrls);
 
         return ClothCreateResponse.from(clothes);
     }

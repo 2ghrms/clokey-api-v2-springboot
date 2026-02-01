@@ -34,7 +34,7 @@ import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.clokey.properties.WebClientProperties;
-import org.clokey.util.S3Util;
+import org.clokey.util.StorageUtil;
 import org.clokey.util.WebClientUtil;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +47,7 @@ public class ClothAiServiceImpl implements ClothAiService {
 
     private final MemberUtil memberUtil;
     private final CategoryRepository categoryRepository;
-    private final S3Util s3Util;
+    private final StorageUtil storageUtil;
     private final WebClientUtil webClientUtil;
     private final WebClientProperties webClientProperties;
 
@@ -61,7 +61,7 @@ public class ClothAiServiceImpl implements ClothAiService {
                 request.payloads().stream()
                         .map(
                                 req ->
-                                        s3Util.createPresignedUrl(
+                                        storageUtil.createPresignedUrl(
                                                 ImageType.CLOTH_IMAGE,
                                                 currentMember.getId(),
                                                 req.fileExtension(),
@@ -262,13 +262,13 @@ public class ClothAiServiceImpl implements ClothAiService {
     }
 
     private void validateImageUrls(List<String> imageUrls) {
-        if (!s3Util.doAllFilesExistByUrls(imageUrls)) {
+        if (!storageUtil.doAllFilesExistByUrls(imageUrls)) {
             throw new BaseCustomException(ClothErrorCode.ClOTH_NOT_FOUND);
         }
     }
 
     private void validateImageUrl(String imageUrl) {
-        if (!s3Util.doesFileExistByUrl(imageUrl)) {
+        if (!storageUtil.doesFileExistByUrl(imageUrl)) {
             throw new BaseCustomException(HistoryErrorCode.HISTORY_IMAGE_NOT_FOUND);
         }
     }
@@ -295,7 +295,7 @@ public class ClothAiServiceImpl implements ClothAiService {
         return java.util.stream.IntStream.range(0, count)
                 .mapToObj(
                         i ->
-                                s3Util.createPresignedUrlWithoutMd5(
+                                storageUtil.createPresignedUrlWithoutMd5(
                                         ImageType.CLOTH_IMAGE, memberId, FileExtension.JPEG))
                 .toList();
     }

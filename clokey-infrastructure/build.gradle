@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage:3.47.0'
     api 'com.google.firebase:firebase-admin:9.7.0'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'io.vanslog:spring-data-meilisearch:0.7.3'

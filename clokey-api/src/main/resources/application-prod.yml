@@ -71,13 +71,16 @@ jwt:
   refresh-token-expiration-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
   issuer: ${JWT_ISSUER}
 
-aws:
-  access-key-id: ${PROD_AWS_ACCESS_KEY_ID}
-  secret-access-key: ${PROD_AWS_SECRET_ACCESS_KEY}
-  region: ${AWS_REGION}
-  s3:
-    bucket: ${PROD_S3_BUCKET}
-    endpoint: ${PROD_S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
+oci:
+  tenancy-id: ${OCI_TENANCY_ID}
+  user-id: ${OCI_USER_ID}
+  fingerprint: ${OCI_FINGERPRINT}
+  private-key: ${OCI_PRIVATE_KEY}
+  region: ${OCI_REGION}
+  passphrase: ${OCI_PASSPHRASE:}
+  objectstorage:
+    namespace: ${OCI_OBJECTSTORAGE_NAMESPACE}
+    bucket: ${OCI_OBJECTSTORAGE_BUCKET}
 
 firebase:
   credentials-path: ${FIREBASE_CREDENTIALS_PATH}

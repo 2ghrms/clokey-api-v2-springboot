@@ -1,13 +1,10 @@
 package org.clokey.config;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
+import com.oracle.bmc.objectstorage.ObjectStorageClient;
+import java.io.ByteArrayInputStream;
 import lombok.RequiredArgsConstructor;
-import org.clokey.properties.AwsProperties;
-import org.clokey.properties.S3Properties;
+import org.clokey.properties.OciProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,21 +12,23 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class S3Config {
 
-    private final AwsProperties awsProperties;
-    private final S3Properties s3Properties;
+    private final OciProperties ociProperties;
 
     @Bean
-    public AmazonS3 s3Client() {
-        BasicAWSCredentials credentials =
-                new BasicAWSCredentials(
-                        awsProperties.accessKeyId(), awsProperties.secretAccessKey());
-        AwsClientBuilder.EndpointConfiguration endpointConfiguration =
-                new AwsClientBuilder.EndpointConfiguration(
-                        s3Properties.endpoint(), awsProperties.region());
+    public ObjectStorageClient objectStorageClient() {
+        String privateKey = ociProperties.privateKey();
+        String passphrase = ociProperties.passphrase();
 
-        return AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(endpointConfiguration)
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .build();
+        SimpleAuthenticationDetailsProvider provider =
+                SimpleAuthenticationDetailsProvider.builder()
+                        .tenantId(ociProperties.tenancyId())
+                        .userId(ociProperties.userId())
+                        .fingerprint(ociProperties.fingerprint())
+                        .privateKeySupplier(() -> new ByteArrayInputStream(privateKey.getBytes()))
+                        .passPhrase(passphrase != null && !passphrase.isEmpty() ? passphrase : null)
+                        .region(com.oracle.bmc.Region.fromRegionId(ociProperties.region()))
+                        .build();
+
+        return new ObjectStorageClient(provider);
     }
 }
