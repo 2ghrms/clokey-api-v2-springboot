@@ -35,20 +35,22 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
         Season nextSeason = season.next();
         Season previousSeason = season.previous();
         Season oppositeSeason = season.next().next();
+        List<Season> targetSeasons = List.of(season, nextSeason, previousSeason, oppositeSeason);
 
         // 우선 순위에 맞게 페이징 합니다.
         // - Category는 고정입니다.
         // - 계절은 요청한 계절에 가까운 순서대로 페이징을 진행합니다.
         NumberExpression<Integer> seasonPriority =
                 new CaseBuilder()
-                        .when(cloth.seasons.contains(season))
+                        .when(cloth.seasons.any().in(List.of(season)))
                         .then(1)
                         .when(
                                 cloth.seasons
-                                        .contains(nextSeason)
-                                        .or(cloth.seasons.contains(previousSeason)))
+                                        .any()
+                                        .in(List.of(nextSeason))
+                                        .or(cloth.seasons.any().in(List.of(previousSeason))))
                         .then(2)
-                        .when(cloth.seasons.contains(oppositeSeason))
+                        .when(cloth.seasons.any().in(List.of(oppositeSeason)))
                         .then(3)
                         .otherwise(4);
 
@@ -58,11 +60,7 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
                         .where(
                                 cloth.category.id.eq(categoryId),
                                 cloth.member.id.eq(memberId),
-                                cloth.seasons
-                                        .contains(season)
-                                        .or(cloth.seasons.contains(nextSeason))
-                                        .or(cloth.seasons.contains(previousSeason))
-                                        .or(cloth.seasons.contains(oppositeSeason)))
+                                cloth.seasons.any().in(targetSeasons))
                         .orderBy(seasonPriority.asc(), cloth.id.asc())
                         .fetch();
 
