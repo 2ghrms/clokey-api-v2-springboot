@@ -73,6 +73,7 @@ public class CoordinateRepositoryImpl implements CoordinateRepositoryCustom {
                                 coordinateCloth.ratio,
                                 coordinateCloth.degree,
                                 coordinateCloth.order,
+                                coordinateCloth.cloth.id,
                                 coordinateCloth.cloth.clothImageUrl,
                                 coordinateCloth.cloth.brand,
                                 coordinateCloth.cloth.name,

@@ -1555,6 +1555,7 @@ class CoordinateControllerTest {
                                     1.5,
                                     240.1,
                                     1,
+                                    14L,
                                     "testImageUrl1",
                                     "testBrand1",
                                     "testName1",
@@ -1567,6 +1568,7 @@ class CoordinateControllerTest {
                                     1.5,
                                     240.1,
                                     2,
+                                    15L,
                                     "testImageUrl2",
                                     "testBrand2",
                                     "testName2",
@@ -1590,6 +1592,7 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.result[0].ratio").value(1.5))
                     .andExpect(jsonPath("$.result[0].degree").value(240.1))
                     .andExpect(jsonPath("$.result[0].order").value(1))
+                    .andExpect(jsonPath("$.result[0].clothId").value(14))
                     .andExpect(jsonPath("$.result[0].imageUrl").value("testImageUrl1"))
                     .andExpect(jsonPath("$.result[0].brand").value("testBrand1"))
                     .andExpect(jsonPath("$.result[0].name").value("testName1"))
@@ -1602,6 +1605,7 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.result[1].ratio").value(1.5))
                     .andExpect(jsonPath("$.result[1].degree").value(240.1))
                     .andExpect(jsonPath("$.result[1].order").value(2))
+                    .andExpect(jsonPath("$.result[1].clothId").value(15))
                     .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"))
                     .andExpect(jsonPath("$.result[1].brand").value("testBrand2"))
                     .andExpect(jsonPath("$.result[1].name").value("testName2"))
