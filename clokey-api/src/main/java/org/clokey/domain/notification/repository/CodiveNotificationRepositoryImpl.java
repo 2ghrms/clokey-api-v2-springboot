@@ -32,8 +32,12 @@ public class CodiveNotificationRepositoryImpl implements CodiveNotificationRepos
                                         codiveNotification.id,
                                         codiveNotification.notificationImageUrl,
                                         codiveNotification.content,
-                                        codiveNotification.redirectInfo,
-                                        codiveNotification.redirectType,
+                                        codiveNotification.notificationType,
+                                        Projections.constructor(
+                                                NotificationListResponse.NotificationActionResponse
+                                                        .class,
+                                                codiveNotification.redirectType,
+                                                codiveNotification.redirectInfo),
                                         codiveNotification.readStatus,
                                         codiveNotification.createdAt))
                         .from(codiveNotification)

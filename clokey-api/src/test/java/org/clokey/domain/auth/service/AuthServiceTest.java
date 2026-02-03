@@ -74,6 +74,7 @@ import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.member.enums.Visibility;
 import org.clokey.notification.entity.CodiveNotification;
+import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.report.entity.Report;
 import org.clokey.report.enums.ReportReason;
@@ -479,7 +480,8 @@ class AuthServiceTest extends IntegrationTest {
                             "testContent",
                             "notificationImageUrl",
                             "redirectInfo",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             codiveNotificationRepository.save(notification);
 
             // Follow 생성 (targetMember가 팔로우하는 경우)
