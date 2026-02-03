@@ -45,7 +45,7 @@ public class ClothController {
             @Parameter(description = "이전 페이지의 옷ID (첫 요청 시 생략)") @RequestParam(required = false)
                     Long lastClothId,
             @Parameter(description = "페이지당 조회할 옷 수") @RequestParam @PageSize Integer size,
-            @Parameter(description = "옷 카테고리 ID") @RequestParam Long categoryId,
+            @Parameter(description = "상위 카테고리 ID") @RequestParam Long categoryId,
             @Parameter(description = "요청 계절") @RequestParam Season season) {
         SliceResponse<ClothRecommendListResponse> response =
                 clothService.recommendCategoryClothes(lastClothId, size, categoryId, season);

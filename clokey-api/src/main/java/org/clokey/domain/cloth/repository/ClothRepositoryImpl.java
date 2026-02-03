@@ -30,7 +30,10 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
 
     @Override
     public Slice<ClothRecommendListResponse> findAllMemberRecommendClothesByCategoryAndSeason(
-            Long lastClothId, int size, Long categoryId, Long memberId, Season season) {
+            Long lastClothId, int size, List<Long> categoryIds, Long memberId, Season season) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return new SliceImpl<>(List.of(), PageRequest.of(0, size), false);
+        }
 
         Season nextSeason = season.next();
         Season previousSeason = season.previous();
@@ -65,7 +68,7 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
                 queryFactory
                         .selectFrom(cloth)
                         .where(
-                                cloth.category.id.eq(categoryId),
+                                cloth.category.id.in(categoryIds),
                                 cloth.member.id.eq(memberId),
                                 seasonCondition)
                         .orderBy(seasonPriority.asc(), cloth.id.asc())
