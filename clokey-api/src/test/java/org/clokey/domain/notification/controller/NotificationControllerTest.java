@@ -13,6 +13,7 @@ import org.clokey.domain.notification.dto.request.TemperatureNotificationRequest
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.service.CodiveNotificationService;
+import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
@@ -71,16 +72,18 @@ public class NotificationControllerTest {
                                     2L,
                                     "https://image.example",
                                     "테스트 알림2 내용입니다.",
-                                    "2",
-                                    RedirectType.HISTORY_REDIRECT,
+                                    NotificationType.COMMENT,
+                                    new NotificationListResponse.NotificationActionResponse(
+                                            RedirectType.HISTORY_REDIRECT, "2"),
                                     ReadStatus.NOT_READ,
                                     LocalDateTime.now()),
                             new NotificationListResponse(
                                     1L,
                                     "https://image.example",
                                     "테스트 알림1 내용입니다.",
-                                    "2",
-                                    RedirectType.MEMBER_REDIRECT,
+                                    NotificationType.FOLLOW,
+                                    new NotificationListResponse.NotificationActionResponse(
+                                            RedirectType.MEMBER_REDIRECT, "2"),
                                     ReadStatus.READ,
                                     LocalDateTime.now()));
 
@@ -95,7 +98,17 @@ public class NotificationControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.content[0].notificationId").value("2"))
+                    .andExpect(jsonPath("$.result.content[0].notificationType").value("COMMENT"))
+                    .andExpect(
+                            jsonPath("$.result.content[0].action.redirectType")
+                                    .value("HISTORY_REDIRECT"))
+                    .andExpect(jsonPath("$.result.content[0].action.redirectInfo").value("2"))
                     .andExpect(jsonPath("$.result.content[1].notificationId").value("1"))
+                    .andExpect(jsonPath("$.result.content[1].notificationType").value("FOLLOW"))
+                    .andExpect(
+                            jsonPath("$.result.content[1].action.redirectType")
+                                    .value("MEMBER_REDIRECT"))
+                    .andExpect(jsonPath("$.result.content[1].action.redirectInfo").value("2"))
                     .andExpect(jsonPath("$.result.isLast").value(true));
         }
 

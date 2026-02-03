@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.clokey.common.model.BaseEntity;
 import org.clokey.member.entity.Member;
+import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 
@@ -30,6 +31,10 @@ public class CodiveNotification extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private RedirectType redirectType;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private NotificationType notificationType;
+
     @Enumerated(EnumType.STRING)
     @NotNull
     private ReadStatus readStatus;
@@ -46,12 +51,14 @@ public class CodiveNotification extends BaseEntity {
             String notificationImageUrl,
             String redirectInfo,
             RedirectType redirectType,
+            NotificationType notificationType,
             ReadStatus readStatus) {
         this.member = member;
         this.content = content;
         this.notificationImageUrl = notificationImageUrl;
         this.redirectInfo = redirectInfo;
         this.redirectType = redirectType;
+        this.notificationType = notificationType;
         this.readStatus = readStatus;
     }
 
@@ -60,13 +67,15 @@ public class CodiveNotification extends BaseEntity {
             String content,
             String notificationImageUrl,
             String redirectInfo,
-            RedirectType redirectType) {
+            RedirectType redirectType,
+            NotificationType notificationType) {
         return CodiveNotification.builder()
                 .member(member)
                 .content(content)
                 .notificationImageUrl(notificationImageUrl)
                 .redirectInfo(redirectInfo)
                 .redirectType(redirectType)
+                .notificationType(notificationType)
                 .readStatus(ReadStatus.NOT_READ)
                 .build();
     }

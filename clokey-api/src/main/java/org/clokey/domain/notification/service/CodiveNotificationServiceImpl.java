@@ -28,6 +28,7 @@ import org.clokey.history.entity.History;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.notification.entity.CodiveNotification;
+import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
@@ -55,6 +56,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
 
     private static final String TODAY_TEMPERATURE_NOTIFICATION =
             "오늘의 기온은 %d도 입니다!\n날씨에 맞는 오늘의 옷차림이 기다리고 있어요👀";
+    private static final String TODAY_TEMPERATURE_IMAGE_URL = "https://example.com/temperature.png";
 
     @Override
     public void sendNewFollowerNotification(Long followFromId, Long followToId) {
@@ -90,7 +92,8 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             content,
                             profileImageUrl,
                             followToMember.getNickname(),
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
 
             codiveNotificationRepository.save(codiveNotification);
         }
@@ -131,7 +134,8 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             content,
                             profileImageUrl,
                             followToMember.getNickname(),
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW_REQUEST);
 
             codiveNotificationRepository.save(codiveNotification);
         }
@@ -173,7 +177,8 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             content,
                             profileImageUrl,
                             String.valueOf(event.historyId()),
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
 
             codiveNotificationRepository.save(codiveNotification);
         }
@@ -212,7 +217,8 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             content,
                             profileImageUrl,
                             String.valueOf(event.historyId()),
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.REPLY);
 
             codiveNotificationRepository.save(codiveNotification);
         }
@@ -221,11 +227,15 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     @Override
     public void sendNewTemperatureNotification(TemperatureNotificationRequest request) {
         Member receiver = memberUtil.getCurrentMember();
-        String content = "";
+        String content =
+                String.format(TODAY_TEMPERATURE_NOTIFICATION, Math.round(request.temperature()));
 
         if (isAbleToSendNotification(receiver)) {
-
-            Notification notification = Notification.builder().setBody(content).build();
+            Notification notification =
+                    Notification.builder()
+                            .setBody(content)
+                            .setImage(TODAY_TEMPERATURE_IMAGE_URL)
+                            .build();
             Message message =
                     Message.builder()
                             .setToken(receiver.getDeviceToken())
@@ -237,6 +247,17 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
             } catch (FirebaseMessagingException e) {
                 throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
             }
+
+            CodiveNotification codiveNotification =
+                    CodiveNotification.createCodiveNotification(
+                            receiver,
+                            content,
+                            TODAY_TEMPERATURE_IMAGE_URL,
+                            "",
+                            RedirectType.NONE,
+                            NotificationType.TEMPERATURE_DAILY);
+
+            codiveNotificationRepository.save(codiveNotification);
         }
     }
 

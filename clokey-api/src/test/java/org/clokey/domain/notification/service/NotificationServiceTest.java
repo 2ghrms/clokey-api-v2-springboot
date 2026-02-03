@@ -40,6 +40,7 @@ import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.member.enums.Visibility;
 import org.clokey.notification.entity.CodiveNotification;
+import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
@@ -354,7 +355,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification1.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification2 =
@@ -363,7 +365,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림2",
                             "http://testImageURl2.test",
                             "testNickname",
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
             notification2.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification3 =
@@ -372,14 +375,16 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림3",
                             "http://testImageURl3.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification4 =
                     CodiveNotification.createCodiveNotification(
                             member2,
                             "테스트 알림4",
                             "http://testImageURl4.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification4.updateReadStatus(ReadStatus.READ);
             notificationRepository.saveAll(
                     List.of(notification1, notification2, notification3, notification4));
@@ -433,7 +438,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification1.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification2 =
@@ -442,7 +448,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림2",
                             "http://testImageURl2.test",
                             "testNickname",
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
             notification2.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification3 =
@@ -451,14 +458,16 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림3",
                             "http://testImageURl3.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification4 =
                     CodiveNotification.createCodiveNotification(
                             member2,
                             "테스트 알림4",
                             "http://testImageURl4.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification4.updateReadStatus(ReadStatus.READ);
             notificationRepository.saveAll(
                     List.of(notification1, notification2, notification3, notification4));
@@ -505,7 +514,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notificationRepository.save(notification1);
         }
 
@@ -547,21 +557,24 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification2 =
                     CodiveNotification.createCodiveNotification(
                             member1,
                             "테스트 알림2",
                             "http://testImageURl2.test",
                             "2",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification3 =
                     CodiveNotification.createCodiveNotification(
                             member1,
                             "테스트 알림3",
                             "http://testImageURl3.test",
                             "3",
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
             notificationRepository.saveAll(List.of(notification1, notification2, notification3));
         }
 
