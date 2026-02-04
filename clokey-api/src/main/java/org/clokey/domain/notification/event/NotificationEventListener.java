@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.clokey.domain.comment.event.NewCommentEvent;
 import org.clokey.domain.comment.event.NewReplyEvent;
+import org.clokey.domain.like.event.NewLikeEvent;
 import org.clokey.domain.member.event.NewFollowerEvent;
 import org.clokey.domain.member.event.NewPendingFollowerEvent;
 import org.clokey.domain.notification.service.CodiveNotificationService;
@@ -82,6 +83,16 @@ public class NotificationEventListener {
                     event.historyId(),
                     event.replyId(),
                     e);
+        }
+    }
+
+    @Async
+    @TransactionalEventListener(classes = NewLikeEvent.class, phase = TransactionPhase.AFTER_COMMIT)
+    public void handleNewLike(NewLikeEvent event) {
+        try {
+            codiveNotificationService.sendNewLikeNotification(event);
+        } catch (Exception e) {
+            log.error("새 좋아요 알림 전송 실패 - historyId: {}, likeId: {}", event.historyId(), event.likeId(), e);
         }
     }
 }
