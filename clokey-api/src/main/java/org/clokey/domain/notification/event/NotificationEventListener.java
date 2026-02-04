@@ -92,7 +92,11 @@ public class NotificationEventListener {
         try {
             codiveNotificationService.sendNewLikeNotification(event);
         } catch (Exception e) {
-            log.error("새 좋아요 알림 전송 실패 - historyId: {}, likeId: {}", event.historyId(), event.likeId(), e);
+            log.error(
+                    "새 좋아요 알림 전송 실패 - historyId: {}, likeId: {}",
+                    event.historyId(),
+                    event.likeId(),
+                    e);
         }
     }
 }

@@ -6,6 +6,4 @@ public record NewLikeEvent(
         Long receiverId,
         Long likerId,
         String likerNickname,
-        String likerProfileImageUrl
-) {
-}
+        String likerProfileImageUrl) {}

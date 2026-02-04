@@ -119,8 +119,7 @@ public class LikeServiceImpl implements LikeService {
                             historyOwner.getId(),
                             currentMember.getId(),
                             currentMember.getNickname(),
-                            currentMember.getProfileImageUrl())
-            );
+                            currentMember.getProfileImageUrl()));
         }
 
         eventPublisher.publishEvent(

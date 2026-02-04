@@ -363,8 +363,7 @@ public class NotificationServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_새_좋아요_알림을_저장한다() {
             // given
-            NewLikeEvent event =
-                    new NewLikeEvent(1L, 1L, 2L, 1L, "liker", "example.com");
+            NewLikeEvent event = new NewLikeEvent(1L, 1L, 2L, 1L, "liker", "example.com");
 
             // when
             notificationService.sendNewLikeNotification(event);
@@ -373,8 +372,7 @@ public class NotificationServiceTest extends IntegrationTest {
             Optional<CodiveNotification> notification = notificationRepository.findById(1L);
 
             assertThat(notification.get().getMember().getId()).isEqualTo(2L);
-            assertThat(notification.get().getContent())
-                    .isEqualTo("liker님이 회원님의 기록을 좋아합니다.");
+            assertThat(notification.get().getContent()).isEqualTo("liker님이 회원님의 기록을 좋아합니다.");
         }
     }
 

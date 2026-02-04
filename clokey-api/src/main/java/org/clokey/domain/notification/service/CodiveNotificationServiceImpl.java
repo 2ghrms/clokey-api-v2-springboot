@@ -224,9 +224,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
         Member receiver = getMemberById(event.receiverId());
 
         if (isAbleToSendNotification(receiver)) {
-            String content =
-                    String.format(
-                            NEW_LIKE_NOTIFICATION, event.likerNickname());
+            String content = String.format(NEW_LIKE_NOTIFICATION, event.likerNickname());
             String profileImageUrl = event.likerProfileImageUrl();
 
             Notification notification =
