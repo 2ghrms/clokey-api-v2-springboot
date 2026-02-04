@@ -5,5 +5,6 @@ public enum NotificationType {
     FOLLOW_REQUEST,
     COMMENT,
     REPLY,
+    LIKE,
     TEMPERATURE_DAILY
 }
