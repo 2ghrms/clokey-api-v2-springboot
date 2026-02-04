@@ -1948,12 +1948,13 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
             // then
             assertThat(responses)
-                    .extracting("coordinateId", "imageUrl")
-                    .containsExactly(tuple(1L, "testUrl1"), tuple(2L, "testUrl2"));
+                    .extracting("coordinateId", "imageUrl", "coordinateName")
+                    .containsExactly(
+                            tuple(1L, "testUrl1", "testName1"), tuple(2L, "testUrl2", "testName2"));
         }
 
         @Test
-        void 좋아요한_코디가_없는_경우_빈_리스틀_반환한다() {
+        void 좋아요한_코디가_없는_경우_빈_리스트를_반환한다() {
             // given
             Member member = memberRepository.findById(2L).orElseThrow();
             given(memberUtil.getCurrentMember()).willReturn(member);

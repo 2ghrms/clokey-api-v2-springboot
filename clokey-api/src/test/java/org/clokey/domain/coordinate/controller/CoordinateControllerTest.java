@@ -1645,8 +1645,10 @@ class CoordinateControllerTest {
             // given
             List<FavoriteCoordinateResponse> response =
                     List.of(
-                            new FavoriteCoordinateResponse(1L, "testImageUrl1"),
-                            new FavoriteCoordinateResponse(2L, "testImageUrl2"));
+                            new FavoriteCoordinateResponse(
+                                    1L, "testImageUrl1", "testCoordinateName1"),
+                            new FavoriteCoordinateResponse(
+                                    2L, "testImageUrl2", "testCoordinateName2"));
 
             given(coordinateService.getFavoriteCoordinates()).willReturn(response);
 
@@ -1658,8 +1660,10 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.result[0].coordinateId").value(1))
                     .andExpect(jsonPath("$.result[0].imageUrl").value("testImageUrl1"))
+                    .andExpect(jsonPath("$.result[0].coordinateName").value("testCoordinateName1"))
                     .andExpect(jsonPath("$.result[1].coordinateId").value(2))
-                    .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"));
+                    .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"))
+                    .andExpect(jsonPath("$.result[1].coordinateName").value("testCoordinateName2"));
         }
     }
 
