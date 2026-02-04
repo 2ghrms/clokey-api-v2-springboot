@@ -15,9 +15,10 @@ public enum CoordinateErrorCode implements BaseErrorCode {
     COORDINATE_NOT_IN_LOOK_BOOK(400, "COORDINATE_4005", "룩북에 속해있지 않은 (오늘의) 코디입니다."),
     COORDINATE_LIKE_LIMIT(400, "COORDINATE_4006", "최대 5개의 코디에 좋아요를 누를 수 있습니다."),
 
-    NOT_COORDINATE_OWNER(400, "COORDINATE_4031", "나의 코디가 아닙니다. 권한이 없습니다."),
+    NOT_COORDINATE_OWNER(403, "COORDINATE_4031", "나의 코디가 아닙니다. 권한이 없습니다."),
 
-    COORDINATE_NOT_FOUND(400, "COORDINATE_4041", "존재하지 않는 코디입니다.");
+    COORDINATE_NOT_FOUND(404, "COORDINATE_4041", "존재하지 않는 코디입니다."),
+    DAILY_COORDINATE_NOT_FOUND(404, "COORDINATE_4042", "오늘의 코디가 존재하지 않습니다.");
 
     private final int status;
     private final String code;
