@@ -55,7 +55,10 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                         comment.content,
                                         Expressions.constant(false),
                                         Expressions.constant(0L),
-                                        member.id.eq(currentMemberId)))
+                                        member.id.eq(currentMemberId),
+                                        member.id
+                                                .eq(currentMemberId)
+                                                .or(history.member.id.eq(currentMemberId))))
                         .from(comment)
                         .join(comment.member, member)
                         .where(
@@ -107,7 +110,8 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                                 c.content(),
                                                 replyCountMap.getOrDefault(c.commentId(), 0L) > 0,
                                                 replyCountMap.getOrDefault(c.commentId(), 0L),
-                                                c.isMine()))
+                                                c.isMine(),
+                                                c.canDelete()))
                         .toList();
 
         return new SliceImpl<>(finalResults, PageRequest.of(0, size), hasNext);
@@ -131,7 +135,10 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                                         member.nickname,
                                         member.profileImageUrl,
                                         comment.content,
-                                        member.id.eq(currentMemberId)))
+                                        member.id.eq(currentMemberId),
+                                        member.id
+                                                .eq(currentMemberId)
+                                                .or(history.member.id.eq(currentMemberId))))
                         .from(comment)
                         .join(comment.member, member)
                         .where(

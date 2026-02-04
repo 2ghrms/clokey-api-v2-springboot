@@ -151,7 +151,11 @@ public class CommentServiceImpl implements CommentService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Comment comment = getCommentById(commentId);
 
-        validateCommentOwner(currentMember, comment);
+        boolean isHistoryOwner =
+                Objects.equals(comment.getHistory().getMember().getId(), currentMember.getId());
+        if (!isHistoryOwner) {
+            validateCommentOwner(currentMember, comment);
+        }
 
         if (comment.getComment() != null) {
             commentRepository.delete(comment);

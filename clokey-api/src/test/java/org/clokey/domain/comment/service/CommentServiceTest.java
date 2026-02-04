@@ -331,7 +331,12 @@ class CommentServiceTest extends IntegrationTest {
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
-            memberRepository.saveAll(List.of(member1, member2));
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2, member3));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Situation situation = Situation.createSituation("testSituation");
@@ -351,8 +356,9 @@ class CommentServiceTest extends IntegrationTest {
             Comment comment1 = Comment.createParentComment("testContent1", member1, history1);
             Comment comment2 = Comment.createParentComment("testContent2", member2, history1);
             Comment comment3 = Comment.createParentComment("testContent3", member2, history1);
+            Comment comment4 = Comment.createParentComment("testContent4", member3, history1);
             Comment reply1 = Comment.createReply("testContent1", member1, history1, comment1);
-            commentRepository.saveAll(List.of(comment1, comment2, comment3, reply1));
+            commentRepository.saveAll(List.of(comment1, comment2, comment3, comment4, reply1));
         }
 
         @Test
@@ -373,10 +379,10 @@ class CommentServiceTest extends IntegrationTest {
         void 정렬_조건이_DESC면_commentId를_내림차순으로_조회한다() {
             // when
             SliceResponse<CommentListResponse> response =
-                    commentService.getHistoryComments(1L, null, 3, SortDirection.DESC);
+                    commentService.getHistoryComments(1L, null, 4, SortDirection.DESC);
 
             // then
-            assertThat(response.content()).extracting("commentId").containsExactly(3L, 2L, 1L);
+            assertThat(response.content()).extracting("commentId").containsExactly(4L, 3L, 2L, 1L);
         }
 
         @Test
@@ -405,11 +411,11 @@ class CommentServiceTest extends IntegrationTest {
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<CommentListResponse> response =
-                    commentService.getHistoryComments(1L, null, 3, SortDirection.ASC);
+                    commentService.getHistoryComments(1L, null, 4, SortDirection.ASC);
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(3),
+                    () -> assertThat(response.content().size()).isEqualTo(4),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -444,6 +450,27 @@ class CommentServiceTest extends IntegrationTest {
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
         }
+
+        @Test
+        void 내가_아닌_공개_계정의_기록에_다른_사람의_댓글을_조회하면_canDelete가_false로_반환된다() {
+            // given
+            Member member = memberRepository.findById(3L).orElse(null);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            // when
+            SliceResponse<CommentListResponse> response =
+                    commentService.getHistoryComments(1L, null, 4, SortDirection.ASC);
+
+            // then
+            assertThat(response.content())
+                    .extracting("commentId", "canDelete")
+                    .containsExactly(
+                            tuple(1L, false), // 다른 사람이 쓴 댓글
+                            tuple(2L, false), // 다른 사람이 쓴 댓글
+                            tuple(3L, false), // 다른 사람이 쓴 댓글
+                            tuple(4L, true) // 내가 쓴 댓글
+                            );
+        }
     }
 
     @Nested
@@ -463,7 +490,12 @@ class CommentServiceTest extends IntegrationTest {
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             member2.changeVisibility();
-            memberRepository.saveAll(List.of(member1, member2));
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+            memberRepository.saveAll(List.of(member1, member2, member3));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Situation situation = Situation.createSituation("testSituation");
@@ -483,8 +515,9 @@ class CommentServiceTest extends IntegrationTest {
             Comment reply1 = Comment.createReply("testContent1", member1, history1, comment1);
             Comment reply2 = Comment.createReply("testContent2", member2, history1, comment1);
             Comment reply3 = Comment.createReply("testContent3", member2, history2, comment2);
+            Comment reply4 = Comment.createReply("testContent3", member3, history1, comment1);
             commentRepository.saveAll(
-                    List.of(comment1, comment2, comment3, reply1, reply2, reply3));
+                    List.of(comment1, comment2, comment3, reply1, reply2, reply3, reply4));
         }
 
         @Test
@@ -504,7 +537,7 @@ class CommentServiceTest extends IntegrationTest {
                     commentService.getCommentReplies(1L, null, 2, SortDirection.DESC);
 
             // then
-            assertThat(response.content()).extracting("replyId").containsExactly(5L, 4L);
+            assertThat(response.content()).extracting("replyId").containsExactly(7L, 5L);
         }
 
         @Test
@@ -514,7 +547,7 @@ class CommentServiceTest extends IntegrationTest {
                     commentService.getCommentReplies(1L, 4L, 2, SortDirection.ASC);
 
             // then
-            assertThat(response.content()).extracting("replyId").containsExactly(5L);
+            assertThat(response.content()).extracting("replyId").containsExactly(5L, 7L);
         }
 
         @Test
@@ -533,11 +566,11 @@ class CommentServiceTest extends IntegrationTest {
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<ReplyListResponse> response =
-                    commentService.getCommentReplies(1L, null, 2, SortDirection.ASC);
+                    commentService.getCommentReplies(1L, null, 3, SortDirection.ASC);
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.content().size()).isEqualTo(3),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -572,6 +605,26 @@ class CommentServiceTest extends IntegrationTest {
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
         }
+
+        @Test
+        void 내가_아닌_공개_계정의_기록의_대댓글을_조회하면_canDelete가_false로_반환된다() {
+            // given
+            Member member = memberRepository.findById(3L).orElse(null);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            // when
+            SliceResponse<ReplyListResponse> response =
+                    commentService.getCommentReplies(1L, null, 3, SortDirection.ASC);
+
+            // then
+            assertThat(response.content())
+                    .extracting("replyId", "canDelete")
+                    .containsExactly(
+                            tuple(4L, false), // 다른 사람이 쓴 댓글
+                            tuple(5L, false), // 다른 사람이 쓴 댓글
+                            tuple(7L, true) // 내가 쓴 댓글
+                            );
+        }
     }
 
     @Nested
@@ -590,7 +643,14 @@ class CommentServiceTest extends IntegrationTest {
                             "testEmail2",
                             "testNickName2",
                             OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
-            memberRepository.saveAll(List.of(member1, member2));
+
+            Member member3 =
+                    Member.createMember(
+                            "testEmail3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2, member3));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Situation situation = Situation.createSituation("testSituation");
@@ -606,7 +666,10 @@ class CommentServiceTest extends IntegrationTest {
             Comment reply1 = Comment.createReply("testContent1", member1, history, comment1);
             Comment reply2 = Comment.createReply("testContent2", member1, history, comment1);
             Comment reply3 = Comment.createReply("testContent3", member1, history, comment2);
-            commentRepository.saveAll(List.of(comment1, comment2, reply1, reply2, reply3));
+            Comment otherComment = Comment.createParentComment("otherContent", member2, history);
+            Comment otherReply = Comment.createReply("otherReply", member2, history, otherComment);
+            commentRepository.saveAll(
+                    List.of(comment1, comment2, reply1, reply2, reply3, otherComment, otherReply));
         }
 
         @Test
@@ -642,13 +705,49 @@ class CommentServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 댓글_작성자가_아닌_경우_예외가_발생한다() {
+        void 글_작성자는_내_글에_달린_남의_댓글을_삭제할_수_있고_대댓글도_함께_삭제된다() {
             // given
-            Member member = memberRepository.findById(2L).orElseThrow();
+            Member historyOwner = memberRepository.findById(1L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(historyOwner);
+
+            Comment otherComment =
+                    commentRepository.findAll().stream()
+                            .filter(c -> c.getComment() == null)
+                            .filter(c -> "otherContent".equals(c.getContent()))
+                            .findFirst()
+                            .orElseThrow();
+
+            Comment otherReply =
+                    commentRepository.findAll().stream()
+                            .filter(c -> c.getComment() != null)
+                            .filter(c -> "otherReply".equals(c.getContent()))
+                            .findFirst()
+                            .orElseThrow();
+
+            // when
+            commentService.deleteComment(otherComment.getId());
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(commentRepository.findById(otherComment.getId())).isEmpty(),
+                    () -> assertThat(commentRepository.findById(otherReply.getId())).isEmpty());
+        }
+
+        @Test
+        void 글_작성자도_아니고_댓글_작성자도_아니면_남의_댓글을_삭제할_수_없다() {
+            // given
+            Member member = memberRepository.findById(3L).orElseThrow();
             given(memberUtil.getCurrentMember()).willReturn(member);
 
+            Comment otherComment =
+                    commentRepository.findAll().stream()
+                            .filter(c -> c.getComment() == null)
+                            .filter(c -> "otherContent".equals(c.getContent()))
+                            .findFirst()
+                            .orElseThrow();
+
             // when & then
-            assertThatThrownBy(() -> commentService.deleteComment(1L))
+            assertThatThrownBy(() -> commentService.deleteComment(otherComment.getId()))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(CommentErrorCode.NOT_MY_COMMENT.getMessage());
         }

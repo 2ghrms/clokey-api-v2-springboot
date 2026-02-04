@@ -292,6 +292,7 @@ class CommentControllerTest {
                                     "testContent1",
                                     false,
                                     0L,
+                                    true,
                                     true),
                             new CommentListResponse(
                                     2L,
@@ -301,6 +302,7 @@ class CommentControllerTest {
                                     "testContent2",
                                     false,
                                     0L,
+                                    true,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 2, SortDirection.ASC))
@@ -319,6 +321,7 @@ class CommentControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.result.content[0].commentId").value(1))
                     .andExpect(jsonPath("$.result.content[1].commentId").value(2))
+                    .andExpect(jsonPath("$.result.content[0].canDelete").value(true))
                     .andExpect(jsonPath("$.result.isLast").value(true));
         }
 
@@ -335,6 +338,7 @@ class CommentControllerTest {
                                     "testContent2",
                                     false,
                                     0L,
+                                    true,
                                     true),
                             new CommentListResponse(
                                     1L,
@@ -344,6 +348,7 @@ class CommentControllerTest {
                                     "testContent1",
                                     false,
                                     0L,
+                                    true,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 2, SortDirection.DESC))
@@ -378,6 +383,7 @@ class CommentControllerTest {
                                     "testContent2",
                                     false,
                                     0L,
+                                    true,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 1, SortDirection.ASC))
@@ -411,6 +417,7 @@ class CommentControllerTest {
                                     "testContent1",
                                     false,
                                     0L,
+                                    true,
                                     true),
                             new CommentListResponse(
                                     2L,
@@ -420,6 +427,7 @@ class CommentControllerTest {
                                     "testContent2",
                                     false,
                                     0L,
+                                    true,
                                     true));
 
             given(commentService.getHistoryComments(1L, null, 1, SortDirection.ASC))
@@ -508,9 +516,21 @@ class CommentControllerTest {
             List<ReplyListResponse> commentReplies =
                     List.of(
                             new ReplyListResponse(
-                                    1L, 1L, "testNickName", "testProfile", "testContent1", true),
+                                    1L,
+                                    1L,
+                                    "testNickName",
+                                    "testProfile",
+                                    "testContent1",
+                                    true,
+                                    true),
                             new ReplyListResponse(
-                                    2L, 1L, "testNickName", "testProfile", "testContent2", true));
+                                    2L,
+                                    1L,
+                                    "testNickName",
+                                    "testProfile",
+                                    "testContent2",
+                                    true,
+                                    true));
 
             given(commentService.getCommentReplies(1L, null, 2, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(commentReplies, true));
@@ -527,6 +547,7 @@ class CommentControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.result.content[0].replyId").value(1))
                     .andExpect(jsonPath("$.result.content[1].replyId").value(2))
+                    .andExpect(jsonPath("$.result.content[0].canDelete").value(true))
                     .andExpect(jsonPath("$.result.isLast").value(true));
         }
 
@@ -536,9 +557,21 @@ class CommentControllerTest {
             List<ReplyListResponse> commentReplies =
                     List.of(
                             new ReplyListResponse(
-                                    2L, 1L, "testNickName", "testProfile", "testContent2", true),
+                                    2L,
+                                    1L,
+                                    "testNickName",
+                                    "testProfile",
+                                    "testContent2",
+                                    true,
+                                    true),
                             new ReplyListResponse(
-                                    1L, 1L, "testNickName", "testProfile", "testContent1", true));
+                                    1L,
+                                    1L,
+                                    "testNickName",
+                                    "testProfile",
+                                    "testContent1",
+                                    true,
+                                    true));
 
             given(commentService.getCommentReplies(1L, null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(commentReplies, true));
@@ -564,7 +597,13 @@ class CommentControllerTest {
             List<ReplyListResponse> commentReplies =
                     List.of(
                             new ReplyListResponse(
-                                    2L, 1L, "testNickName", "testProfile", "testContent2", true));
+                                    2L,
+                                    1L,
+                                    "testNickName",
+                                    "testProfile",
+                                    "testContent2",
+                                    true,
+                                    true));
 
             given(commentService.getCommentReplies(1L, null, 1, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(commentReplies, true));
@@ -589,9 +628,21 @@ class CommentControllerTest {
             List<ReplyListResponse> commentsReplies =
                     List.of(
                             new ReplyListResponse(
-                                    1L, 1L, "testNickName", "testProfile", "testContent1", true),
+                                    1L,
+                                    1L,
+                                    "testNickName",
+                                    "testProfile",
+                                    "testContent1",
+                                    true,
+                                    true),
                             new ReplyListResponse(
-                                    2L, 1L, "testNickName", "testProfile", "testContent2", true));
+                                    2L,
+                                    1L,
+                                    "testNickName",
+                                    "testProfile",
+                                    "testContent2",
+                                    true,
+                                    true));
 
             given(commentService.getCommentReplies(1L, null, 2, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(commentsReplies, false));
