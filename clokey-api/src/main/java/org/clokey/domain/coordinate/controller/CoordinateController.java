@@ -101,14 +101,24 @@ public class CoordinateController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
-    @GetMapping("/daily/today")
+    @GetMapping("/daily/today/preview")
     @Operation(
-            operationId = "Coordinate_getTodayDailyCoordinateClothes",
-            summary = "오늘의 코디 옷 정보 조회",
-            description = "오늘의 코디에 포함된 옷 정보를 조회하는 API입니다.")
-    public BaseResponse<List<DailyCoordinateClothResponse>> getTodayDailyCoordinateClothes() {
-        List<DailyCoordinateClothResponse> response =
-                coordinateService.getTodayDailyCoordinateClothes();
+            operationId = "Coordinate_getTodayCoordinatePreview",
+            summary = "오늘의 코디 Preview 조회",
+            description = "오늘의 코디의 Preview를 조회하는 API입니다.")
+    public BaseResponse<DailyCoordinatePreviewResponse> getTodayCoordinatePreview() {
+        DailyCoordinatePreviewResponse response = coordinateService.getTodayCoordinatePreview();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @GetMapping("/daily/today/details")
+    @Operation(
+            operationId = "Coordinate_getTodayCoordinateDetails",
+            summary = "오늘의 코디 Details 조회",
+            description = "오늘의 코디의 Details를 조회하는 API입니다.")
+    public BaseResponse<List<CoordinateDetailsListResponse>> getTodayCoordinateDetails() {
+        List<CoordinateDetailsListResponse> response =
+                coordinateService.getTodayCoordinateDetails();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 

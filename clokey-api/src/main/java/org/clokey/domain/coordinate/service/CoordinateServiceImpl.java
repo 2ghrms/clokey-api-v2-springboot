@@ -322,25 +322,19 @@ public class CoordinateServiceImpl implements CoordinateService {
     }
 
     @Override
-    public List<DailyCoordinateClothResponse> getTodayDailyCoordinateClothes() {
+    public DailyCoordinatePreviewResponse getTodayCoordinatePreview() {
         final Member currentMember = memberUtil.getCurrentMember();
-        Optional<Coordinate> coordinate =
-                coordinateRepository.findDailyCoordinateByDateAndMemberId(
-                        LocalDate.now(), currentMember.getId());
+        final Coordinate coordinate = getTodayDailyCoordinate(currentMember);
 
-        if (coordinate.isEmpty()) {
-            return List.of();
-        }
+        return DailyCoordinatePreviewResponse.from(coordinate);
+    }
 
-        List<CoordinateDetailsListResponse> details =
-                coordinateRepository.findAllCoordinateDetailsByCoordinateId(
-                        coordinate.get().getId());
+    @Override
+    public List<CoordinateDetailsListResponse> getTodayCoordinateDetails() {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Coordinate coordinate = getTodayDailyCoordinate(currentMember);
 
-        if (details.isEmpty()) {
-            return List.of();
-        }
-
-        return details.stream().map(DailyCoordinateClothResponse::from).toList();
+        return coordinateRepository.findAllCoordinateDetailsByCoordinateId(coordinate.getId());
     }
 
     @Override
@@ -486,5 +480,14 @@ public class CoordinateServiceImpl implements CoordinateService {
                 .findById(coordinateId)
                 .orElseThrow(
                         () -> new BaseCustomException(CoordinateErrorCode.COORDINATE_NOT_FOUND));
+    }
+
+    private Coordinate getTodayDailyCoordinate(Member member) {
+        return coordinateRepository
+                .findDailyCoordinateByDateAndMemberId(LocalDate.now(), member.getId())
+                .orElseThrow(
+                        () ->
+                                new BaseCustomException(
+                                        CoordinateErrorCode.DAILY_COORDINATE_NOT_FOUND));
     }
 }
