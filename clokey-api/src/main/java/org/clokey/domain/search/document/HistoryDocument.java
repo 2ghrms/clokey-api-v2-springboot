@@ -21,6 +21,7 @@ import org.springframework.data.annotation.Id;
             "historyImageUrl",
             "profileImageUrl",
             "nickname",
+            "styleNames",
             "hashtagNames",
             "categoryNames"
         },
