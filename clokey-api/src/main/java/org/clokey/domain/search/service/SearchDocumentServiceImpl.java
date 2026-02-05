@@ -5,18 +5,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.clokey.domain.history.repository.HistoryClothTagRepository;
-import org.clokey.domain.history.repository.HistoryHashtagRepository;
-import org.clokey.domain.history.repository.HistoryImageRepository;
-import org.clokey.domain.history.repository.HistoryRepository;
+import org.clokey.domain.history.repository.*;
 import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.search.document.HistoryDocument;
 import org.clokey.domain.search.document.MemberDocument;
-import org.clokey.history.entity.History;
-import org.clokey.history.entity.HistoryClothTag;
-import org.clokey.history.entity.HistoryHashtag;
-import org.clokey.history.entity.HistoryImage;
+import org.clokey.history.entity.*;
 import org.clokey.member.entity.Member;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +23,7 @@ public class SearchDocumentServiceImpl implements SearchDocumentService {
     private final HistoryRepository historyRepository;
     private final MemberRepository memberRepository;
     private final MemberLikeRepository memberLikeRepository;
+    private final HistoryStyleRepository historyStyleRepository;
     private final HistoryHashtagRepository historyHashtagRepository;
     private final HistoryImageRepository historyImageRepository;
     private final HistoryClothTagRepository historyClothTagRepository;
@@ -51,13 +46,16 @@ public class SearchDocumentServiceImpl implements SearchDocumentService {
         List<HistoryImage> images = historyImageRepository.findByHistoryId(historyId);
         String historyImageUrl = images.isEmpty() ? null : images.get(0).getImageUrl();
 
+        // 스타일 이름 리스트
+        List<HistoryStyle> historyStyles = historyStyleRepository.findByHistoryId(historyId);
+        List<String> styleNames =
+                historyStyles.stream().map(hs -> hs.getStyle().getName()).toList();
+
         // 해시태그 이름 리스트
         List<HistoryHashtag> historyHashtags =
                 historyHashtagRepository.findAllByHistoryIdWithHashtag(historyId);
         List<String> hashtagNames =
-                historyHashtags.stream()
-                        .map(hh -> hh.getHashtag().getName())
-                        .collect(Collectors.toList());
+                historyHashtags.stream().map(hh -> hh.getHashtag().getName()).toList();
 
         // 카테고리 이름 리스트 (중복 제거)
         Set<String> categoryNamesSet =
@@ -85,6 +83,7 @@ public class SearchDocumentServiceImpl implements SearchDocumentService {
         document.setHistoryImageUrl(historyImageUrl);
         document.setProfileImageUrl(member.getProfileImageUrl());
         document.setNickname(member.getNickname());
+        document.setStyleNames(styleNames);
         document.setHashtagNames(hashtagNames);
         document.setCategoryNames(categoryNames);
 
