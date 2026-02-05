@@ -27,18 +27,18 @@ public class MeiliSearchRepositoryImpl implements SearchRepository {
     private static final String HISTORY_INDEX = "histories";
     private static final String MEMBER_INDEX = "members";
     private final MeilisearchOperations meilisearchOperations;
-    private final MeilisearchHistoryRepository historyRepository;
-    private final MeilisearchMemberRepository memberRepository;
+    private final MeilisearchHistoryRepository historyDocumentRepository;
+    private final MeilisearchMemberRepository memberDocumentRepository;
 
     // MemberDocument 관련 메서드 구현
     @Override
     public void saveAllMembers(List<MemberDocument> documents) {
-        memberRepository.saveAll(documents);
+        memberDocumentRepository.saveAll(documents);
     }
 
     @Override
     public void deleteMember(String id) {
-        memberRepository.deleteById(id);
+        memberDocumentRepository.deleteById(id);
     }
 
     @Override
@@ -96,12 +96,12 @@ public class MeiliSearchRepositoryImpl implements SearchRepository {
     // HistoryDocument 관련 메서드 구현
     @Override
     public void saveAllHistories(List<HistoryDocument> documents) {
-        historyRepository.saveAll(documents);
+        historyDocumentRepository.saveAll(documents);
     }
 
     @Override
     public void deleteHistory(String id) {
-        historyRepository.deleteById(id);
+        historyDocumentRepository.deleteById(id);
     }
 
     @Override
