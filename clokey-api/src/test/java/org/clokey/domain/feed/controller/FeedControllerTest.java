@@ -42,6 +42,7 @@ public class FeedControllerTest {
                                             LocalDateTime.parse("2025-01-01T12:00:00"),
                                             "https://image.test/10.png",
                                             true,
+                                            false,
                                             new FeedListResponse.FeedAuthorResponse(
                                                     2L,
                                                     "clokey2",
@@ -76,6 +77,7 @@ public class FeedControllerTest {
                             jsonPath("$.result.items[0].imageUrl")
                                     .value("https://image.test/10.png"))
                     .andExpect(jsonPath("$.result.items[0].isLiked").value(true))
+                    .andExpect(jsonPath("$.result.items[0].isMine").value(false))
                     .andExpect(jsonPath("$.result.items[0].author.memberId").value(2L))
                     .andExpect(jsonPath("$.result.items[0].author.nickname").value("clokey2"))
                     .andExpect(
