@@ -646,6 +646,32 @@ class HistoryServiceImplTest extends IntegrationTest {
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(ClothErrorCode.NOT_CLOTH_OWNER.getMessage());
         }
+
+        @Test
+        void 기록에_중복된_이미지_URL이_존재할_때_수정_요청하면_성공해야_한다() {
+            // given
+            // 강제로 중복 이미지 생성
+            History history =
+                    transactionUtil.getResult(() -> historyRepository.findById(1L).orElseThrow());
+            HistoryImage duplicateImage = HistoryImage.createHistoryImage("image1", history);
+            historyImageRepository.save(duplicateImage);
+
+            HistoryUpdateRequest request =
+                    new HistoryUpdateRequest(
+                            "new content ",
+                            2L,
+                            List.of(2L, 3L),
+                            List.of("testHashtag2", "newHash"),
+                            List.of(
+                                    new HistoryUpdateRequest.Payload(
+                                            "image1",
+                                            List.of(
+                                                    new HistoryUpdateRequest.ClothTag(
+                                                            2L, 0.5, 0.6)))));
+
+            // when & then
+            historyService.updateHistory(1L, request);
+        }
     }
 
     @Nested

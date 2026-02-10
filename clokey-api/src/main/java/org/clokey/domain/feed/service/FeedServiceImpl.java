@@ -143,9 +143,6 @@ public class FeedServiceImpl implements FeedService {
                                                 history.getCreatedAt(),
                                                 imageUrlMap.get(history.getId()),
                                                 likedHistoryIds.contains(history.getId()),
-                                                history.getMember()
-                                                        .getId()
-                                                        .equals(currentMember.getId()),
                                                 toAuthorResponse(
                                                         history.getMember(),
                                                         followedMemberIds.contains(

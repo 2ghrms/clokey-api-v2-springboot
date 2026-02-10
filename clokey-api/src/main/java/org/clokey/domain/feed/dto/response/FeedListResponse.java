@@ -21,7 +21,6 @@ public record FeedListResponse(
             @Schema(description = "대표 이미지 URL", example = "https://example.com/image.jpg")
                     String imageUrl,
             @Schema(description = "좋아요 여부", example = "true") boolean isLiked,
-            @Schema(description = "작성자 본인 여부", example = "false") boolean isMine,
             @Schema(description = "작성자 정보") FeedAuthorResponse author) {}
 
     @Schema(name = "FeedAuthorResponse", description = "피드 작성자 정보")

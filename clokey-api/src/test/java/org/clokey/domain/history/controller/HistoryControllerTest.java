@@ -556,7 +556,7 @@ public class HistoryControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/histories/1")
+                            put("/histories/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -586,7 +586,7 @@ public class HistoryControllerTest {
 
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/histories/1")
+                            put("/histories/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -605,7 +605,7 @@ public class HistoryControllerTest {
 
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/histories/1")
+                            put("/histories/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -628,7 +628,7 @@ public class HistoryControllerTest {
 
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/histories/1")
+                            put("/histories/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
