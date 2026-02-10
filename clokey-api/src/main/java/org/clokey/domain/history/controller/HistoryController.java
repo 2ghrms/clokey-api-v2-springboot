@@ -53,7 +53,7 @@ public class HistoryController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.CREATED, response);
     }
 
-    @PatchMapping("/{historyId}")
+    @PutMapping("/{historyId}")
     @Operation(
             operationId = "History_updateHistory",
             summary = "기록 수정",

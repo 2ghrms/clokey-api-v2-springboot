@@ -59,20 +59,26 @@ public class FeedServiceTest extends IntegrationTest {
         void setUp() {
             Member member1 =
                     Member.createMember(
-                            "testEmail10",
-                            "testNickName10",
-                            OauthInfo.createOauthInfo("oauth-current-10", OauthProvider.KAKAO));
+                            "testEmail1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
-                            "testEmail20",
-                            "testNickName20",
-                            OauthInfo.createOauthInfo("oauth-a-20", OauthProvider.KAKAO));
+                            "testEmail2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
             Member member3 =
                     Member.createMember(
-                            "testEmail30",
-                            "testNickName30",
-                            OauthInfo.createOauthInfo("oauth-b-30", OauthProvider.KAKAO));
-            memberRepository.saveAll(List.of(member1, member2, member3));
+                            "testEmail3",
+                            "testNickName3",
+                            OauthInfo.createOauthInfo("testOauthId3", OauthProvider.KAKAO));
+            Member member4 =
+                    Member.createMember(
+                            "testEmail4",
+                            "testNickName4",
+                            OauthInfo.createOauthInfo("testOauthId4", OauthProvider.KAKAO));
+            member4.changeVisibility();
+            memberRepository.saveAll(List.of(member1, member2, member3, member4));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Situation situation = Situation.createSituation("daily");
@@ -90,7 +96,12 @@ public class FeedServiceTest extends IntegrationTest {
                     History.createHistory(LocalDate.of(2025, 1, 4), "B1", member3, situation);
             History history3_2 =
                     History.createHistory(LocalDate.of(2025, 1, 5), "B2", member3, situation);
-            historyRepository.saveAll(List.of(history3_1, history3_2));
+
+            History history4_1 =
+                    History.createHistory(LocalDate.of(2025, 1, 4), "C1", member4, situation);
+            History history4_2 =
+                    History.createHistory(LocalDate.of(2025, 1, 5), "C2", member4, situation);
+            historyRepository.saveAll(List.of(history3_1, history3_2, history4_1, history4_2));
 
             historyImageRepository.saveAll(
                     List.of(
@@ -98,7 +109,9 @@ public class FeedServiceTest extends IntegrationTest {
                             HistoryImage.createHistoryImage("img-a2", history2_2),
                             HistoryImage.createHistoryImage("img-a3", history2_3),
                             HistoryImage.createHistoryImage("img-b1", history3_1),
-                            HistoryImage.createHistoryImage("img-b2", history3_2)));
+                            HistoryImage.createHistoryImage("img-b2", history3_2),
+                            HistoryImage.createHistoryImage("img-c1", history4_1),
+                            HistoryImage.createHistoryImage("img-c2", history4_2)));
         }
 
         @Test
@@ -187,9 +200,10 @@ public class FeedServiceTest extends IntegrationTest {
         @Test
         void 차단한_사용자의_피드는_노출되지_않는다() {
             // given
-            Member member1 = memberRepository.findByNickname("testNickName10").orElseThrow();
-            Member member2 = memberRepository.findByNickname("testNickName20").orElseThrow();
+            Member member1 = memberRepository.findByNickname("testNickName1").orElseThrow();
+            Member member2 = memberRepository.findByNickname("testNickName2").orElseThrow();
             blockRepository.save(Block.createBlock(member1, member2));
+
             // when
             FeedListResponse response =
                     feedService.getFeeds(FollowScope.ALL, List.of(), List.of(), 3, null);
@@ -215,6 +229,36 @@ public class FeedServiceTest extends IntegrationTest {
             assertThat(response.items()).hasSize(2);
             assertThat(response.hasNext()).isFalse();
         }
+
+        @Test
+        void 비공개_계정의_피드는_전체_피드에서_노출되지_않는다() {
+            // when
+            FeedListResponse response =
+                    feedService.getFeeds(FollowScope.ALL, List.of(), List.of(), 3, null);
+
+            // then
+            Map<String, Long> historyIds =
+                    historyRepository.findAll().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            History::getContent,
+                                            History::getId,
+                                            (left, right) -> left));
+            Long history3_1 = historyIds.get("B1");
+            Long history3_2 = historyIds.get("B2");
+            Long history2_3 = historyIds.get("A3");
+            Long history4_1 = historyIds.get("C1");
+            Long history4_2 = historyIds.get("C2");
+
+            assertThat(response.items()).hasSize(3);
+            List<Long> feedIds =
+                    response.items().stream()
+                            .map(FeedListResponse.FeedItemResponse::feedId)
+                            .toList();
+            assertThat(feedIds).containsExactly(history3_2, history2_3, history3_1);
+            assertThat(feedIds).doesNotContain(history4_1, history4_2);
+            assertThat(response.hasNext()).isTrue();
+        }
     }
 
     @Nested
@@ -237,7 +281,13 @@ public class FeedServiceTest extends IntegrationTest {
                             "testEmail3",
                             "testNickName3",
                             OauthInfo.createOauthInfo("oauth-b", OauthProvider.KAKAO));
-            memberRepository.saveAll(List.of(member1, member2, member3));
+            Member member4 =
+                    Member.createMember(
+                            "testEmail4",
+                            "testNickName4",
+                            OauthInfo.createOauthInfo("testOauthId4", OauthProvider.KAKAO));
+            member4.changeVisibility();
+            memberRepository.saveAll(List.of(member1, member2, member3, member4));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Situation situation = Situation.createSituation("daily");
@@ -255,7 +305,11 @@ public class FeedServiceTest extends IntegrationTest {
                     History.createHistory(LocalDate.of(2025, 1, 4), "B1", member3, situation);
             History history3_2 =
                     History.createHistory(LocalDate.of(2025, 1, 5), "B2", member3, situation);
-            historyRepository.saveAll(List.of(history3_1, history3_2));
+            History history4_1 =
+                    History.createHistory(LocalDate.of(2025, 1, 4), "C1", member4, situation);
+            History history4_2 =
+                    History.createHistory(LocalDate.of(2025, 1, 5), "C2", member4, situation);
+            historyRepository.saveAll(List.of(history3_1, history3_2, history4_1, history4_2));
 
             historyImageRepository.saveAll(
                     List.of(
@@ -263,12 +317,15 @@ public class FeedServiceTest extends IntegrationTest {
                             HistoryImage.createHistoryImage("img-a2", history2_2),
                             HistoryImage.createHistoryImage("img-a3", history2_3),
                             HistoryImage.createHistoryImage("img-b1", history3_1),
-                            HistoryImage.createHistoryImage("img-b2", history3_2)));
+                            HistoryImage.createHistoryImage("img-b2", history3_2),
+                            HistoryImage.createHistoryImage("img-c1", history4_1),
+                            HistoryImage.createHistoryImage("img-c2", history4_2)));
 
             followRepository.saveAll(
                     List.of(
                             Follow.createFollow(member1, member2),
-                            Follow.createFollow(member1, member3)));
+                            Follow.createFollow(member1, member3),
+                            Follow.createFollow(member1, member4)));
 
             memberLikeRepository.save(MemberLike.createMemberLike(member1, history3_2));
         }
@@ -330,6 +387,36 @@ public class FeedServiceTest extends IntegrationTest {
                     .containsExactly(history2_2, history2_1);
             assertThat(second.hasNext()).isFalse();
             assertThat(second.nextCursor()).isNull();
+        }
+
+        @Test
+        void 비공개_계정의_피드는_팔로우하더라도_노출되지_않는다() {
+            // when
+            FeedListResponse response =
+                    feedService.getFeeds(FollowScope.FOLLOWING, List.of(), List.of(), 3, null);
+
+            // then
+            Map<String, Long> historyIds =
+                    historyRepository.findAll().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            History::getContent,
+                                            History::getId,
+                                            (left, right) -> left));
+            Long history3_1 = historyIds.get("B1");
+            Long history3_2 = historyIds.get("B2");
+            Long history2_3 = historyIds.get("A3");
+            Long history4_1 = historyIds.get("C1");
+            Long history4_2 = historyIds.get("C2");
+
+            assertThat(response.items()).hasSize(3);
+            List<Long> feedIds =
+                    response.items().stream()
+                            .map(FeedListResponse.FeedItemResponse::feedId)
+                            .toList();
+            assertThat(feedIds).containsExactly(history3_2, history3_1, history2_3);
+            assertThat(feedIds).doesNotContain(history4_1, history4_2);
+            assertThat(response.hasNext()).isTrue();
         }
     }
 }

@@ -155,7 +155,11 @@ public class HistoryServiceImpl implements HistoryService {
         List<HistoryImage> existingImages = historyImageRepository.findByHistoryId(historyId);
         Map<String, HistoryImage> existingImageMap =
                 existingImages.stream()
-                        .collect(Collectors.toMap(HistoryImage::getImageUrl, Function.identity()));
+                        .collect(
+                                Collectors.toMap(
+                                        HistoryImage::getImageUrl,
+                                        Function.identity(),
+                                        (left, right) -> left));
 
         Set<String> requestedImageUrls =
                 request.payloads().stream()
@@ -362,6 +366,7 @@ public class HistoryServiceImpl implements HistoryService {
         clearStylesAndHashtags(historyId);
         memberLikeRepository.deleteAllByHistoryId(historyId);
         commentRepository.deleteAllByHistoryId(historyId);
+        commentRepository.flush();
         reportRepository.deleteAllByTargetTypeAndTargetId(TargetType.HISTORY, historyId);
 
         historyRepository.delete(history);
@@ -565,15 +570,11 @@ public class HistoryServiceImpl implements HistoryService {
     }
 
     private void clearStylesAndHashtags(Long historyId) {
-        List<HistoryStyle> styles = historyStyleRepository.findByHistoryId(historyId);
-        if (!styles.isEmpty()) {
-            historyStyleRepository.deleteAll(styles);
-        }
+        historyStyleRepository.deleteAllByHistoryId(historyId);
+        historyStyleRepository.flush();
 
-        List<HistoryHashtag> hashtags = historyHashtagRepository.findByHistoryId(historyId);
-        if (!hashtags.isEmpty()) {
-            historyHashtagRepository.deleteAll(hashtags);
-        }
+        historyHashtagRepository.deleteAllByHistoryId(historyId);
+        historyHashtagRepository.flush();
     }
 
     private void deleteClothTagsByHistoryImageIds(List<Long> historyImageIds) {
