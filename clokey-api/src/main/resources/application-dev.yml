@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DEV_MYSQL_HOST}:${MYSQL_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${OCI_MYSQL_HEATWAVE_HOST}:${MYSQL_PORT}/${OCI_DEV_MYSQL_DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${OCI_MYSQL_USERNAME}
+    password: ${OCI_MYSQL_PASSWORD}
     hikari:
       minimum-idle: 10
       maximum-pool-size: 20
@@ -80,14 +80,14 @@ oci:
   passphrase: ${OCI_PASSPHRASE:}
   objectstorage:
     namespace: ${OCI_OBJECTSTORAGE_NAMESPACE}
-    bucket: ${OCI_OBJECTSTORAGE_BUCKET}
+    bucket: ${OCI_DEV_OBJECTSTORAGE_BUCKET}
 
 external:
   api:
     ai-server-ip: ${AI_SERVER_IP}
     cloth-inference-path: ${CLOTH_INFERENCE_PATH}
     style-inference-path: ${STYLE_INFERENCE_PATH}
-    cloth-detect-path: ${CLOTH_DETECT_PATH}
+    cloth-detect-path: ${HISTORY_CLOTH_DETECT_PATH}
 
 swagger:
   username: ${SWAGGER_USERNAME}

@@ -80,14 +80,18 @@ oci:
   passphrase: ${OCI_PASSPHRASE:}
   objectstorage:
     namespace: ${OCI_OBJECTSTORAGE_NAMESPACE}
-    bucket: ${OCI_OBJECTSTORAGE_BUCKET}
+    bucket: ${OCI_DEV_OBJECTSTORAGE_BUCKET}
 
 external:
   api:
     ai-server-ip: ${AI_SERVER_IP}
     cloth-inference-path: ${CLOTH_INFERENCE_PATH}
     style-inference-path: ${STYLE_INFERENCE_PATH}
-    cloth-detect-path: ${CLOTH_DETECT_PATH}
+    cloth-detect-path: ${HISTORY_CLOTH_DETECT_PATH}
+
+swagger:
+  username: ${SWAGGER_USERNAME}
+  password: ${SWAGGER_PASSWORD}
 
 spring-doc:
   default-consumes-media-type: application/json
