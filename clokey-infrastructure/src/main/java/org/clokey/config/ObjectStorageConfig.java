@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.clokey.properties.OciProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,6 +25,7 @@ public class ObjectStorageConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "oci.region")
     public ObjectStorageClient objectStorageClient() {
         String rawKey = ociProperties.privateKey();
         String privateKey = normalizePemPrivateKey(rawKey);
