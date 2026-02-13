@@ -58,12 +58,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # 포크에서 온 PR이면 SonarCloud PR 연동 생략 (원본 레포에 PR이 없어서 조회 실패 방지)
+          # 포크에서 온 PR: PR 연동 시 원본 레포에 PR이 없어 실패하므로 브랜치 분석만 수행
+          # 같은 레포 PR: PR 데코레이션 사용
           if [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
             ./gradlew test sonar --info --stacktrace \
               -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
               -Dsonar.pullrequest.branch=${{ github.head_ref }} \
               -Dsonar.pullrequest.base=${{ github.base_ref }}
           else
-            ./gradlew test sonar --info --stacktrace
+            ./gradlew test sonar --info --stacktrace \
+              -Dsonar.branch.name=pr-${{ github.event.pull_request.number }}
           fi
