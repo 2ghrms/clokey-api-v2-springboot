@@ -148,6 +148,10 @@ public class MemberServiceImpl implements MemberService {
         Member currentMember = memberUtil.getCurrentMember();
         Member targetMember = getMemberById(memberId);
 
+        if (!currentMember.getId().equals(targetMember.getId())) {
+            validateBlockedMutual(currentMember.getId(), targetMember.getId());
+        }
+
         return memberRepository.findMemberInfoById(currentMember.getId(), memberId);
     }
 
@@ -246,6 +250,13 @@ public class MemberServiceImpl implements MemberService {
     private void validateBlocked(Member currentMember, Member targetMember) {
         if (blockRepository.existsByBlockerIdAndBlockedId(
                 targetMember.getId(), currentMember.getId())) {
+            throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
+        }
+    }
+
+    private void validateBlockedMutual(Long currentMemberId, Long targetMemberId) {
+        if (blockRepository.existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(
+                currentMemberId, targetMemberId, targetMemberId, currentMemberId)) {
             throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
         }
     }

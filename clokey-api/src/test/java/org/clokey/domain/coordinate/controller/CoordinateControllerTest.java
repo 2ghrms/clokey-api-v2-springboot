@@ -1650,10 +1650,10 @@ class CoordinateControllerTest {
                             new FavoriteCoordinateResponse(
                                     2L, "testImageUrl2", "testCoordinateName2"));
 
-            given(coordinateService.getFavoriteCoordinates()).willReturn(response);
+            given(coordinateService.getFavoriteCoordinates(null)).willReturn(response);
 
             // when & then
-            ResultActions perform = mockMvc.perform(get("/coordinate/my-favorites"));
+            ResultActions perform = mockMvc.perform(get("/coordinate/favorites"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))

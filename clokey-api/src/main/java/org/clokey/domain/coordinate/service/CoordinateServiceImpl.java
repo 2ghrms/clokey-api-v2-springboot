@@ -24,11 +24,15 @@ import org.clokey.domain.coordinate.repository.CoordinateRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.lookbook.exception.LookBookErrorCode;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
+import org.clokey.domain.member.exception.MemberErrorCode;
+import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.lookbook.entity.LookBook;
 import org.clokey.member.entity.Member;
+import org.clokey.member.enums.Visibility;
 import org.clokey.response.SliceResponse;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
@@ -46,6 +50,8 @@ public class CoordinateServiceImpl implements CoordinateService {
     private final CoordinateRepository coordinateRepository;
     private final ClothRepository clothRepository;
     private final LookBookRepository lookBookRepository;
+    private final MemberRepository memberRepository;
+    private final BlockRepository blockRepository;
     private final CoordinateClothRepository coordinateClothRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -373,17 +379,36 @@ public class CoordinateServiceImpl implements CoordinateService {
     }
 
     @Override
-    public List<FavoriteCoordinateResponse> getFavoriteCoordinates() {
+    public List<FavoriteCoordinateResponse> getFavoriteCoordinates(Long memberId) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final Long targetMemberId =
+                resolveFavoriteCoordinateTargetMemberId(currentMember, memberId);
 
         List<Coordinate> favoriteCoordinates =
-                coordinateRepository.findLikedCoordinatesByMemberId(currentMember.getId());
+                coordinateRepository.findLikedCoordinatesByMemberId(targetMemberId);
 
         if (favoriteCoordinates.isEmpty()) {
             return List.of();
         }
 
         return favoriteCoordinates.stream().map(FavoriteCoordinateResponse::from).toList();
+    }
+
+    private Long resolveFavoriteCoordinateTargetMemberId(Member currentMember, Long memberId) {
+        if (memberId == null || memberId.equals(currentMember.getId())) {
+            return currentMember.getId();
+        }
+
+        Member targetMember =
+                memberRepository
+                        .findById(memberId)
+                        .orElseThrow(
+                                () -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        validatePublicMember(targetMember);
+        validateNotBlocked(currentMember.getId(), targetMember.getId());
+
+        return targetMember.getId();
     }
 
     private void validateAllClothesExist(List<Long> clothIds, Map<Long, Cloth> clothMap) {
@@ -466,6 +491,19 @@ public class CoordinateServiceImpl implements CoordinateService {
         if (coordinate.getLiked().equals(false)
                 && coordinateRepository.countByMemberIdAndLikedTrue(memberId) >= 5) {
             throw new BaseCustomException(CoordinateErrorCode.COORDINATE_LIKE_LIMIT);
+        }
+    }
+
+    private void validatePublicMember(Member member) {
+        if (member.getVisibility().equals(Visibility.PRIVATE)) {
+            throw new BaseCustomException(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED);
+        }
+    }
+
+    private void validateNotBlocked(Long currentMemberId, Long targetMemberId) {
+        if (blockRepository.existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(
+                currentMemberId, targetMemberId, targetMemberId, currentMemberId)) {
+            throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
         }
     }
 

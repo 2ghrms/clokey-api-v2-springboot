@@ -31,11 +31,14 @@ import org.clokey.domain.coordinate.repository.CoordinateRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.lookbook.exception.LookBookErrorCode;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
+import org.clokey.domain.member.exception.MemberErrorCode;
+import org.clokey.domain.member.repository.BlockRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.lookbook.entity.LookBook;
+import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
@@ -56,6 +59,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
     @Autowired private CoordinateRepository coordinateRepository;
     @Autowired private MemberRepository memberRepository;
+    @Autowired private BlockRepository blockRepository;
     @Autowired private CoordinateClothRepository coordinateClothRepository;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ClothRepository clothRepository;
@@ -1944,7 +1948,8 @@ class CoordinateServiceImplTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_좋아요한_코디를_반환한다() {
             // when
-            List<FavoriteCoordinateResponse> responses = coordinateService.getFavoriteCoordinates();
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(null);
 
             // then
             assertThat(responses)
@@ -1960,10 +1965,50 @@ class CoordinateServiceImplTest extends IntegrationTest {
             given(memberUtil.getCurrentMember()).willReturn(member);
 
             // when
-            List<FavoriteCoordinateResponse> responses = coordinateService.getFavoriteCoordinates();
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(null);
 
             // then
             assertThat(responses).isEmpty();
+        }
+
+        @Test
+        void memberId를_전달하면_해당_회원의_좋아요한_코디를_반환한다() {
+            // when
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(1L);
+
+            // then
+            assertThat(responses)
+                    .extracting("coordinateId", "imageUrl", "coordinateName")
+                    .containsExactly(
+                            tuple(1L, "testUrl1", "testName1"), tuple(2L, "testUrl2", "testName2"));
+        }
+
+        @Test
+        void 비공개_계정의_memberId로_조회하면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            member.changeVisibility();
+            memberRepository.saveAndFlush(member);
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getFavoriteCoordinates(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 차단_관계의_memberId로_조회하면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(currentMember, targetMember));
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getFavoriteCoordinates(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
         }
     }
 

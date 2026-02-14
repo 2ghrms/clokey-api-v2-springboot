@@ -787,6 +787,27 @@ class MemberServiceTest extends IntegrationTest {
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
         }
+
+        @Test
+        void 내가_차단한_회원의_정보를_조회하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> memberService.getMemberInfo(3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 나를_차단한_회원의_정보를_조회하면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(targetMember, currentMember));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.getMemberInfo(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
+        }
     }
 
     @Nested
