@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
-import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
+import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.FollowMemberResponse;
@@ -135,7 +135,7 @@ class MemberServiceTest extends IntegrationTest {
         @ValueSource(strings = {"testNickname1", "distinctId1", "distinctId2"})
         void 현재_닉네임_또는_중복되지_않는_닉네임을_입력하면_false를_반환한다(String nickname) {
             // given
-            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest(nickname);
+            DuplicatedNicknameCheckRequest request = new DuplicatedNicknameCheckRequest(nickname);
 
             // when& then
             assertThat(memberService.checkDuplicateNickname(request).duplicated()).isFalse();
@@ -144,7 +144,8 @@ class MemberServiceTest extends IntegrationTest {
         @Test
         void 중복되는_닉네임을_입력한_경우_true를_반환한다() {
             // given
-            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest("testNickname2");
+            DuplicatedNicknameCheckRequest request =
+                    new DuplicatedNicknameCheckRequest("testNickname2");
 
             // when& then
             assertThat(memberService.checkDuplicateNickname(request).duplicated()).isTrue();

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.history.repository.HistoryRepository;
-import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
+import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.*;
 import org.clokey.domain.member.event.NewFollowerEvent;
@@ -70,7 +70,8 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public DuplicatedIdCheckResponse checkDuplicateNickname(DuplicatedIdCheckRequest request) {
+    public DuplicatedIdCheckResponse checkDuplicateNickname(
+            DuplicatedNicknameCheckRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         boolean duplicated =

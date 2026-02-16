@@ -1,6 +1,6 @@
 package org.clokey.domain.member.service;
 
-import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
+import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.*;
 import org.clokey.global.paging.SortDirection;
@@ -10,7 +10,7 @@ public interface MemberService {
 
     void updateProfile(ProfileUpdateRequest request);
 
-    DuplicatedIdCheckResponse checkDuplicateNickname(DuplicatedIdCheckRequest request);
+    DuplicatedIdCheckResponse checkDuplicateNickname(DuplicatedNicknameCheckRequest request);
 
     void toggleFollow(Long userId);
 
