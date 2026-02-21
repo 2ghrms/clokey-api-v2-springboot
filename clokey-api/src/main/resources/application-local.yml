@@ -100,14 +100,6 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
-    # OAuth2 관련 상세 로그
-    org.springframework.security.oauth2: DEBUG
-    org.springframework.security.oauth2.client: DEBUG
-    org.springframework.security.oauth2.client.oidc: DEBUG
-    org.springframework.security.oauth2.client.web: DEBUG
-    org.springframework.security.oauth2.core: DEBUG
-    org.clokey.domain.auth: DEBUG
-    org.clokey.global.config.security: DEBUG
 
 firebase:
   credentials-path: ${FIREBASE_CREDENTIALS_PATH}
