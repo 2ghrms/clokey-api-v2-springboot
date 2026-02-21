@@ -13,6 +13,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,33 +31,85 @@ public class CustomOAuth2UserService extends OidcUserService {
     @Override
     @Transactional
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-        OidcUser oidcUser = super.loadUser(userRequest);
-
         String provider = userRequest.getClientRegistration().getRegistrationId();
-        String oauthId = oidcUser.getName();
-        String email = oidcUser.getAttribute("email");
+        String clientId = userRequest.getClientRegistration().getClientId();
+        String clientAuthenticationMethod =
+                userRequest.getClientRegistration().getClientAuthenticationMethod().getValue();
 
-        OauthProvider oauthProvider = OauthProvider.valueOf(provider.toUpperCase());
-        OauthInfo oauthInfo = OauthInfo.createOauthInfo(oauthId, oauthProvider);
+        log.info(
+                "[OIDC] 사용자 로드 시작 - Provider: {}, ClientId: {}, AuthMethod: {}",
+                provider,
+                clientId,
+                clientAuthenticationMethod);
 
-        Member member =
-                memberRepository
-                        .findByOauthInfo(oauthInfo)
-                        .orElseGet(
-                                () -> {
-                                    Member newMember =
-                                            Member.createMember(
-                                                    email,
-                                                    uniqueUtil.generateRandomNickname(),
-                                                    oauthInfo);
-                                    memberRepository.save(newMember);
-                                    eventPublisher.publishEvent(
-                                            MeiliSearchSyncEvent.of(
-                                                    MeiliSearchSyncEvent.EntityType.MEMBER,
-                                                    newMember.getId()));
-                                    return newMember;
-                                });
+        try {
+            log.info("[OIDC] Access Token 교환 시도 - Provider: {}", provider);
+            OidcUser oidcUser = super.loadUser(userRequest);
+            log.info("[OIDC] Access Token 교환 성공 - Provider: {}", provider);
 
-        return new CustomPrincipal(member, oidcUser.getAttributes(), oidcUser.getIdToken());
+            String oauthId = oidcUser.getName();
+            String email = oidcUser.getAttribute("email");
+            log.info(
+                    "[OIDC] 사용자 정보 추출 - Provider: {}, OAuthId: {}, Email: {}",
+                    provider,
+                    oauthId,
+                    email);
+
+            OauthProvider oauthProvider = OauthProvider.valueOf(provider.toUpperCase());
+            OauthInfo oauthInfo = OauthInfo.createOauthInfo(oauthId, oauthProvider);
+
+            log.info("[OIDC] 회원 조회 시작 - Provider: {}, OAuthId: {}", provider, oauthId);
+            Member member =
+                    memberRepository
+                            .findByOauthInfo(oauthInfo)
+                            .orElseGet(
+                                    () -> {
+                                        log.info(
+                                                "[OIDC] 신규 회원 생성 - Provider: {}, Email: {}",
+                                                provider,
+                                                email);
+                                        Member newMember =
+                                                Member.createMember(
+                                                        email,
+                                                        uniqueUtil.generateRandomNickname(),
+                                                        oauthInfo);
+                                        memberRepository.save(newMember);
+                                        eventPublisher.publishEvent(
+                                                MeiliSearchSyncEvent.of(
+                                                        MeiliSearchSyncEvent.EntityType.MEMBER,
+                                                        newMember.getId()));
+                                        log.info(
+                                                "[OIDC] 신규 회원 생성 완료 - MemberId: {}",
+                                                newMember.getId());
+                                        return newMember;
+                                    });
+
+            log.info("[OIDC] 사용자 로드 완료 - Provider: {}, MemberId: {}", provider, member.getId());
+            return new CustomPrincipal(member, oidcUser.getAttributes(), oidcUser.getIdToken());
+        } catch (OAuth2AuthenticationException e) {
+            // OAuth2AuthenticationException은 그대로 전달 (이미 OAuth2Error 포함)
+            log.error(
+                    "[OIDC] 사용자 로드 실패 - Provider: {}, ErrorCode: {}, Description: {}",
+                    provider,
+                    e.getError() != null ? e.getError().getErrorCode() : "UNKNOWN",
+                    e.getError() != null ? e.getError().getDescription() : e.getMessage(),
+                    e);
+            throw e;
+        } catch (Exception e) {
+            // 일반 Exception을 OAuth2AuthenticationException으로 변환
+            log.error(
+                    "[OIDC] 예상치 못한 오류 발생 - Provider: {}, Error: {}, Message: {}",
+                    provider,
+                    e.getClass().getSimpleName(),
+                    e.getMessage(),
+                    e);
+
+            OAuth2Error oauth2Error =
+                    new OAuth2Error(
+                            OAuth2ErrorCodes.SERVER_ERROR,
+                            "사용자 로드 중 오류 발생: " + e.getMessage(),
+                            null);
+            throw new OAuth2AuthenticationException(oauth2Error, e);
+        }
     }
 }

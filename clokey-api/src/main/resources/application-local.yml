@@ -48,6 +48,7 @@ spring:
             client-secret: ${APPLE_CLIENT_SECRET}
             redirect-uri: ${APPLE_REDIRECT_URI}
             authorization-grant-type: authorization_code
+            client-authentication-method: private_key_jwt
             scope:
               - openid
             provider: apple
@@ -99,6 +100,14 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+    # OAuth2 관련 상세 로그
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.oauth2.client: DEBUG
+    org.springframework.security.oauth2.client.oidc: DEBUG
+    org.springframework.security.oauth2.client.web: DEBUG
+    org.springframework.security.oauth2.core: DEBUG
+    org.clokey.domain.auth: DEBUG
+    org.clokey.global.config.security: DEBUG
 
 firebase:
   credentials-path: ${FIREBASE_CREDENTIALS_PATH}
