@@ -48,6 +48,7 @@ spring:
             client-secret: ${APPLE_CLIENT_SECRET}
             redirect-uri: ${APPLE_REDIRECT_URI}
             authorization-grant-type: authorization_code
+            client-authentication-method: private_key_jwt
             scope:
               - openid
             provider: apple
