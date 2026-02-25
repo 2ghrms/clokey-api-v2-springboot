@@ -121,18 +121,26 @@ public class StorageUtil {
     }
 
     public void deleteByUrl(String url) {
-        String namespace = storageProperties.namespace();
-        String bucket = storageProperties.bucket();
-        String objectKey = extractObjectKey(url);
+        if (url == null || url.isBlank()) {
+            log.info("deleteByUrl skipped: url is null or blank");
+            return;
+        }
+        try {
+            String namespace = storageProperties.namespace();
+            String bucket = storageProperties.bucket();
+            String objectKey = extractObjectKey(url);
 
-        DeleteObjectRequest request =
-                DeleteObjectRequest.builder()
-                        .namespaceName(namespace)
-                        .bucketName(bucket)
-                        .objectName(objectKey)
-                        .build();
+            DeleteObjectRequest request =
+                    DeleteObjectRequest.builder()
+                            .namespaceName(namespace)
+                            .bucketName(bucket)
+                            .objectName(objectKey)
+                            .build();
 
-        objectStorageClient.deleteObject(request);
+            objectStorageClient.deleteObject(request);
+        } catch (Exception e) {
+            log.error("Failed to delete object: {}", url, e);
+        }
     }
 
     private String extractObjectKey(String url) {
