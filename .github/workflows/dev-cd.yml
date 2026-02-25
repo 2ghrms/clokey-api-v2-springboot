@@ -122,21 +122,21 @@ jobs:
             export STYLE_INFERENCE_PATH=${{ secrets.STYLE_INFERENCE_PATH }}
             export HISTORY_CLOTH_DETECT_PATH=${{ secrets.HISTORY_CLOTH_DETECT_PATH }}
 
-            sudo mkdir -p /home/ubuntu/secrets
-            echo "${{ secrets.FIREBASE_SA_JSON_B64 }}" | base64 -d | sudo tee /home/ubuntu/secrets/firebase-sa.json > /dev/null
-            sudo chmod 600 /home/ubuntu/secrets/firebase-sa.json
+            mkdir -p /home/ubuntu/secrets
+            echo "${{ secrets.FIREBASE_SA_JSON_B64 }}" | base64 -d | tee /home/ubuntu/secrets/firebase-sa.json > /dev/null
+            chmod 600 /home/ubuntu/secrets/firebase-sa.json
 
-            echo '${{ env.OCI_PRIVATE_KEY_B64 }}' | base64 -d | sudo tee /home/ubuntu/secrets/oci_key.pem > /dev/null
-            sudo chmod 600 /home/ubuntu/secrets/oci_key.pem
+            echo '${{ env.OCI_PRIVATE_KEY_B64 }}' | base64 -d | tee /home/ubuntu/secrets/oci_key.pem > /dev/null
+            chmod 600 /home/ubuntu/secrets/oci_key.pem
             export OCI_PRIVATE_KEY="$(cat /home/ubuntu/secrets/oci_key.pem)"
 
             export FIREBASE_CREDENTIALS_PATH=/home/ubuntu/secrets/firebase-sa.json
 
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
             cd /home/ubuntu
-            sudo docker-compose -f dev-compose.yml up -d
+            docker-compose -f dev-compose.yml up -d
             
             echo "Cleaning up dangling Docker images..."
-            sudo docker image prune -f
+            docker image prune -f
             
