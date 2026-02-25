@@ -42,7 +42,7 @@ jobs:
       - name: Build & Push App Image
         run: |
           docker buildx build \
-            --platform linux/amd64 \
+            --platform linux/arm64 \
             --push \
             --file clokey-api/Dockerfile \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/clokey-docker-2025:dev-app \
