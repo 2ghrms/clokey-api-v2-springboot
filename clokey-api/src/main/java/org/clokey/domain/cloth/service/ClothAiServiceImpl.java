@@ -3,8 +3,10 @@ package org.clokey.domain.cloth.service;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.clokey.category.entity.Category;
 import org.clokey.cloth.enums.Season;
 import org.clokey.domain.category.exception.CategoryErrorCode;
@@ -43,7 +45,10 @@ import org.springframework.stereotype.Service;
 // FIXME: 현재는 Tomcat Thread Pool을 점유하고 있는 비효율적인 구조이기 때문에 나중에 비동기 처리를 통해 트래픽이 생길 경우 최적화가 필요합니다.
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ClothAiServiceImpl implements ClothAiService {
+
+    private static final long SLOW_REQUEST_THRESHOLD_MS = 3000L;
 
     private final MemberUtil memberUtil;
     private final CategoryRepository categoryRepository;
@@ -74,94 +79,129 @@ public class ClothAiServiceImpl implements ClothAiService {
     @Override
     public ClothInfoExtractResponse extractClothInfo(ClothInfoExtractRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final Long memberId = currentMember.getId();
         final List<String> clothImageUrls = request.clothImageUrls();
+        final long startedAtNs = System.nanoTime();
+        long validationMs = 0L;
+        long presignMs = 0L;
+        long aiCallMs = 0L;
+        long postProcessMs = 0L;
+        String errorCode = null;
 
-        validateImageUrls(clothImageUrls);
-
-        // AI Server에게 N개의 사진을 전처리한 후 업로드할 수 있는 presignedUrl을 넘겨줍니다.
-        List<String> presignedUrls =
-                createPresignedUrls(currentMember.getId(), clothImageUrls.size());
-
-        ClothInfoExtractAiResponseDTO aiResponse;
         try {
-            aiResponse =
-                    webClientUtil
-                            .postToAiServer(
-                                    webClientProperties.clothInferencePath(),
-                                    new ClothInfoExtractAiRequestDTO(clothImageUrls, presignedUrls),
-                                    ClothInfoExtractAiResponseDTO.class)
-                            .block();
-        } catch (Exception e) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
-        }
+            long phaseStartedAtNs = System.nanoTime();
+            validateImageUrls(clothImageUrls);
+            validationMs = elapsedMillis(phaseStartedAtNs);
 
-        if (aiResponse == null) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
-        }
+            // AI Server에게 N개의 사진을 전처리한 후 업로드할 수 있는 presignedUrl을 넘겨줍니다.
+            phaseStartedAtNs = System.nanoTime();
+            List<String> presignedUrls = createPresignedUrls(memberId, clothImageUrls.size());
+            presignMs = elapsedMillis(phaseStartedAtNs);
 
-        if (!Boolean.TRUE.equals(aiResponse.isSuccess())) {
-            throw new BaseCustomException(mapAiErrorCode(aiResponse.errorCode()));
-        }
-
-        if (aiResponse.result() == null || aiResponse.result().isEmpty()) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_INVALID_RESPONSE);
-        }
-
-        if (aiResponse.result().size() != clothImageUrls.size()) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_RESULT_MISMATCH);
-        }
-
-        List<ClothInfoExtractAiResponseDTO.ResultItem> resultItems = aiResponse.result();
-        List<ClothInfoExtractResponse.Payload> payloads =
-                new java.util.ArrayList<>(resultItems.size());
-
-        Set<Long> categoryIds =
-                resultItems.stream()
-                        .map(ClothInfoExtractAiResponseDTO.ResultItem::categories)
-                        .filter(categories -> categories != null && !categories.isEmpty())
-                        .map(categories -> categories.get(0).id())
-                        .collect(Collectors.toSet());
-
-        Map<Long, Category> categoryMap =
-                categoryRepository.findAllByIdWithParent(categoryIds).stream()
-                        .collect(Collectors.toMap(Category::getId, c -> c));
-
-        for (int i = 0; i < resultItems.size(); i++) {
-            ClothInfoExtractAiResponseDTO.ResultItem resultItem = resultItems.get(i);
-            String clothImageUrl = resultItem.uploadedUrl();
-
-            List<ClothInfoExtractAiResponseDTO.CategoryItem> categories = resultItem.categories();
-            if (categories == null || categories.isEmpty()) {
-                throw new BaseCustomException(ClothErrorCode.ClOTH_NOT_FOUND);
-            }
-            ClothInfoExtractAiResponseDTO.CategoryItem categoryItem = categories.get(0);
-            Category category = categoryMap.get(categoryItem.id());
-            if (category == null) {
-                throw new BaseCustomException(CategoryErrorCode.CATEGORY_NOT_FOUND);
-            }
-            Category parentCategory = category.getParent();
-
-            List<ClothInfoExtractAiResponseDTO.SeasonItem> seasonItems = resultItem.seasons();
-            if (seasonItems == null || seasonItems.isEmpty()) {
-                throw new BaseCustomException(ClothErrorCode.ClOTH_NOT_FOUND);
+            ClothInfoExtractAiResponseDTO aiResponse;
+            try {
+                phaseStartedAtNs = System.nanoTime();
+                aiResponse =
+                        webClientUtil
+                                .postToAiServer(
+                                        webClientProperties.clothInferencePath(),
+                                        new ClothInfoExtractAiRequestDTO(
+                                                clothImageUrls, presignedUrls),
+                                        ClothInfoExtractAiResponseDTO.class)
+                                .block();
+            } catch (Exception e) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
+            } finally {
+                aiCallMs = elapsedMillis(phaseStartedAtNs);
             }
 
-            List<Season> seasons = new java.util.ArrayList<>(seasonItems.size());
-            for (ClothInfoExtractAiResponseDTO.SeasonItem seasonItem : seasonItems) {
-                seasons.add(convertSeasonNameToEnum(seasonItem.name()));
+            if (aiResponse == null) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
             }
 
-            payloads.add(
-                    new ClothInfoExtractResponse.Payload(
-                            clothImageUrl,
-                            seasons,
-                            parentCategory != null ? parentCategory.getId() : null,
-                            parentCategory != null ? parentCategory.getName() : null,
-                            category.getId(),
-                            category.getName()));
-        }
+            if (!Boolean.TRUE.equals(aiResponse.isSuccess())) {
+                ClothAiErrorCode mappedErrorCode = mapAiErrorCode(aiResponse.errorCode());
+                throw new BaseCustomException(mappedErrorCode);
+            }
 
-        return ClothInfoExtractResponse.of(payloads);
+            if (aiResponse.result() == null || aiResponse.result().isEmpty()) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_INVALID_RESPONSE);
+            }
+
+            if (aiResponse.result().size() != clothImageUrls.size()) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_RESULT_MISMATCH);
+            }
+
+            phaseStartedAtNs = System.nanoTime();
+            List<ClothInfoExtractAiResponseDTO.ResultItem> resultItems = aiResponse.result();
+            List<ClothInfoExtractResponse.Payload> payloads =
+                    new java.util.ArrayList<>(resultItems.size());
+
+            Set<Long> categoryIds =
+                    resultItems.stream()
+                            .map(ClothInfoExtractAiResponseDTO.ResultItem::categories)
+                            .filter(categories -> categories != null && !categories.isEmpty())
+                            .map(categories -> categories.get(0).id())
+                            .collect(Collectors.toSet());
+
+            Map<Long, Category> categoryMap =
+                    categoryRepository.findAllByIdWithParent(categoryIds).stream()
+                            .collect(Collectors.toMap(Category::getId, c -> c));
+
+            for (int i = 0; i < resultItems.size(); i++) {
+                ClothInfoExtractAiResponseDTO.ResultItem resultItem = resultItems.get(i);
+                String clothImageUrl = resultItem.uploadedUrl();
+
+                List<ClothInfoExtractAiResponseDTO.CategoryItem> categories =
+                        resultItem.categories();
+                if (categories == null || categories.isEmpty()) {
+                    throw new BaseCustomException(ClothErrorCode.ClOTH_NOT_FOUND);
+                }
+                ClothInfoExtractAiResponseDTO.CategoryItem categoryItem = categories.get(0);
+                Category category = categoryMap.get(categoryItem.id());
+                if (category == null) {
+                    throw new BaseCustomException(CategoryErrorCode.CATEGORY_NOT_FOUND);
+                }
+                Category parentCategory = category.getParent();
+
+                List<ClothInfoExtractAiResponseDTO.SeasonItem> seasonItems = resultItem.seasons();
+                if (seasonItems == null || seasonItems.isEmpty()) {
+                    throw new BaseCustomException(ClothErrorCode.ClOTH_NOT_FOUND);
+                }
+
+                List<Season> seasons = new java.util.ArrayList<>(seasonItems.size());
+                for (ClothInfoExtractAiResponseDTO.SeasonItem seasonItem : seasonItems) {
+                    seasons.add(convertSeasonNameToEnum(seasonItem.name()));
+                }
+
+                payloads.add(
+                        new ClothInfoExtractResponse.Payload(
+                                clothImageUrl,
+                                seasons,
+                                parentCategory != null ? parentCategory.getId() : null,
+                                parentCategory != null ? parentCategory.getName() : null,
+                                category.getId(),
+                                category.getName()));
+            }
+            postProcessMs = elapsedMillis(phaseStartedAtNs);
+
+            ClothInfoExtractResponse response = ClothInfoExtractResponse.of(payloads);
+            return response;
+        } catch (BaseCustomException e) {
+            errorCode = e.getErrorReasonDto().code();
+            throw e;
+        } finally {
+            logClothAiObservation(
+                    "extractClothInfo",
+                    memberId,
+                    clothImageUrls.size(),
+                    elapsedMillis(startedAtNs),
+                    validationMs,
+                    presignMs,
+                    aiCallMs,
+                    postProcessMs,
+                    errorCode);
+        }
     }
 
     private Season convertSeasonNameToEnum(String seasonName) {
@@ -176,89 +216,157 @@ public class ClothAiServiceImpl implements ClothAiService {
 
     @Override
     public HistoryStyleInferenceResponse inferHistoryStyle(HistoryStyleInferenceRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Long memberId = currentMember.getId();
         final String historyImageUrl = request.historyImageUrl();
+        final long startedAtNs = System.nanoTime();
+        long validationMs = 0L;
+        long aiCallMs = 0L;
+        long postProcessMs = 0L;
+        String errorCode = null;
 
-        validateImageUrl(historyImageUrl);
-
-        HistoryStyleInferenceAiResponseDTO aiResponse;
         try {
-            aiResponse =
-                    webClientUtil
-                            .postToAiServer(
-                                    webClientProperties.styleInferencePath(),
-                                    new HistoryStyleInferenceAiRequestDTO(historyImageUrl),
-                                    HistoryStyleInferenceAiResponseDTO.class)
-                            .block();
-        } catch (Exception e) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
+            long phaseStartedAtNs = System.nanoTime();
+            validateImageUrl(historyImageUrl);
+            validationMs = elapsedMillis(phaseStartedAtNs);
+
+            HistoryStyleInferenceAiResponseDTO aiResponse;
+            try {
+                phaseStartedAtNs = System.nanoTime();
+                aiResponse =
+                        webClientUtil
+                                .postToAiServer(
+                                        webClientProperties.styleInferencePath(),
+                                        new HistoryStyleInferenceAiRequestDTO(historyImageUrl),
+                                        HistoryStyleInferenceAiResponseDTO.class)
+                                .block();
+            } catch (Exception e) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
+            } finally {
+                aiCallMs = elapsedMillis(phaseStartedAtNs);
+            }
+
+            if (aiResponse == null || aiResponse.result() == null) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_INVALID_RESPONSE);
+            }
+
+            phaseStartedAtNs = System.nanoTime();
+            HistoryStyleInferenceAiResponseDTO.Result result = aiResponse.result();
+
+            if (result.situations() == null || result.situations().isEmpty()) {
+                throw new BaseCustomException(SituationErrorCode.SITUATION_NOT_FOUND);
+            }
+            HistoryStyleInferenceAiResponseDTO.SituationItem situationItem =
+                    result.situations().get(0);
+
+            if (result.styles() == null || result.styles().isEmpty()) {
+                throw new BaseCustomException(StyleErrorCode.STYLE_NOT_FOUND);
+            }
+
+            List<HistoryStyleInferenceResponse.StylePayload> styles =
+                    result.styles().stream()
+                            .map(
+                                    style ->
+                                            new HistoryStyleInferenceResponse.StylePayload(
+                                                    style.id(), style.name()))
+                            .toList();
+            postProcessMs = elapsedMillis(phaseStartedAtNs);
+
+            HistoryStyleInferenceResponse response =
+                    HistoryStyleInferenceResponse.of(
+                            situationItem.id(), situationItem.name(), styles);
+            return response;
+        } catch (BaseCustomException e) {
+            errorCode = e.getErrorReasonDto().code();
+            throw e;
+        } finally {
+            logClothAiObservation(
+                    "inferHistoryStyle",
+                    memberId,
+                    1,
+                    elapsedMillis(startedAtNs),
+                    validationMs,
+                    0L,
+                    aiCallMs,
+                    postProcessMs,
+                    errorCode);
         }
-
-        if (aiResponse.result() == null) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_INVALID_RESPONSE);
-        }
-
-        HistoryStyleInferenceAiResponseDTO.Result result = aiResponse.result();
-
-        if (result.situations() == null || result.situations().isEmpty()) {
-            throw new BaseCustomException(SituationErrorCode.SITUATION_NOT_FOUND);
-        }
-        HistoryStyleInferenceAiResponseDTO.SituationItem situationItem = result.situations().get(0);
-
-        if (result.styles() == null || result.styles().isEmpty()) {
-            throw new BaseCustomException(StyleErrorCode.STYLE_NOT_FOUND);
-        }
-
-        List<HistoryStyleInferenceResponse.StylePayload> styles =
-                result.styles().stream()
-                        .map(
-                                style ->
-                                        new HistoryStyleInferenceResponse.StylePayload(
-                                                style.id(), style.name()))
-                        .toList();
-
-        return HistoryStyleInferenceResponse.of(situationItem.id(), situationItem.name(), styles);
     }
 
     @Override
     public ClothDetectResponse detectClothes(ClothDetectRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final Long memberId = currentMember.getId();
         final String imageUrl = request.imageUrl();
+        final long startedAtNs = System.nanoTime();
+        long validationMs = 0L;
+        long presignMs = 0L;
+        long aiCallMs = 0L;
+        long postProcessMs = 0L;
+        String errorCode = null;
 
-        validateImageUrl(imageUrl);
-
-        List<String> presignedUrls = createPresignedUrls(currentMember.getId(), 10);
-
-        ClothDetectAiResponseDTO aiResponse;
         try {
-            aiResponse =
-                    webClientUtil
-                            .postToAiServer(
-                                    webClientProperties.clothDetectPath(),
-                                    new ClothDetectAiRequestDTO(imageUrl, presignedUrls),
-                                    ClothDetectAiResponseDTO.class)
-                            .block();
-        } catch (Exception e) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
+            long phaseStartedAtNs = System.nanoTime();
+            validateImageUrl(imageUrl);
+            validationMs = elapsedMillis(phaseStartedAtNs);
+
+            phaseStartedAtNs = System.nanoTime();
+            List<String> presignedUrls = createPresignedUrls(memberId, 10);
+            presignMs = elapsedMillis(phaseStartedAtNs);
+
+            ClothDetectAiResponseDTO aiResponse;
+            try {
+                phaseStartedAtNs = System.nanoTime();
+                aiResponse =
+                        webClientUtil
+                                .postToAiServer(
+                                        webClientProperties.clothDetectPath(),
+                                        new ClothDetectAiRequestDTO(imageUrl, presignedUrls),
+                                        ClothDetectAiResponseDTO.class)
+                                .block();
+            } catch (Exception e) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
+            } finally {
+                aiCallMs = elapsedMillis(phaseStartedAtNs);
+            }
+
+            if (aiResponse == null) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
+            }
+
+            if (!Boolean.TRUE.equals(aiResponse.isSuccess())) {
+                ClothAiErrorCode mappedErrorCode = mapAiErrorCode(aiResponse.errorCode());
+                throw new BaseCustomException(mappedErrorCode);
+            }
+
+            if (aiResponse.result() == null || aiResponse.result().uploadedUrls() == null) {
+                throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_INVALID_RESPONSE);
+            }
+
+            phaseStartedAtNs = System.nanoTime();
+            List<ClothDetectResponse.Payload> payloads =
+                    aiResponse.result().uploadedUrls().stream()
+                            .map(ClothDetectResponse.Payload::new)
+                            .toList();
+            postProcessMs = elapsedMillis(phaseStartedAtNs);
+
+            ClothDetectResponse response = ClothDetectResponse.of(payloads);
+            return response;
+        } catch (BaseCustomException e) {
+            errorCode = e.getErrorReasonDto().code();
+            throw e;
+        } finally {
+            logClothAiObservation(
+                    "detectClothes",
+                    memberId,
+                    1,
+                    elapsedMillis(startedAtNs),
+                    validationMs,
+                    presignMs,
+                    aiCallMs,
+                    postProcessMs,
+                    errorCode);
         }
-
-        if (aiResponse == null) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_REQUEST_FAILED);
-        }
-
-        if (!Boolean.TRUE.equals(aiResponse.isSuccess())) {
-            throw new BaseCustomException(mapAiErrorCode(aiResponse.errorCode()));
-        }
-
-        if (aiResponse.result() == null || aiResponse.result().uploadedUrls() == null) {
-            throw new BaseCustomException(ClothAiErrorCode.AI_SERVER_INVALID_RESPONSE);
-        }
-
-        List<ClothDetectResponse.Payload> payloads =
-                aiResponse.result().uploadedUrls().stream()
-                        .map(ClothDetectResponse.Payload::new)
-                        .toList();
-
-        return ClothDetectResponse.of(payloads);
     }
 
     private void validateImageUrls(List<String> imageUrls) {
@@ -298,5 +406,49 @@ public class ClothAiServiceImpl implements ClothAiService {
                                 s3Util.createPresignedUrlWithoutMd5(
                                         ImageType.CLOTH_IMAGE, memberId, FileExtension.JPEG))
                 .toList();
+    }
+
+    private void logClothAiObservation(
+            String operation,
+            Long memberId,
+            int itemCount,
+            long totalMs,
+            long validationMs,
+            long presignMs,
+            long aiCallMs,
+            long postProcessMs,
+            String errorCode) {
+        if (errorCode != null) {
+            log.warn(
+                    "[cloth-ai] {} 실패 - memberId: {}, itemCount: {}, errorCode: {}, totalMs: {}, validationMs: {}, presignMs: {}, aiCallMs: {}, postProcessMs: {}",
+                    operation,
+                    memberId,
+                    itemCount,
+                    errorCode,
+                    totalMs,
+                    validationMs,
+                    presignMs,
+                    aiCallMs,
+                    postProcessMs);
+            return;
+        }
+
+        if (totalMs >= SLOW_REQUEST_THRESHOLD_MS) {
+            log.warn(
+                    "[cloth-ai] {} 지연 감지 - memberId: {}, itemCount: {}, totalMs: {}, validationMs: {}, presignMs: {}, aiCallMs: {}, postProcessMs: {}",
+                    operation,
+                    memberId,
+                    itemCount,
+                    totalMs,
+                    validationMs,
+                    presignMs,
+                    aiCallMs,
+                    postProcessMs);
+            return;
+        }
+    }
+
+    private long elapsedMillis(long startedAtNs) {
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNs);
     }
 }
