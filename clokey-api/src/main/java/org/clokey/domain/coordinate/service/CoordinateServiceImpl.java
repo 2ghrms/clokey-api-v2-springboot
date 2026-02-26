@@ -1,6 +1,7 @@
 package org.clokey.domain.coordinate.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -44,6 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CoordinateServiceImpl implements CoordinateService {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final MemberUtil memberUtil;
 
@@ -89,7 +92,7 @@ public class CoordinateServiceImpl implements CoordinateService {
         validateExceedingCoordinationClothesLimit(request.payloads());
         validateDuplicatedClothes(clothes);
         validateAllClothesOwnership(currentMember, clothes);
-        validateDailyCoordinateExist(currentMember.getId(), LocalDate.now());
+        validateDailyCoordinateExist(currentMember.getId(), LocalDate.now(KST));
 
         Coordinate coordinate =
                 Coordinate.createDailyCoordinate(request.coordinateImageUrl(), currentMember);
@@ -522,7 +525,7 @@ public class CoordinateServiceImpl implements CoordinateService {
 
     private Coordinate getTodayDailyCoordinate(Member member) {
         return coordinateRepository
-                .findDailyCoordinateByDateAndMemberId(LocalDate.now(), member.getId())
+                .findDailyCoordinateByDateAndMemberId(LocalDate.now(KST), member.getId())
                 .orElseThrow(
                         () ->
                                 new BaseCustomException(

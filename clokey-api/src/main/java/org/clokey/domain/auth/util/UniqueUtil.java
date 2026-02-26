@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UniqueUtil {
 
+    private static final int MAX_NICKNAME_LENGTH = 20;
     private static final String[] PREFIX_NAMES = {"미니멀한", "모던한", "케주얼한", "스트릿한"};
 
     private static final String[] CLOTHING_CATEGORIES = {
@@ -22,9 +23,23 @@ public class UniqueUtil {
 
         String prefix = PREFIX_NAMES[random.nextInt(PREFIX_NAMES.length)];
         String category = CLOTHING_CATEGORIES[random.nextInt(CLOTHING_CATEGORIES.length)];
+        String nicknamePrefix = prefix + "_" + category + "_";
 
-        String uuidPart = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        int suffixLength = MAX_NICKNAME_LENGTH - nicknamePrefix.length();
+        if (suffixLength <= 0) {
+            return nicknamePrefix.substring(0, MAX_NICKNAME_LENGTH);
+        }
 
-        return prefix + "-" + category + "-" + uuidPart;
+        return nicknamePrefix + generateSuffix(suffixLength);
+    }
+
+    private String generateSuffix(int length) {
+        StringBuilder suffix = new StringBuilder(length);
+
+        while (suffix.length() < length) {
+            suffix.append(UUID.randomUUID().toString().replace("-", ""));
+        }
+
+        return suffix.substring(0, length);
     }
 }

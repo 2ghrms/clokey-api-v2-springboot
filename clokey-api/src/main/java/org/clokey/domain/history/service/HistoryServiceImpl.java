@@ -1,6 +1,7 @@
 package org.clokey.domain.history.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,6 +49,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class HistoryServiceImpl implements HistoryService {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final MemberUtil memberUtil;
 
     private final HistoryRepository historyRepository;
@@ -90,7 +93,7 @@ public class HistoryServiceImpl implements HistoryService {
         final String content =
                 Optional.ofNullable(request.content()).map(String::trim).orElse(null);
         final History history =
-                History.createHistory(LocalDate.now(), content, currentMember, situation);
+                History.createHistory(LocalDate.now(KST), content, currentMember, situation);
         historyRepository.save(history);
 
         List<HistoryImage> images = new ArrayList<>();
