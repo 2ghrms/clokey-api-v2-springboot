@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.clokey.IntegrationTest;
@@ -2043,7 +2044,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
             // then
             assertThat(response)
                     .extracting("coordinateId", "imageUrl", "date")
-                    .containsExactly(1L, "testImageUrl1", LocalDate.now());
+                    .containsExactly(1L, "testImageUrl1", LocalDate.now(ZoneId.of("Asia/Seoul")));
         }
 
         @Test

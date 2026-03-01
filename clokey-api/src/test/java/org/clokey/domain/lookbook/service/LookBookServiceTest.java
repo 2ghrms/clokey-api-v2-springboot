@@ -221,6 +221,9 @@ class LookBookServiceTest extends IntegrationTest {
 
             // then
             Assertions.assertAll(
+                    // 룩북 자체가 삭제된다.
+                    () -> assertThat(lookBookRepository.findById(1L)).isEmpty(),
+
                     // 룩북에서 생성된 코디는 삭제, 오늘의 코디는 삭제되지 않고 룩북에서만 제거된다.
                     () -> assertThat(coordinateRepository.findAllById(List.of(1L, 2L))).isEmpty(),
                     () ->
