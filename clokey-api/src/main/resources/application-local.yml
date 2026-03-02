@@ -57,6 +57,7 @@ spring:
             client-authentication-method: client_secret_post
             scope:
               - openid
+              - email
             provider: apple
         provider:
           kakao:

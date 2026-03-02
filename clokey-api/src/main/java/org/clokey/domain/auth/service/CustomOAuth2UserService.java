@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -57,6 +58,7 @@ public class CustomOAuth2UserService extends OidcUserService {
 
             OauthProvider oauthProvider = OauthProvider.valueOf(provider.toUpperCase());
             OauthInfo oauthInfo = OauthInfo.createOauthInfo(oauthId, oauthProvider);
+            String resolvedEmail = resolveEmail(email, oauthId, oauthProvider);
 
             log.info("[OIDC] 회원 조회 시작 - Provider: {}, OAuthId: {}", provider, oauthId);
             Member member =
@@ -70,7 +72,7 @@ public class CustomOAuth2UserService extends OidcUserService {
                                                 email);
                                         Member newMember =
                                                 Member.createMember(
-                                                        email,
+                                                        resolvedEmail,
                                                         uniqueUtil.generateRandomNickname(),
                                                         oauthInfo);
                                         memberRepository.save(newMember);
@@ -111,5 +113,24 @@ public class CustomOAuth2UserService extends OidcUserService {
                             null);
             throw new OAuth2AuthenticationException(oauth2Error, e);
         }
+    }
+
+    private String resolveEmail(String email, String oauthId, OauthProvider oauthProvider) {
+        if (StringUtils.hasText(email)) {
+            return email;
+        }
+
+        String safeOauthId = oauthId.replaceAll("[^a-zA-Z0-9._-]", "_");
+        if (safeOauthId.length() > 80) {
+            safeOauthId = safeOauthId.substring(0, 80);
+        }
+        String fallbackEmail =
+                oauthProvider.name().toLowerCase() + "_" + safeOauthId + "@noemail.local";
+        log.warn(
+                "[OIDC] Email claim missing. Fallback email is used - Provider: {}, OAuthId: {}, FallbackEmail: {}",
+                oauthProvider,
+                oauthId,
+                fallbackEmail);
+        return fallbackEmail;
     }
 }
