@@ -97,9 +97,9 @@ public class SearchController {
     @Operation(
             operationId = "Search_searchUserByNickname",
             summary = "유저 검색",
-            description = "검색탭에서 클로키ID와 닉네임을 통해 유저를 검색할 수 있는 API입니다.")
+            description = "검색탭에서 클로키ID와 닉네임을 통해 유저를 검색할 수 있는 API입니다. (본인 제외)")
     public BaseResponse<SliceResponse<SearchedMemberResponse>> searchUserByNickname(
-            @Parameter(description = "검색 키워드 (클로키ID or 닉네임)") @RequestParam String keyword,
+            @Parameter(description = "검색 키워드 (닉네임)") @RequestParam String keyword,
             @Parameter(description = "페이지 번호") @RequestParam Long page,
             @Parameter(description = "페이지당 조회할 유저의 수") @RequestParam @PageSize Integer size) {
         SliceResponse<SearchedMemberResponse> response =
