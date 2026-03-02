@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.clokey.domain.auth.handler.OidcLoginSuccessHandler;
 import org.clokey.domain.auth.service.CustomOAuth2UserService;
 import org.clokey.domain.auth.service.JwtTokenService;
+import org.clokey.global.security.AppleAwareOAuth2AuthorizationRequestResolver;
 import org.clokey.global.security.JwtAuthenticationFilter;
 import org.clokey.helper.SpringEnvironmentHelper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -169,8 +169,8 @@ public class SecurityConfig {
         if (clientRegistrationRepository == null) {
             throw new IllegalStateException("ClientRegistrationRepository is required for OAuth2");
         }
-        DefaultOAuth2AuthorizationRequestResolver resolver =
-                new DefaultOAuth2AuthorizationRequestResolver(
+        AppleAwareOAuth2AuthorizationRequestResolver resolver =
+                new AppleAwareOAuth2AuthorizationRequestResolver(
                         clientRegistrationRepository, "/oauth2/authorization");
         resolver.setAuthorizationRequestCustomizer(
                 OAuth2AuthorizationRequestCustomizers.withPkce());
