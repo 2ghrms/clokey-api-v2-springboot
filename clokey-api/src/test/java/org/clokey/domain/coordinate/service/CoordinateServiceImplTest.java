@@ -34,12 +34,14 @@ import org.clokey.domain.lookbook.exception.LookBookErrorCode;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.lookbook.entity.LookBook;
 import org.clokey.member.entity.Block;
+import org.clokey.member.entity.Follow;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
@@ -61,6 +63,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
     @Autowired private CoordinateRepository coordinateRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private BlockRepository blockRepository;
+    @Autowired private FollowRepository followRepository;
     @Autowired private CoordinateClothRepository coordinateClothRepository;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ClothRepository clothRepository;
@@ -1620,11 +1623,58 @@ class CoordinateServiceImplTest extends IntegrationTest {
         }
 
         @Test
-        void 나의_코디가_아닌_경우_예외가_발생한다() {
+        void 타인의_공개_코디면_조회할_수_있다() {
+            // when
+            CoordinatePreviewResponse response = coordinateService.getCoordinatePreview(2L);
+
+            // then
+            assertThat(response)
+                    .extracting("coordinateId", "imageUrl", "coordinateName", "coordinateMemo")
+                    .containsExactly(2L, "testImageUrl2", "testName2", "testMemo2");
+        }
+
+        @Test
+        void 타인의_비공개_코디이고_팔로우하지_않으면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            member.changeVisibility();
+            memberRepository.saveAndFlush(member);
+
             // when & then
             assertThatThrownBy(() -> coordinateService.getCoordinatePreview(2L))
                     .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(CoordinateErrorCode.NOT_COORDINATE_OWNER.getMessage());
+                    .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 타인의_비공개_코디여도_승인된_팔로우면_조회할_수_있다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            targetMember.changeVisibility();
+            memberRepository.saveAndFlush(targetMember);
+            followRepository.save(Follow.createFollow(currentMember, targetMember));
+
+            // when
+            CoordinatePreviewResponse response = coordinateService.getCoordinatePreview(2L);
+
+            // then
+            assertThat(response)
+                    .extracting("coordinateId", "imageUrl", "coordinateName", "coordinateMemo")
+                    .containsExactly(2L, "testImageUrl2", "testName2", "testMemo2");
+        }
+
+        @Test
+        void 차단_관계의_타인_코디면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(currentMember, targetMember));
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getCoordinatePreview(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
         }
 
         @Test
@@ -1764,11 +1814,56 @@ class CoordinateServiceImplTest extends IntegrationTest {
         }
 
         @Test
-        void 나의_코디가_아닌_경우_예외가_발생한다() {
+        void 타인의_공개_코디면_Details를_조회할_수_있다() {
+            // when
+            List<CoordinateDetailsListResponse> response =
+                    coordinateService.getCoordinateDetails(2L);
+
+            // then
+            assertThat(response).isEmpty();
+        }
+
+        @Test
+        void 타인의_비공개_코디이고_팔로우하지_않으면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            member.changeVisibility();
+            memberRepository.saveAndFlush(member);
+
             // when & then
             assertThatThrownBy(() -> coordinateService.getCoordinateDetails(2L))
                     .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(CoordinateErrorCode.NOT_COORDINATE_OWNER.getMessage());
+                    .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 타인의_비공개_코디여도_승인된_팔로우면_Details를_조회할_수_있다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            targetMember.changeVisibility();
+            memberRepository.saveAndFlush(targetMember);
+            followRepository.save(Follow.createFollow(currentMember, targetMember));
+
+            // when
+            List<CoordinateDetailsListResponse> response =
+                    coordinateService.getCoordinateDetails(2L);
+
+            // then
+            assertThat(response).isEmpty();
+        }
+
+        @Test
+        void 차단_관계의_타인_코디면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(currentMember, targetMember));
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getCoordinateDetails(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
         }
 
         @Test
@@ -1987,7 +2082,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
         }
 
         @Test
-        void 비공개_계정의_memberId로_조회하면_예외가_발생한다() {
+        void 비공개_계정의_memberId를_팔로우하지_않고_조회하면_예외가_발생한다() {
             // given
             Member member = memberRepository.findById(2L).orElseThrow();
             member.changeVisibility();
@@ -1997,6 +2092,33 @@ class CoordinateServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> coordinateService.getFavoriteCoordinates(2L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 비공개_계정의_memberId여도_승인된_팔로우면_조회할_수_있다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            targetMember.changeVisibility();
+            memberRepository.saveAndFlush(targetMember);
+            followRepository.save(Follow.createFollow(currentMember, targetMember));
+
+            LookBook lookBook = lookBookRepository.findById(2L).orElseThrow();
+            Coordinate targetLikedCoordinate =
+                    Coordinate.createCoordinateManual(
+                            "targetLike", "memo", "targetUrl", targetMember, lookBook);
+            targetLikedCoordinate.toggleLike();
+            coordinateRepository.saveAndFlush(targetLikedCoordinate);
+
+            // when
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(2L);
+
+            // then
+            assertThat(responses)
+                    .extracting("coordinateId", "imageUrl", "coordinateName")
+                    .containsExactly(
+                            tuple(targetLikedCoordinate.getId(), "targetUrl", "targetLike"));
         }
 
         @Test

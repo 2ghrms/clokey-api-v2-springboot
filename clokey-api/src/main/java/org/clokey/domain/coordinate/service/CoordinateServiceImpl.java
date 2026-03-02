@@ -27,6 +27,7 @@ import org.clokey.domain.lookbook.exception.LookBookErrorCode;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
@@ -55,6 +56,7 @@ public class CoordinateServiceImpl implements CoordinateService {
     private final LookBookRepository lookBookRepository;
     private final MemberRepository memberRepository;
     private final BlockRepository blockRepository;
+    private final FollowRepository followRepository;
     private final CoordinateClothRepository coordinateClothRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -351,7 +353,7 @@ public class CoordinateServiceImpl implements CoordinateService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Coordinate coordinate = getCoordinateById(coordinateId);
 
-        validateCoordinateOwner(coordinate, currentMember.getId());
+        validateCoordinateViewAccess(currentMember, coordinate.getMember());
         validateCoordinateInLookBook(coordinate);
 
         return CoordinatePreviewResponse.from(coordinate);
@@ -362,7 +364,7 @@ public class CoordinateServiceImpl implements CoordinateService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Coordinate coordinate = getCoordinateById(coordinateId);
 
-        validateCoordinateOwner(coordinate, currentMember.getId());
+        validateCoordinateViewAccess(currentMember, coordinate.getMember());
         validateCoordinateInLookBook(coordinate);
 
         return coordinateRepository.findAllCoordinateDetailsByCoordinateId(coordinate.getId());
@@ -408,8 +410,7 @@ public class CoordinateServiceImpl implements CoordinateService {
                         .orElseThrow(
                                 () -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        validatePublicMember(targetMember);
-        validateNotBlocked(currentMember.getId(), targetMember.getId());
+        validateCoordinateViewAccess(currentMember, targetMember);
 
         return targetMember.getId();
     }
@@ -497,16 +498,24 @@ public class CoordinateServiceImpl implements CoordinateService {
         }
     }
 
-    private void validatePublicMember(Member member) {
-        if (member.getVisibility().equals(Visibility.PRIVATE)) {
-            throw new BaseCustomException(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED);
-        }
-    }
-
     private void validateNotBlocked(Long currentMemberId, Long targetMemberId) {
         if (blockRepository.existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(
                 currentMemberId, targetMemberId, targetMemberId, currentMemberId)) {
             throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
+        }
+    }
+
+    private void validateCoordinateViewAccess(Member currentMember, Member targetMember) {
+        if (Objects.equals(currentMember.getId(), targetMember.getId())) {
+            return;
+        }
+
+        validateNotBlocked(currentMember.getId(), targetMember.getId());
+
+        if (targetMember.getVisibility().equals(Visibility.PRIVATE)
+                && !followRepository.existsByFollowFrom_IdAndFollowTo_Id(
+                        currentMember.getId(), targetMember.getId())) {
+            throw new BaseCustomException(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED);
         }
     }
 
