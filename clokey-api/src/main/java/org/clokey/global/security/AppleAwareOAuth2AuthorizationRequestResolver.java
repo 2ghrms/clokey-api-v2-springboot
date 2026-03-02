@@ -6,6 +6,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RequiredArgsConstructor
 public class AppleAwareOAuth2AuthorizationRequestResolver
@@ -36,9 +37,7 @@ public class AppleAwareOAuth2AuthorizationRequestResolver
             return null;
         }
         return "apple".equals(clientRegistrationId)
-                ? OAuth2AuthorizationRequest.from(authorizationRequest)
-                        .additionalParameters(params -> params.put("response_mode", "form_post"))
-                        .build()
+                ? enforceAppleResponseMode(authorizationRequest)
                 : authorizationRequest;
     }
 
@@ -55,10 +54,23 @@ public class AppleAwareOAuth2AuthorizationRequestResolver
         }
         String requestUri = request.getRequestURI();
         if (requestUri != null && requestUri.endsWith("/apple")) {
-            return OAuth2AuthorizationRequest.from(authorizationRequest)
-                    .additionalParameters(params -> params.put("response_mode", "form_post"))
-                    .build();
+            return enforceAppleResponseMode(authorizationRequest);
         }
         return authorizationRequest;
+    }
+
+    private OAuth2AuthorizationRequest enforceAppleResponseMode(
+            OAuth2AuthorizationRequest authorizationRequest) {
+        String authorizationRequestUri =
+                UriComponentsBuilder.fromUriString(
+                                authorizationRequest.getAuthorizationRequestUri())
+                        .replaceQueryParam("response_mode", "form_post")
+                        .build(true)
+                        .toUriString();
+
+        return OAuth2AuthorizationRequest.from(authorizationRequest)
+                .additionalParameters(params -> params.put("response_mode", "form_post"))
+                .authorizationRequestUri(authorizationRequestUri)
+                .build();
     }
 }
