@@ -10,7 +10,6 @@ import org.clokey.domain.auth.service.JwtTokenService;
 import org.clokey.global.security.AppleAwareOAuth2AuthorizationRequestResolver;
 import org.clokey.global.security.JwtAuthenticationFilter;
 import org.clokey.helper.SpringEnvironmentHelper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,9 +42,6 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OidcLoginSuccessHandler oidcLoginSuccessHandler;
 
-    @Autowired(required = false)
-    private ClientRegistrationRepository clientRegistrationRepository;
-
     @Value("${swagger.username:default}")
     private String swaggerUsername;
 
@@ -58,7 +54,8 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(
-                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        session ->
+                                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
     }
 
     @Bean
@@ -85,10 +82,7 @@ public class SecurityConfig {
 
         http.securityMatcher("/swagger-ui/**", "/v3/api-docs/**").httpBasic(withDefaults());
 
-        http.authorizeHttpRequests(
-                (springEnvironmentHelper.isDevProfile())
-                        ? authorize -> authorize.anyRequest().authenticated()
-                        : authorize -> authorize.anyRequest().permitAll());
+        http.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated());
 
         return http.build();
     }
@@ -107,7 +101,11 @@ public class SecurityConfig {
         http.authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers(
-                                                "/public/**", "/swagger-ui/**", "/v3/api-docs/**")
+                                                "/public/**",
+                                                "/swagger-ui/**",
+                                                "/v3/api-docs/**",
+                                                "/oauth2/**",
+                                                "/login/oauth2/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
@@ -118,12 +116,10 @@ public class SecurityConfig {
                                                     userInfo.oidcUserService(
                                                             customOAuth2UserService))
                                     .successHandler(oidcLoginSuccessHandler);
-                            if (authorizationRequestResolver != null) {
-                                oauth2.authorizationEndpoint(
-                                        authorization ->
-                                                authorization.authorizationRequestResolver(
-                                                        authorizationRequestResolver));
-                            }
+                            oauth2.authorizationEndpoint(
+                                    a ->
+                                            a.authorizationRequestResolver(
+                                                    authorizationRequestResolver));
                         })
                 .addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -134,19 +130,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
         configuration.setAllowedOriginPatterns(
                 List.of(
                         "http://localhost:3000",
                         "https://dev.clokey.store",
                         "https://prod.clokey.store"));
-
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
+        CorsConfiguration appleCallbackConfiguration = new CorsConfiguration();
+        appleCallbackConfiguration.setAllowedOriginPatterns(List.of("https://appleid.apple.com"));
+        appleCallbackConfiguration.setAllowedMethods(List.of("POST", "OPTIONS"));
+        appleCallbackConfiguration.setAllowedHeaders(List.of("*"));
+        appleCallbackConfiguration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/login/oauth2/code/**", appleCallbackConfiguration);
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
@@ -157,14 +158,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2AuthorizationRequestResolver oauth2AuthorizationRequestResolver() {
+    @Profile({"local", "dev", "prod"})
+    public OAuth2AuthorizationRequestResolver oauth2AuthorizationRequestResolver(
+            ClientRegistrationRepository clientRegistrationRepository) {
         AppleAwareOAuth2AuthorizationRequestResolver resolver =
                 new AppleAwareOAuth2AuthorizationRequestResolver(
                         clientRegistrationRepository, "/oauth2/authorization");
 
         resolver.setAuthorizationRequestCustomizer(
                 OAuth2AuthorizationRequestCustomizers.withPkce());
-
         return resolver;
     }
 }
