@@ -13,7 +13,6 @@ import org.clokey.helper.SpringEnvironmentHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -44,7 +43,6 @@ public class SecurityConfig {
     private final SpringEnvironmentHelper springEnvironmentHelper;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OidcLoginSuccessHandler oidcLoginSuccessHandler;
-    private final ApplicationContext applicationContext;
 
     @Autowired(required = false)
     private ClientRegistrationRepository clientRegistrationRepository;
@@ -101,7 +99,11 @@ public class SecurityConfig {
     @Order(2)
     @Profile({"local", "dev", "prod"})
     public SecurityFilterChain apiFilterChain(
-            HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            @Autowired(required = false)
+                    OAuth2AuthorizationRequestResolver authorizationRequestResolver)
+            throws Exception {
         defaultFilterChain(http);
 
         http.authorizeHttpRequests(
@@ -118,18 +120,11 @@ public class SecurityConfig {
                                                     userInfo.oidcUserService(
                                                             customOAuth2UserService))
                                     .successHandler(oidcLoginSuccessHandler);
-                            if (clientRegistrationRepository != null) {
-                                try {
-                                    OAuth2AuthorizationRequestResolver resolver =
-                                            applicationContext.getBean(
-                                                    OAuth2AuthorizationRequestResolver.class);
-                                    oauth2.authorizationEndpoint(
-                                            authorization ->
-                                                    authorization.authorizationRequestResolver(
-                                                            resolver));
-                                } catch (Exception e) {
-                                    // Resolver bean이 없으면 기본 resolver 사용
-                                }
+                            if (authorizationRequestResolver != null) {
+                                oauth2.authorizationEndpoint(
+                                        authorization ->
+                                                authorization.authorizationRequestResolver(
+                                                        authorizationRequestResolver));
                             }
                         })
                 .addFilterBefore(
