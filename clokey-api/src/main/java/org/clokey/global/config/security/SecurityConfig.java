@@ -12,7 +12,6 @@ import org.clokey.global.security.JwtAuthenticationFilter;
 import org.clokey.helper.SpringEnvironmentHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -101,8 +100,7 @@ public class SecurityConfig {
     public SecurityFilterChain apiFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            @Autowired(required = false)
-                    OAuth2AuthorizationRequestResolver authorizationRequestResolver)
+            OAuth2AuthorizationRequestResolver authorizationRequestResolver)
             throws Exception {
         defaultFilterChain(http);
 
@@ -159,16 +157,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    @ConditionalOnBean(ClientRegistrationRepository.class)
     public OAuth2AuthorizationRequestResolver oauth2AuthorizationRequestResolver() {
-        if (clientRegistrationRepository == null) {
-            throw new IllegalStateException("ClientRegistrationRepository is required for OAuth2");
-        }
         AppleAwareOAuth2AuthorizationRequestResolver resolver =
                 new AppleAwareOAuth2AuthorizationRequestResolver(
                         clientRegistrationRepository, "/oauth2/authorization");
+
         resolver.setAuthorizationRequestCustomizer(
                 OAuth2AuthorizationRequestCustomizers.withPkce());
+
         return resolver;
     }
 }
