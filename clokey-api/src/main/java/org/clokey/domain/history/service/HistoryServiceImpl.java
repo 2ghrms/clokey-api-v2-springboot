@@ -39,7 +39,7 @@ import org.clokey.history.entity.*;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.Visibility;
 import org.clokey.report.enums.TargetType;
-import org.clokey.util.S3Util;
+import org.clokey.util.StorageUtil;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +68,7 @@ public class HistoryServiceImpl implements HistoryService {
     private final ReportRepository reportRepository;
     private final MemberRepository memberRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final S3Util s3Util;
+    private final StorageUtil storageUtil;
 
     @Override
     @Transactional
@@ -392,7 +392,7 @@ public class HistoryServiceImpl implements HistoryService {
                 request.payloads().stream()
                         .map(
                                 payload ->
-                                        s3Util.createPresignedUrl(
+                                        storageUtil.createPresignedUrl(
                                                 ImageType.HISTORY_IMAGE,
                                                 currentMember.getId(),
                                                 payload.fileExtension(),

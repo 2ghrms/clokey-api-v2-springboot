@@ -1,26 +1,44 @@
 version: "3.8"
 
 services:
-  app:
-    image: ${DOCKERHUB_NAME}/clokey-docker-2025:${DOCKER_TAG}
-    container_name: clokey-app
-    pull_policy: always
+  redis-prod:
+    image: redis:7-alpine
+    container_name: clokey-redis-prod
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: ["sh", "-c", "if [ -n \"$$REDIS_PASSWORD\" ]; then exec redis-server --requirepass \"$$REDIS_PASSWORD\"; else exec redis-server; fi"]
     ports:
-      - "8080:8080"
+      - "6380:6379"
+    networks:
+      - prod_app_network
+
+  app:
+    image: ${DOCKERHUB_USERNAME}/clokey-docker-2025:${DOCKER_TAG}
+    container_name: clokey-app-prod
+    pull_policy: always
+    depends_on:
+      - redis-prod
+    ports:
+      - "8081:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       TZ: Asia/Seoul
 
-      # Database
-      PROD_MYSQL_HOST: ${PROD_MYSQL_HOST}
-      MYSQL_PORT: ${MYSQL_PORT}
-      DB_NAME: ${DB_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      # Domain
+      CODIVE_DEV_BASE_URL: ${CODIVE_DEV_BASE_URL}
+      CODIVE_PROD_BASE_URL: ${CODIVE_PROD_BASE_URL}
+
+      # Database (MySQL HeatWave)
+      OCI_MYSQL_HEATWAVE_HOST: ${OCI_MYSQL_HEATWAVE_HOST}
+      MYSQL_PORT: 3306
+      OCI_PROD_MYSQL_DB_NAME: ${OCI_PROD_MYSQL_DB_NAME}
+      OCI_MYSQL_USERNAME: ${OCI_MYSQL_USERNAME}
+      OCI_MYSQL_PASSWORD: ${OCI_MYSQL_PASSWORD}
 
       # Redis
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
+      REDIS_HOST: redis-prod
+      REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       # Kakao OIDC
@@ -43,33 +61,37 @@ services:
       JWT_REFRESH_TOKEN_EXPIRATION_TIME: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
       JWT_ISSUER: ${JWT_ISSUER}
 
-      # AWS S3
-      PROD_AWS_ACCESS_KEY_ID: ${PROD_AWS_ACCESS_KEY_ID}
-      PROD_AWS_SECRET_ACCESS_KEY: ${PROD_AWS_SECRET_ACCESS_KEY}
-      AWS_REGION: ${AWS_REGION}
-      PROD_S3_BUCKET: ${PROD_S3_BUCKET}
-      PROD_S3_ENDPOINT: ${PROD_S3_ENDPOINT}
+      # OCI Object Storage
+      OCI_TENANCY_ID: ${OCI_TENANCY_ID}
+      OCI_USER_ID: ${OCI_USER_ID}
+      OCI_FINGERPRINT: ${OCI_FINGERPRINT}
+      OCI_PRIVATE_KEY: ${OCI_PRIVATE_KEY}
+      OCI_REGION: ${OCI_REGION}
+      OCI_PASSPHRASE: ${OCI_PASSPHRASE}
+      OCI_OBJECTSTORAGE_NAMESPACE: ${OCI_OBJECTSTORAGE_NAMESPACE}
+      OCI_PROD_OBJECTSTORAGE_BUCKET: ${OCI_PROD_OBJECTSTORAGE_BUCKET}
 
       # Swagger
       SWAGGER_USERNAME: ${SWAGGER_USERNAME}
       SWAGGER_PASSWORD: ${SWAGGER_PASSWORD}
 
+      # MeiliSearch
+      MEILISEARCH_ENDPOINT: ${MEILISEARCH_ENDPOINT}
+      MEILISEARCH_KEY: ${MEILISEARCH_KEY}
+
+      # External API (AI)
       AI_SERVER_IP: ${AI_SERVER_IP}
       CLOTH_INFERENCE_PATH: ${CLOTH_INFERENCE_PATH}
       STYLE_INFERENCE_PATH: ${STYLE_INFERENCE_PATH}
-      CLOTH_DETECT_PATH: ${CLOTH_DETECT_PATH}
-
-      # MeilieSearch
-      MEILISEARCH_ENDPOINT: ${MEILISEARCH_ENDPOINT}
-      MEILISEARCH_KEY: ${MEILISEARCH_KEY}
+      HISTORY_CLOTH_DETECT_PATH: ${HISTORY_CLOTH_DETECT_PATH}
 
     volumes:
       - /home/ubuntu/secrets/firebase-sa.json:/run/secrets/firebase-sa.json:ro
 
     networks:
-      - app_network
+      - prod_app_network
 
 networks:
-  app_network:
-    name: app_network
+  prod_app_network:
+    name: prod_app_network
     driver: bridge

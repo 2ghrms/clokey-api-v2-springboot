@@ -21,4 +21,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     implementation 'io.vanslog:spring-data-meilisearch:0.7.3'
+
+    testImplementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage:3.47.0'
 }

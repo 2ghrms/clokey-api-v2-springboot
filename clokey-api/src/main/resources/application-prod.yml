@@ -3,9 +3,9 @@ spring:
     time-zone: Asia/Seoul
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${PROD_MYSQL_HOST}:${MYSQL_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${OCI_MYSQL_HEATWAVE_HOST}:${MYSQL_PORT}/${OCI_PROD_MYSQL_DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${OCI_MYSQL_USERNAME}
+    password: ${OCI_MYSQL_PASSWORD}
     hikari:
       minimum-idle: 10
       maximum-pool-size: 20
@@ -43,7 +43,7 @@ spring:
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
-            redirect-uri: ${KAKAO_REDIRECT_URI}
+            redirect-uri: "${app.base-url.prod}/login/oauth2/code/kakao"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope:
@@ -52,7 +52,7 @@ spring:
           apple:
             client-id: ${APPLE_CLIENT_ID}
             client-secret: ${APPLE_CLIENT_SECRET}
-            redirect-uri: ${APPLE_REDIRECT_URI}
+            redirect-uri: "${app.base-url.prod}/login/oauth2/code/apple"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope:
@@ -79,13 +79,16 @@ jwt:
   refresh-token-expiration-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
   issuer: ${JWT_ISSUER}
 
-aws:
-  access-key-id: ${PROD_AWS_ACCESS_KEY_ID}
-  secret-access-key: ${PROD_AWS_SECRET_ACCESS_KEY}
-  region: ${AWS_REGION}
-  s3:
-    bucket: ${PROD_S3_BUCKET}
-    endpoint: ${PROD_S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
+oci:
+  tenancy-id: ${OCI_TENANCY_ID}
+  user-id: ${OCI_USER_ID}
+  fingerprint: ${OCI_FINGERPRINT}
+  private-key: ${OCI_PRIVATE_KEY}
+  region: ${OCI_REGION}
+  passphrase: ${OCI_PASSPHRASE:}
+  objectstorage:
+    namespace: ${OCI_OBJECTSTORAGE_NAMESPACE}
+    bucket: ${OCI_PROD_OBJECTSTORAGE_BUCKET}
 
 firebase:
   credentials-path: ${FIREBASE_CREDENTIALS_PATH}
@@ -95,8 +98,11 @@ external:
     ai-server-ip: ${AI_SERVER_IP}
     cloth-inference-path: ${CLOTH_INFERENCE_PATH}
     style-inference-path: ${STYLE_INFERENCE_PATH}
-    cloth-detect-path: ${CLOTH_DETECT_PATH}
+    cloth-detect-path: ${HISTORY_CLOTH_DETECT_PATH}
 app:
   oauth:
     redirect-scheme: codive
+  base-url:
+    dev: ${CODIVE_DEV_BASE_URL}
+    prod: ${CODIVE_PROD_BASE_URL}
 

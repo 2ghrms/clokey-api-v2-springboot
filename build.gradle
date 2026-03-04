@@ -128,6 +128,7 @@ tasks.register('updateGitHooks', Copy) {
 }
 
 tasks.register('makeGitHooksExecutable', Exec) {
+    onlyIf { !System.getProperty('os.name').toLowerCase(java.util.Locale.ROOT).contains('windows') }
     commandLine 'chmod', '+x', './.git/hooks/pre-commit'
     dependsOn updateGitHooks
 }
