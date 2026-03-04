@@ -11,7 +11,7 @@ services:
     ports:
       - "6380:6379"
     networks:
-      - app_network
+      - prod_app_network
 
   app:
     image: ${DOCKERHUB_USERNAME}/clokey-docker-2025:${DOCKER_TAG}
@@ -23,6 +23,11 @@ services:
       - "8081:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      TZ: Asia/Seoul
+
+      # Domain
+      CODIVE_DEV_BASE_URL: ${CODIVE_DEV_BASE_URL}
+      CODIVE_PROD_BASE_URL: ${CODIVE_PROD_BASE_URL}
 
       # Database (MySQL HeatWave)
       OCI_MYSQL_HEATWAVE_HOST: ${OCI_MYSQL_HEATWAVE_HOST}
@@ -82,8 +87,9 @@ services:
       - /home/ubuntu/secrets/firebase-sa.json:/run/secrets/firebase-sa.json:ro
 
     networks:
-      - app_network
+      - prod_app_network
 
 networks:
-  app_network:
-    external: true
+  prod_app_network:
+    name: prod_app_network
+    driver: bridge

@@ -11,7 +11,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - app_network
+      - dev_app_network
 
   app:
     image: ${DOCKERHUB_USERNAME}/clokey-docker-2025:${DOCKER_TAG}
@@ -23,6 +23,11 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
+      TZ: Asia/Seoul
+
+      # Domain
+      CODIVE_DEV_BASE_URL: ${CODIVE_DEV_BASE_URL}
+      CODIVE_PROD_BASE_URL: ${CODIVE_PROD_BASE_URL}
 
       # Database (MySQL HeatWave)
       OCI_MYSQL_HEATWAVE_HOST: ${OCI_MYSQL_HEATWAVE_HOST}
@@ -68,7 +73,7 @@ services:
       SWAGGER_USERNAME: ${SWAGGER_USERNAME}
       SWAGGER_PASSWORD: ${SWAGGER_PASSWORD}
 
-      # MeiliSearch
+      # MeilieSearch
       MEILISEARCH_ENDPOINT: ${MEILISEARCH_ENDPOINT}
       MEILISEARCH_KEY: ${MEILISEARCH_KEY}
 
@@ -82,9 +87,9 @@ services:
       - /home/ubuntu/secrets/firebase-sa.json:/run/secrets/firebase-sa.json:ro
 
     networks:
-      - app_network
+      - dev_app_network
 
 networks:
-  app_network:
-    name: app_network
+  dev_app_network:
+    name: dev_app_network
     driver: bridge

@@ -71,16 +71,28 @@ jobs:
           target: /home/ubuntu/
           strip_components: 1
 
+      - name: Set OCI private key env (multiline)
+        run: |
+          echo "OCI_PRIVATE_KEY<<ENDOFKEY" >> $GITHUB_ENV
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" >> $GITHUB_ENV
+          echo "ENDOFKEY" >> $GITHUB_ENV
+
+      - name: Prepare OCI key base64 for Deploy script
+        run: echo "OCI_PRIVATE_KEY_B64=$(echo -n "$OCI_PRIVATE_KEY" | base64 -w 0)" >> $GITHUB_ENV
+
       - name: Deploy App
         uses: appleboy/ssh-action@master
         with:
           username: ubuntu
           host: ${{ secrets.OCI_HOST }}
           key: ${{ secrets.OCI_INSTANCE_SSH_KEY }}
-          envs: DOCKERHUB_USERNAME,OCI_MYSQL_HEATWAVE_HOST,OCI_PROD_MYSQL_DB_NAME,OCI_MYSQL_USERNAME,OCI_MYSQL_PASSWORD,REDIS_PASSWORD,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,APPLE_CLIENT_ID,APPLE_CLIENT_SECRET,JWT_ACCESS_TOKEN_SECRET,JWT_REFRESH_TOKEN_SECRET,JWT_ACCESS_TOKEN_EXPIRATION_TIME,JWT_REFRESH_TOKEN_EXPIRATION_TIME,JWT_ISSUER,OCI_TENANCY_ID,OCI_USER_ID,OCI_FINGERPRINT,OCI_PRIVATE_KEY,OCI_REGION,OCI_PASSPHRASE,OCI_OBJECTSTORAGE_NAMESPACE,OCI_PROD_OBJECTSTORAGE_BUCKET,SWAGGER_USERNAME,SWAGGER_PASSWORD,FIREBASE_SA_JSON_B64,AI_SERVER_IP,CLOTH_INFERENCE_PATH,STYLE_INFERENCE_PATH,HISTORY_CLOTH_DETECT_PATH,MEILISEARCH_ENDPOINT,MEILISEARCH_KEY
+          envs: DOCKERHUB_USERNAME,CODIVE_DEV_BASE_URL,CODIVE_PROD_BASE_URL,OCI_MYSQL_HEATWAVE_HOST,OCI_PROD_MYSQL_DB_NAME,OCI_MYSQL_USERNAME,OCI_MYSQL_PASSWORD,REDIS_PASSWORD,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,APPLE_CLIENT_ID,APPLE_CLIENT_SECRET,JWT_ACCESS_TOKEN_SECRET,JWT_REFRESH_TOKEN_SECRET,JWT_ACCESS_TOKEN_EXPIRATION_TIME,JWT_REFRESH_TOKEN_EXPIRATION_TIME,JWT_ISSUER,OCI_TENANCY_ID,OCI_USER_ID,OCI_FINGERPRINT,OCI_PRIVATE_KEY,OCI_REGION,OCI_PASSPHRASE,OCI_OBJECTSTORAGE_NAMESPACE,OCI_PROD_OBJECTSTORAGE_BUCKET,SWAGGER_USERNAME,SWAGGER_PASSWORD,FIREBASE_SA_JSON_B64,AI_SERVER_IP,CLOTH_INFERENCE_PATH,STYLE_INFERENCE_PATH,HISTORY_CLOTH_DETECT_PATH,MEILISEARCH_ENDPOINT,MEILISEARCH_KEY
           script: |
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             export DOCKER_TAG=prod-app
+
+            export CODIVE_DEV_BASE_URL=${{ secrets.CODIVE_DEV_BASE_URL }}
+            export CODIVE_PROD_BASE_URL=${{ secrets.CODIVE_PROD_BASE_URL }}
 
             export OCI_MYSQL_HEATWAVE_HOST=${{ secrets.OCI_MYSQL_HEATWAVE_HOST }}
             export OCI_PROD_MYSQL_DB_NAME=${{ secrets.OCI_PROD_MYSQL_DB_NAME }}
@@ -125,6 +137,10 @@ jobs:
             echo "${{ secrets.FIREBASE_SA_JSON_B64 }}" | base64 -d | tee /home/ubuntu/secrets/firebase-sa.json > /dev/null
             chmod 600 /home/ubuntu/secrets/firebase-sa.json
 
+            echo '${{ env.OCI_PRIVATE_KEY_B64 }}' | base64 -d | tee /home/ubuntu/secrets/oci_key.pem > /dev/null
+            chmod 600 /home/ubuntu/secrets/oci_key.pem
+            export OCI_PRIVATE_KEY="$(cat /home/ubuntu/secrets/oci_key.pem)"
+
             export FIREBASE_CREDENTIALS_PATH=/home/ubuntu/secrets/firebase-sa.json
 
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
@@ -134,4 +150,3 @@ jobs:
 
             echo "Cleaning up dangling Docker images..."
             docker image prune -f
-            
