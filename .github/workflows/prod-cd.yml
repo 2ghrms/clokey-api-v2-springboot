@@ -106,7 +106,7 @@ jobs:
 
             export APPLE_CLIENT_ID=${{ secrets.APPLE_CLIENT_ID }}
             export APPLE_CLIENT_SECRET=${{ secrets.APPLE_CLIENT_SECRET }}
-
+            
             export JWT_ACCESS_TOKEN_SECRET=${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
             export JWT_REFRESH_TOKEN_SECRET=${{ secrets.JWT_REFRESH_TOKEN_SECRET }}
             export JWT_ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION_TIME }}
