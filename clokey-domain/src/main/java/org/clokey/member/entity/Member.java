@@ -3,6 +3,7 @@ package org.clokey.member.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -24,6 +25,8 @@ import org.clokey.term.entity.MemberTerm;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -140,6 +143,6 @@ public class Member extends BaseEntity {
 
     public void deactivate() {
         this.memberStatus = MemberStatus.INACTIVE;
-        this.inactiveDate = LocalDate.now();
+        this.inactiveDate = LocalDate.now(KST);
     }
 }

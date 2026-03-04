@@ -1,5 +1,6 @@
 package org.clokey.domain.member.controller;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -9,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
+import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.*;
 import org.clokey.domain.member.service.MemberService;
@@ -48,7 +49,7 @@ class MemberControllerTest {
             // given
             ProfileUpdateRequest request =
                     new ProfileUpdateRequest(
-                            "testNickname",
+                            "testnickname",
                             "testBio",
                             Visibility.PUBLIC,
                             "https://img.example.com/bg.jpg");
@@ -94,7 +95,9 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                    .andExpect(jsonPath("$.result.nickname").value("닉네임은 비워둘 수 없습니다."));
+                    .andExpect(
+                            jsonPath("$.result.nickname")
+                                    .value(containsString("닉네임은 비워둘 수 없습니다.")));
         }
 
         @ParameterizedTest
@@ -121,7 +124,9 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(false))
                     .andExpect(jsonPath("$.code").value("COMMON400"))
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                    .andExpect(jsonPath("$.result.nickname").value("닉네임은 비워둘 수 없습니다."));
+                    .andExpect(
+                            jsonPath("$.result.nickname")
+                                    .value(containsString("닉네임은 비워둘 수 없습니다.")));
         }
 
         @Test
@@ -130,7 +135,7 @@ class MemberControllerTest {
             String longBio = "a".repeat(101);
             ProfileUpdateRequest request =
                     new ProfileUpdateRequest(
-                            "testNickname",
+                            "testnickname",
                             longBio,
                             Visibility.PRIVATE,
                             "https://img.example.com/bg.jpg");
@@ -149,6 +154,59 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
                     .andExpect(jsonPath("$.result.bio").value("바이오는 100자를 넘길 수 없습니다."));
         }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"clokey clokey", "CLOKEY", "clokey-user"})
+        void 닉네임_패턴을_위배하면_예외가_발생한다(String nickname) throws Exception {
+            // given
+            ProfileUpdateRequest request =
+                    new ProfileUpdateRequest(
+                            nickname,
+                            "testBio",
+                            Visibility.PRIVATE,
+                            "https://img.example.com/bg.jpg");
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/users")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(
+                            jsonPath("$.result.nickname")
+                                    .value("닉네임은 영어 소문자, 숫자, 한글, 언더바(_), 점(.)만 허용됩니다."));
+        }
+
+        @Test
+        void 닉네임이_20자를_초과하면_예외가_발생한다() throws Exception {
+            // given
+            ProfileUpdateRequest request =
+                    new ProfileUpdateRequest(
+                            "abcdefghijklmnopqrstu",
+                            "testBio",
+                            Visibility.PRIVATE,
+                            "https://img.example.com/bg.jpg");
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/users")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.nickname").value("닉네임은 20자 이하여야 합니다."));
+        }
     }
 
     @Nested
@@ -157,7 +215,8 @@ class MemberControllerTest {
         @Test
         void 유효한_요청이면_중복_여부를_반환한다() throws Exception {
             // given
-            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest("test_clokey_id");
+            DuplicatedNicknameCheckRequest request =
+                    new DuplicatedNicknameCheckRequest("clokey.홍길동");
             DuplicatedIdCheckResponse response = new DuplicatedIdCheckResponse(true);
 
             given(memberService.checkDuplicateNickname(request)).willReturn(response);
@@ -180,7 +239,7 @@ class MemberControllerTest {
         @Test
         void 닉네임이_null이면_예외가_발생한다() throws Exception {
             // given
-            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest(null);
+            DuplicatedNicknameCheckRequest request = new DuplicatedNicknameCheckRequest(null);
 
             // when
             ResultActions perform =
@@ -197,12 +256,12 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.result.nickname").value("닉네임은 비워둘 수 없습니다."));
         }
 
-        // 허용 종류 : 영문(소문자) , 숫자, 언더바(_), 점(.)
         @ParameterizedTest
-        @ValueSource(strings = {"clokey clokey", "CLOKEY", "클로키", "clokey-user", "clokey,,user^^"})
-        void 닉네임_제약조건을_위배하면_예외가_발생한다(String nickname) throws Exception {
+        @NullAndEmptySource
+        @ValueSource(strings = {" "})
+        void 닉네임이_비어있으면_예외가_발생한다(String nickname) throws Exception {
             // given
-            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest(nickname);
+            DuplicatedNicknameCheckRequest request = new DuplicatedNicknameCheckRequest(nickname);
 
             // when
             ResultActions perform =
@@ -218,7 +277,75 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
                     .andExpect(
                             jsonPath("$.result.nickname")
-                                    .value("닉네임은 영어 소문자, 숫자, 언더바(_), 점(.)만 허용됩니다."));
+                                    .value(containsString("닉네임은 비워둘 수 없습니다.")));
+        }
+
+        // 허용 종류 : 영어 소문자, 숫자, 한글, 언더바(_), 점(.)
+        @ParameterizedTest
+        @ValueSource(strings = {"clokey clokey", "CLOKEY", "clokey-user", "clokey,,user^^"})
+        void 닉네임_제약조건을_위배하면_예외가_발생한다(String nickname) throws Exception {
+            // given
+            DuplicatedNicknameCheckRequest request = new DuplicatedNicknameCheckRequest(nickname);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/users/check-duplicate-nickname")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(
+                            jsonPath("$.result.nickname")
+                                    .value("닉네임은 영어 소문자, 숫자, 한글, 언더바(_), 점(.)만 허용됩니다."));
+        }
+
+        @Test
+        void 닉네임이_20자를_초과하면_예외가_발생한다() throws Exception {
+            // given
+            DuplicatedNicknameCheckRequest request =
+                    new DuplicatedNicknameCheckRequest("abcdefghijklmnopqrstu");
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/users/check-duplicate-nickname")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.nickname").value("닉네임은 20자 이하여야 합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"clokey", "홍길동", "clokey.홍길동", "abc_def", "clokey1"})
+        void 닉네임_제약조건을_만족하면_중복_여부를_반환한다(String nickname) throws Exception {
+            // given
+            DuplicatedNicknameCheckRequest request = new DuplicatedNicknameCheckRequest(nickname);
+            DuplicatedIdCheckResponse response = new DuplicatedIdCheckResponse(false);
+            given(memberService.checkDuplicateNickname(request)).willReturn(response);
+
+            // when
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/users/check-duplicate-nickname")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.duplicated").value(false));
         }
     }
 

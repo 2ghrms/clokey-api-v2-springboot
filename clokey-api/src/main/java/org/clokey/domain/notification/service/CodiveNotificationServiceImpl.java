@@ -5,6 +5,7 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.clokey.comment.entitiy.Comment;
 import org.clokey.domain.comment.event.NewCommentEvent;
 import org.clokey.domain.comment.event.NewReplyEvent;
@@ -12,6 +13,7 @@ import org.clokey.domain.comment.exception.CommentErrorCode;
 import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.repository.HistoryRepository;
+import org.clokey.domain.like.event.NewLikeEvent;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.domain.notification.dto.request.TemperatureNotificationRequest;
@@ -28,12 +30,19 @@ import org.clokey.history.entity.History;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.notification.entity.CodiveNotification;
+import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -45,6 +54,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     private final HistoryRepository historyRepository;
     private final CommentRepository commentRepository;
     private final FirebaseMessaging firebaseMessaging;
+    private final ApplicationEventPublisher eventPublisher;
 
     private final MemberUtil memberUtil;
 
@@ -52,11 +62,14 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     private static final String NEW_PENDING_FOLLOWER_NOTIFICATION = "%s님이 회원님의 옷장에 팔로우를 요청했습니다.";
     private static final String NEW_COMMENT_NOTIFICATION = "%s님이 회원님의 기록에 댓글을 남겼습니다. : %s";
     private static final String NEW_REPLY_NOTIFICATION = "%s님이 회원님의 댓글에 답장을 남겼습니다. : %s";
+    private static final String NEW_LIKE_NOTIFICATION = "%s님이 회원님의 기록을 좋아합니다.";
 
     private static final String TODAY_TEMPERATURE_NOTIFICATION =
             "오늘의 기온은 %d도 입니다!\n날씨에 맞는 오늘의 옷차림이 기다리고 있어요👀";
+    private static final String TODAY_TEMPERATURE_IMAGE_URL = "https://example.com/temperature.png";
 
     @Override
+    @Transactional
     public void sendNewFollowerNotification(Long followFromId, Long followToId) {
         Member followFromMember = getMemberById(followFromId);
         Member followToMember = getMemberById(followToId);
@@ -78,25 +91,22 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             .putData("redirectType", "MEMBER_PROFILE")
                             .build();
 
-            try {
-                firebaseMessaging.send(message);
-            } catch (FirebaseMessagingException e) {
-                throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
-            }
-
             CodiveNotification codiveNotification =
                     CodiveNotification.createCodiveNotification(
                             followToMember,
                             content,
                             profileImageUrl,
                             followToMember.getNickname(),
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
 
             codiveNotificationRepository.save(codiveNotification);
+            eventPublisher.publishEvent(PushSendEvent.from(message));
         }
     }
 
     @Override
+    @Transactional
     public void sendNewPendingFollowerNotification(Long followFromId, Long followToId) {
         Member followFromMember = getMemberById(followFromId);
         Member followToMember = getMemberById(followToId);
@@ -119,25 +129,22 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             .putData("redirectType", "MEMBER_PROFILE")
                             .build();
 
-            try {
-                firebaseMessaging.send(message);
-            } catch (FirebaseMessagingException e) {
-                throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
-            }
-
             CodiveNotification codiveNotification =
                     CodiveNotification.createCodiveNotification(
                             followToMember,
                             content,
                             profileImageUrl,
                             followToMember.getNickname(),
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW_REQUEST);
 
             codiveNotificationRepository.save(codiveNotification);
+            eventPublisher.publishEvent(PushSendEvent.from(message));
         }
     }
 
     @Override
+    @Transactional
     public void sendNewCommentNotification(NewCommentEvent event) {
 
         Member receiver = getMemberById(event.receiverId());
@@ -161,25 +168,22 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             .putData("commentId", String.valueOf(event.commentId()))
                             .putData("commenterId", String.valueOf(event.commenterId()))
                             .build();
-
-            try {
-                firebaseMessaging.send(message);
-            } catch (FirebaseMessagingException e) {
-                throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
-            }
             CodiveNotification codiveNotification =
                     CodiveNotification.createCodiveNotification(
                             receiver,
                             content,
                             profileImageUrl,
                             String.valueOf(event.historyId()),
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
 
             codiveNotificationRepository.save(codiveNotification);
+            eventPublisher.publishEvent(PushSendEvent.from(message));
         }
     }
 
     @Override
+    @Transactional
     public void sendNewReplyNotification(NewReplyEvent event) {
         Member receiver = getMemberById(event.receiverId());
 
@@ -200,43 +204,83 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             .putData("replierId", String.valueOf(event.replierId()))
                             .build();
 
-            try {
-                firebaseMessaging.send(message);
-            } catch (FirebaseMessagingException e) {
-                throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
-            }
-
             CodiveNotification codiveNotification =
                     CodiveNotification.createCodiveNotification(
                             receiver,
                             content,
                             profileImageUrl,
                             String.valueOf(event.historyId()),
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.REPLY);
 
             codiveNotificationRepository.save(codiveNotification);
+            eventPublisher.publishEvent(PushSendEvent.from(message));
         }
     }
 
     @Override
-    public void sendNewTemperatureNotification(TemperatureNotificationRequest request) {
-        Member receiver = memberUtil.getCurrentMember();
-        String content = "";
+    @Transactional
+    public void sendNewLikeNotification(NewLikeEvent event) {
+        Member receiver = getMemberById(event.receiverId());
 
         if (isAbleToSendNotification(receiver)) {
+            String content = String.format(NEW_LIKE_NOTIFICATION, event.likerNickname());
+            String profileImageUrl = event.likerProfileImageUrl();
 
-            Notification notification = Notification.builder().setBody(content).build();
+            Notification notification =
+                    Notification.builder().setBody(content).setImage(profileImageUrl).build();
+            Message message =
+                    Message.builder()
+                            .setToken(receiver.getDeviceToken())
+                            .setNotification(notification)
+                            .putData("historyId", String.valueOf(event.historyId()))
+                            .putData("likerId", String.valueOf(event.likerId()))
+                            .putData("likerNickName", String.valueOf(event.likerNickname()))
+                            .build();
+            CodiveNotification codiveNotification =
+                    CodiveNotification.createCodiveNotification(
+                            receiver,
+                            content,
+                            profileImageUrl,
+                            event.likerNickname(),
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.LIKE);
+
+            codiveNotificationRepository.save(codiveNotification);
+            eventPublisher.publishEvent(PushSendEvent.from(message));
+        }
+    }
+
+    @Override
+    @Transactional
+    public void sendNewTemperatureNotification(TemperatureNotificationRequest request) {
+        Member receiver = memberUtil.getCurrentMember();
+        String content =
+                String.format(TODAY_TEMPERATURE_NOTIFICATION, Math.round(request.temperature()));
+
+        if (isAbleToSendNotification(receiver)) {
+            Notification notification =
+                    Notification.builder()
+                            .setBody(content)
+                            .setImage(TODAY_TEMPERATURE_IMAGE_URL)
+                            .build();
             Message message =
                     Message.builder()
                             .setToken(receiver.getDeviceToken())
                             .setNotification(notification)
                             .build();
 
-            try {
-                firebaseMessaging.send(message);
-            } catch (FirebaseMessagingException e) {
-                throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
-            }
+            CodiveNotification codiveNotification =
+                    CodiveNotification.createCodiveNotification(
+                            receiver,
+                            content,
+                            TODAY_TEMPERATURE_IMAGE_URL,
+                            "",
+                            RedirectType.NONE,
+                            NotificationType.TEMPERATURE_DAILY);
+
+            codiveNotificationRepository.save(codiveNotification);
+            eventPublisher.publishEvent(PushSendEvent.from(message));
         }
     }
 
@@ -320,5 +364,23 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                         .isAgreed();
 
         return isActive && hasDeviceToken && hasAgreed;
+    }
+
+    @Async
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendPushAfterCommit(PushSendEvent event) {
+        try {
+            firebaseMessaging.send(event.message());
+        } catch (FirebaseMessagingException e) {
+            log.warn("[Notification] Firebase 전송 실패", e);
+            throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
+        }
+    }
+
+    private record PushSendEvent(Message message) {
+        private static PushSendEvent from(Message message) {
+            return new PushSendEvent(message);
+        }
     }
 }

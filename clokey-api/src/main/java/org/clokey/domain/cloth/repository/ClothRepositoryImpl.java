@@ -30,15 +30,27 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
 
     @Override
     public Slice<ClothRecommendListResponse> findAllMemberRecommendClothesByCategoryAndSeason(
-            Long lastClothId, int size, Long categoryId, Long memberId, Season season) {
+            Long lastClothId, int size, List<Long> categoryIds, Long memberId, Season season) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return new SliceImpl<>(List.of(), PageRequest.of(0, size), false);
+        }
 
         Season nextSeason = season.next();
         Season previousSeason = season.previous();
         Season oppositeSeason = season.next().next();
+        List<Season> targetSeasons = List.of(season, nextSeason, previousSeason, oppositeSeason);
 
         // 우선 순위에 맞게 페이징 합니다.
         // - Category는 고정입니다.
         // - 계절은 요청한 계절에 가까운 순서대로 페이징을 진행합니다.
+        // @ElementCollection에서는 exists 서브쿼리가 더 안정적입니다.
+        BooleanExpression seasonCondition =
+                cloth.seasons
+                        .contains(season)
+                        .or(cloth.seasons.contains(nextSeason))
+                        .or(cloth.seasons.contains(previousSeason))
+                        .or(cloth.seasons.contains(oppositeSeason));
+
         NumberExpression<Integer> seasonPriority =
                 new CaseBuilder()
                         .when(cloth.seasons.contains(season))
@@ -56,13 +68,9 @@ public class ClothRepositoryImpl implements ClothRepositoryCustom {
                 queryFactory
                         .selectFrom(cloth)
                         .where(
-                                cloth.category.id.eq(categoryId),
+                                cloth.category.id.in(categoryIds),
                                 cloth.member.id.eq(memberId),
-                                cloth.seasons
-                                        .contains(season)
-                                        .or(cloth.seasons.contains(nextSeason))
-                                        .or(cloth.seasons.contains(previousSeason))
-                                        .or(cloth.seasons.contains(oppositeSeason)))
+                                seasonCondition)
                         .orderBy(seasonPriority.asc(), cloth.id.asc())
                         .fetch();
 

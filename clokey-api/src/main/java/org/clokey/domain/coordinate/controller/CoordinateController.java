@@ -17,6 +17,7 @@ import org.clokey.global.annotation.PageSize;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.response.BaseResponse;
 import org.clokey.response.SliceResponse;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -101,14 +102,24 @@ public class CoordinateController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
-    @GetMapping("/daily/today")
+    @GetMapping("/daily/today/preview")
     @Operation(
-            operationId = "Coordinate_getTodayDailyCoordinateClothes",
-            summary = "오늘의 코디 옷 정보 조회",
-            description = "오늘의 코디에 포함된 옷 정보를 조회하는 API입니다.")
-    public BaseResponse<List<DailyCoordinateClothResponse>> getTodayDailyCoordinateClothes() {
-        List<DailyCoordinateClothResponse> response =
-                coordinateService.getTodayDailyCoordinateClothes();
+            operationId = "Coordinate_getTodayCoordinatePreview",
+            summary = "오늘의 코디 Preview 조회",
+            description = "오늘의 코디의 Preview를 조회하는 API입니다.")
+    public BaseResponse<DailyCoordinatePreviewResponse> getTodayCoordinatePreview() {
+        DailyCoordinatePreviewResponse response = coordinateService.getTodayCoordinatePreview();
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @GetMapping("/daily/today/details")
+    @Operation(
+            operationId = "Coordinate_getTodayCoordinateDetails",
+            summary = "오늘의 코디 Details 조회",
+            description = "오늘의 코디의 Details를 조회하는 API입니다.")
+    public BaseResponse<List<CoordinateDetailsListResponse>> getTodayCoordinateDetails() {
+        List<CoordinateDetailsListResponse> response =
+                coordinateService.getTodayCoordinateDetails();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 
@@ -145,13 +156,23 @@ public class CoordinateController {
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.NO_CONTENT, null);
     }
 
-    @GetMapping("/my-favorites")
+    @GetMapping("/favorites")
     @Operation(
             operationId = "Coordinate_getFavoriteCoordinates",
-            summary = "나의 최애 코디 조회",
-            description = "나의 최애 코디를 조회하는 API입니다.")
-    public BaseResponse<List<FavoriteCoordinateResponse>> getFavoriteCoordinates() {
-        List<FavoriteCoordinateResponse> response = coordinateService.getFavoriteCoordinates();
+            summary = "최애 코디 조회",
+            description = "최애 코디를 조회하는 API입니다.")
+    public BaseResponse<List<FavoriteCoordinateResponse>> getFavoriteCoordinates(
+            @RequestParam(required = false) String memberId) {
+        Long parsedMemberId = null;
+        if (memberId != null && !memberId.isBlank()) {
+            try {
+                parsedMemberId = Long.valueOf(memberId);
+            } catch (NumberFormatException e) {
+                throw new TypeMismatchException(memberId, Long.class, e);
+            }
+        }
+        List<FavoriteCoordinateResponse> response =
+                coordinateService.getFavoriteCoordinates(parsedMemberId);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 }

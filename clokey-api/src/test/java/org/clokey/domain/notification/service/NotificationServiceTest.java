@@ -20,6 +20,7 @@ import org.clokey.domain.comment.repository.CommentRepository;
 import org.clokey.domain.comment.service.CommentService;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.history.repository.SituationRepository;
+import org.clokey.domain.like.event.NewLikeEvent;
 import org.clokey.domain.member.event.NewFollowerEvent;
 import org.clokey.domain.member.event.NewPendingFollowerEvent;
 import org.clokey.domain.member.repository.MemberRepository;
@@ -40,6 +41,7 @@ import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
 import org.clokey.member.enums.Visibility;
 import org.clokey.notification.entity.CodiveNotification;
+import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
@@ -330,6 +332,51 @@ public class NotificationServiceTest extends IntegrationTest {
     }
 
     @Nested
+    class 기록에_좋아요가_달렸을_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member liker =
+                    Member.createMember(
+                            "testEmail1",
+                            "liker",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            liker.updateProfile("liker", "example.com", "한줄소개~", Visibility.PUBLIC);
+            Member receiver =
+                    Member.createMember(
+                            "testEmail2",
+                            "receiver",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+            receiver.updateDeviceToken("test-device-token-for-member2");
+            memberRepository.saveAll(List.of(liker, receiver));
+
+            MemberTerm mockAgreement = Mockito.mock(MemberTerm.class);
+            given(mockAgreement.isAgreed()).willReturn(true);
+
+            given(
+                            memberTermRepository.findByMemberIdAndTermId(
+                                    eq(receiver.getId()),
+                                    eq(TermInfo.PUSH_NOTIFICATION_RECEIVE.getId())))
+                    .willReturn(Optional.of(mockAgreement));
+        }
+
+        @Test
+        void 유효한_요청이면_새_좋아요_알림을_저장한다() {
+            // given
+            NewLikeEvent event = new NewLikeEvent(1L, 1L, 2L, 1L, "liker", "example.com");
+
+            // when
+            notificationService.sendNewLikeNotification(event);
+
+            // then
+            Optional<CodiveNotification> notification = notificationRepository.findById(1L);
+
+            assertThat(notification.get().getMember().getId()).isEqualTo(2L);
+            assertThat(notification.get().getContent()).isEqualTo("liker님이 회원님의 기록을 좋아합니다.");
+        }
+    }
+
+    @Nested
     class 안읽은_알림_여부를_확인할_때 {
 
         @BeforeEach
@@ -354,7 +401,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification1.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification2 =
@@ -363,7 +411,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림2",
                             "http://testImageURl2.test",
                             "testNickname",
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
             notification2.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification3 =
@@ -372,14 +421,16 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림3",
                             "http://testImageURl3.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification4 =
                     CodiveNotification.createCodiveNotification(
                             member2,
                             "테스트 알림4",
                             "http://testImageURl4.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification4.updateReadStatus(ReadStatus.READ);
             notificationRepository.saveAll(
                     List.of(notification1, notification2, notification3, notification4));
@@ -433,7 +484,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification1.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification2 =
@@ -442,7 +494,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림2",
                             "http://testImageURl2.test",
                             "testNickname",
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
             notification2.updateReadStatus(ReadStatus.READ);
 
             CodiveNotification notification3 =
@@ -451,14 +504,16 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림3",
                             "http://testImageURl3.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification4 =
                     CodiveNotification.createCodiveNotification(
                             member2,
                             "테스트 알림4",
                             "http://testImageURl4.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notification4.updateReadStatus(ReadStatus.READ);
             notificationRepository.saveAll(
                     List.of(notification1, notification2, notification3, notification4));
@@ -492,6 +547,7 @@ public class NotificationServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
+            Mockito.reset(firebaseMessaging);
             Member member1 =
                     Member.createMember(
                             "testEmail1",
@@ -505,7 +561,8 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             notificationRepository.save(notification1);
         }
 
@@ -547,21 +604,24 @@ public class NotificationServiceTest extends IntegrationTest {
                             "테스트 알림1",
                             "http://testImageURl1.test",
                             "1",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification2 =
                     CodiveNotification.createCodiveNotification(
                             member1,
                             "테스트 알림2",
                             "http://testImageURl2.test",
                             "2",
-                            RedirectType.HISTORY_REDIRECT);
+                            RedirectType.HISTORY_REDIRECT,
+                            NotificationType.COMMENT);
             CodiveNotification notification3 =
                     CodiveNotification.createCodiveNotification(
                             member1,
                             "테스트 알림3",
                             "http://testImageURl3.test",
                             "3",
-                            RedirectType.MEMBER_REDIRECT);
+                            RedirectType.MEMBER_REDIRECT,
+                            NotificationType.FOLLOW);
             notificationRepository.saveAll(List.of(notification1, notification2, notification3));
         }
 
@@ -620,7 +680,8 @@ public class NotificationServiceTest extends IntegrationTest {
 
             // then
             // firebaseMessaging.send() 메서드가 1번 호출되었는지 검증
-            Mockito.verify(firebaseMessaging, Mockito.times(1)).send(Mockito.any(Message.class));
+            Mockito.verify(firebaseMessaging, Mockito.timeout(1000).times(1))
+                    .send(Mockito.any(Message.class));
         }
 
         @Test
@@ -642,7 +703,8 @@ public class NotificationServiceTest extends IntegrationTest {
             notificationService.sendNewTemperatureNotification(request);
 
             // then
-            Mockito.verify(firebaseMessaging, Mockito.times(0)).send(Mockito.any(Message.class));
+            Mockito.verify(firebaseMessaging, Mockito.after(200).never())
+                    .send(Mockito.any(Message.class));
         }
     }
 }

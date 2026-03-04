@@ -16,6 +16,7 @@ import org.clokey.domain.feed.query.FeedCursor;
 import org.clokey.domain.feed.query.FollowScope;
 import org.clokey.history.entity.History;
 import org.clokey.member.entity.QBlock;
+import org.clokey.member.enums.Visibility;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -42,6 +43,8 @@ public class FeedQueryRepository {
                 .fetchJoin()
                 .where(
                         history.banned.isFalse(),
+                        notSelfCondition(currentMemberId),
+                        visibilityCondition(currentMemberId),
                         followScopeCondition(currentMemberId, followScope),
                         notBlockedCondition(currentMemberId),
                         styleFilterCondition(styleIds),
@@ -62,6 +65,8 @@ public class FeedQueryRepository {
                 .fetchJoin()
                 .where(
                         history.banned.isFalse(),
+                        notSelfCondition(currentMemberId),
+                        visibilityCondition(currentMemberId),
                         history.id.in(historyIds),
                         notBlockedCondition(currentMemberId))
                 .fetch();
@@ -134,5 +139,21 @@ public class FeedQueryRepository {
         return Expressions.asBoolean(
                         JPAExpressions.selectOne().from(blockCheck).where(blockCondition).exists())
                 .not();
+    }
+
+    private BooleanExpression visibilityCondition(Long currentMemberId) {
+        if (currentMemberId == null) {
+            return member.visibility.eq(Visibility.PUBLIC);
+        }
+
+        return member.visibility.eq(Visibility.PUBLIC).or(member.id.eq(currentMemberId));
+    }
+
+    private BooleanExpression notSelfCondition(Long currentMemberId) {
+        if (currentMemberId == null) {
+            return null;
+        }
+
+        return member.id.ne(currentMemberId);
     }
 }

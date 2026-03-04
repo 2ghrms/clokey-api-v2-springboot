@@ -1,6 +1,7 @@
 package org.clokey.domain.member.batch;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class InactiveMemberDeletionBatch {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final MemberRepository memberRepository;
     private final AuthService authService;
 
-    @Scheduled(cron = "0 0 0 * * *") // 매일 00:00:00
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul") // 매일 00:00:00 KST
     @Transactional
     public void deleteInactiveMembers() {
-        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(15);
+        LocalDateTime cutoffDate = LocalDateTime.now(KST).minusDays(15);
         List<Member> inactiveMembers =
                 memberRepository.findInactiveMembersBefore(MemberStatus.INACTIVE, cutoffDate);
 

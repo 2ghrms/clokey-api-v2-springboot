@@ -1,6 +1,7 @@
 package org.clokey.domain.coordinate.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -24,11 +25,16 @@ import org.clokey.domain.coordinate.repository.CoordinateRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.lookbook.exception.LookBookErrorCode;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
+import org.clokey.domain.member.exception.MemberErrorCode;
+import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.FollowRepository;
+import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.lookbook.entity.LookBook;
 import org.clokey.member.entity.Member;
+import org.clokey.member.enums.Visibility;
 import org.clokey.response.SliceResponse;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
@@ -41,11 +47,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class CoordinateServiceImpl implements CoordinateService {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final MemberUtil memberUtil;
 
     private final CoordinateRepository coordinateRepository;
     private final ClothRepository clothRepository;
     private final LookBookRepository lookBookRepository;
+    private final MemberRepository memberRepository;
+    private final BlockRepository blockRepository;
+    private final FollowRepository followRepository;
     private final CoordinateClothRepository coordinateClothRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -83,7 +94,7 @@ public class CoordinateServiceImpl implements CoordinateService {
         validateExceedingCoordinationClothesLimit(request.payloads());
         validateDuplicatedClothes(clothes);
         validateAllClothesOwnership(currentMember, clothes);
-        validateDailyCoordinateExist(currentMember.getId(), LocalDate.now());
+        validateDailyCoordinateExist(currentMember.getId(), LocalDate.now(KST));
 
         Coordinate coordinate =
                 Coordinate.createDailyCoordinate(request.coordinateImageUrl(), currentMember);
@@ -322,25 +333,19 @@ public class CoordinateServiceImpl implements CoordinateService {
     }
 
     @Override
-    public List<DailyCoordinateClothResponse> getTodayDailyCoordinateClothes() {
+    public DailyCoordinatePreviewResponse getTodayCoordinatePreview() {
         final Member currentMember = memberUtil.getCurrentMember();
-        Optional<Coordinate> coordinate =
-                coordinateRepository.findDailyCoordinateByDateAndMemberId(
-                        LocalDate.now(), currentMember.getId());
+        final Coordinate coordinate = getTodayDailyCoordinate(currentMember);
 
-        if (coordinate.isEmpty()) {
-            return List.of();
-        }
+        return DailyCoordinatePreviewResponse.from(coordinate);
+    }
 
-        List<CoordinateDetailsListResponse> details =
-                coordinateRepository.findAllCoordinateDetailsByCoordinateId(
-                        coordinate.get().getId());
+    @Override
+    public List<CoordinateDetailsListResponse> getTodayCoordinateDetails() {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Coordinate coordinate = getTodayDailyCoordinate(currentMember);
 
-        if (details.isEmpty()) {
-            return List.of();
-        }
-
-        return details.stream().map(DailyCoordinateClothResponse::from).toList();
+        return coordinateRepository.findAllCoordinateDetailsByCoordinateId(coordinate.getId());
     }
 
     @Override
@@ -348,7 +353,7 @@ public class CoordinateServiceImpl implements CoordinateService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Coordinate coordinate = getCoordinateById(coordinateId);
 
-        validateCoordinateOwner(coordinate, currentMember.getId());
+        validateCoordinateViewAccess(currentMember, coordinate.getMember());
         validateCoordinateInLookBook(coordinate);
 
         return CoordinatePreviewResponse.from(coordinate);
@@ -359,7 +364,7 @@ public class CoordinateServiceImpl implements CoordinateService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Coordinate coordinate = getCoordinateById(coordinateId);
 
-        validateCoordinateOwner(coordinate, currentMember.getId());
+        validateCoordinateViewAccess(currentMember, coordinate.getMember());
         validateCoordinateInLookBook(coordinate);
 
         return coordinateRepository.findAllCoordinateDetailsByCoordinateId(coordinate.getId());
@@ -379,17 +384,35 @@ public class CoordinateServiceImpl implements CoordinateService {
     }
 
     @Override
-    public List<FavoriteCoordinateResponse> getFavoriteCoordinates() {
+    public List<FavoriteCoordinateResponse> getFavoriteCoordinates(Long memberId) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final Long targetMemberId =
+                resolveFavoriteCoordinateTargetMemberId(currentMember, memberId);
 
         List<Coordinate> favoriteCoordinates =
-                coordinateRepository.findLikedCoordinatesByMemberId(currentMember.getId());
+                coordinateRepository.findLikedCoordinatesByMemberId(targetMemberId);
 
         if (favoriteCoordinates.isEmpty()) {
             return List.of();
         }
 
         return favoriteCoordinates.stream().map(FavoriteCoordinateResponse::from).toList();
+    }
+
+    private Long resolveFavoriteCoordinateTargetMemberId(Member currentMember, Long memberId) {
+        if (memberId == null || memberId.equals(currentMember.getId())) {
+            return currentMember.getId();
+        }
+
+        Member targetMember =
+                memberRepository
+                        .findById(memberId)
+                        .orElseThrow(
+                                () -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        validateCoordinateViewAccess(currentMember, targetMember);
+
+        return targetMember.getId();
     }
 
     private void validateAllClothesExist(List<Long> clothIds, Map<Long, Cloth> clothMap) {
@@ -475,6 +498,27 @@ public class CoordinateServiceImpl implements CoordinateService {
         }
     }
 
+    private void validateNotBlocked(Long currentMemberId, Long targetMemberId) {
+        if (blockRepository.existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(
+                currentMemberId, targetMemberId, targetMemberId, currentMemberId)) {
+            throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
+        }
+    }
+
+    private void validateCoordinateViewAccess(Member currentMember, Member targetMember) {
+        if (Objects.equals(currentMember.getId(), targetMember.getId())) {
+            return;
+        }
+
+        validateNotBlocked(currentMember.getId(), targetMember.getId());
+
+        if (targetMember.getVisibility().equals(Visibility.PRIVATE)
+                && !followRepository.existsByFollowFrom_IdAndFollowTo_Id(
+                        currentMember.getId(), targetMember.getId())) {
+            throw new BaseCustomException(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED);
+        }
+    }
+
     private LookBook getLookBookById(Long lookBookId) {
         return lookBookRepository
                 .findById(lookBookId)
@@ -486,5 +530,14 @@ public class CoordinateServiceImpl implements CoordinateService {
                 .findById(coordinateId)
                 .orElseThrow(
                         () -> new BaseCustomException(CoordinateErrorCode.COORDINATE_NOT_FOUND));
+    }
+
+    private Coordinate getTodayDailyCoordinate(Member member) {
+        return coordinateRepository
+                .findDailyCoordinateByDateAndMemberId(LocalDate.now(KST), member.getId())
+                .orElseThrow(
+                        () ->
+                                new BaseCustomException(
+                                        CoordinateErrorCode.DAILY_COORDINATE_NOT_FOUND));
     }
 }

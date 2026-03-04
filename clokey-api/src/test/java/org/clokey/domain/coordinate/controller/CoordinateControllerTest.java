@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
@@ -1555,6 +1556,7 @@ class CoordinateControllerTest {
                                     1.5,
                                     240.1,
                                     1,
+                                    14L,
                                     "testImageUrl1",
                                     "testBrand1",
                                     "testName1",
@@ -1567,6 +1569,7 @@ class CoordinateControllerTest {
                                     1.5,
                                     240.1,
                                     2,
+                                    15L,
                                     "testImageUrl2",
                                     "testBrand2",
                                     "testName2",
@@ -1590,6 +1593,7 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.result[0].ratio").value(1.5))
                     .andExpect(jsonPath("$.result[0].degree").value(240.1))
                     .andExpect(jsonPath("$.result[0].order").value(1))
+                    .andExpect(jsonPath("$.result[0].clothId").value(14))
                     .andExpect(jsonPath("$.result[0].imageUrl").value("testImageUrl1"))
                     .andExpect(jsonPath("$.result[0].brand").value("testBrand1"))
                     .andExpect(jsonPath("$.result[0].name").value("testName1"))
@@ -1602,6 +1606,7 @@ class CoordinateControllerTest {
                     .andExpect(jsonPath("$.result[1].ratio").value(1.5))
                     .andExpect(jsonPath("$.result[1].degree").value(240.1))
                     .andExpect(jsonPath("$.result[1].order").value(2))
+                    .andExpect(jsonPath("$.result[1].clothId").value(15))
                     .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"))
                     .andExpect(jsonPath("$.result[1].brand").value("testBrand2"))
                     .andExpect(jsonPath("$.result[1].name").value("testName2"))
@@ -1640,66 +1645,129 @@ class CoordinateControllerTest {
             // given
             List<FavoriteCoordinateResponse> response =
                     List.of(
-                            new FavoriteCoordinateResponse(1L, "testImageUrl1"),
-                            new FavoriteCoordinateResponse(2L, "testImageUrl2"));
+                            new FavoriteCoordinateResponse(
+                                    1L, "testImageUrl1", "testCoordinateName1"),
+                            new FavoriteCoordinateResponse(
+                                    2L, "testImageUrl2", "testCoordinateName2"));
 
-            given(coordinateService.getFavoriteCoordinates()).willReturn(response);
+            given(coordinateService.getFavoriteCoordinates(null)).willReturn(response);
 
             // when & then
-            ResultActions perform = mockMvc.perform(get("/coordinate/my-favorites"));
+            ResultActions perform = mockMvc.perform(get("/coordinate/favorites"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.result[0].coordinateId").value(1))
                     .andExpect(jsonPath("$.result[0].imageUrl").value("testImageUrl1"))
+                    .andExpect(jsonPath("$.result[0].coordinateName").value("testCoordinateName1"))
                     .andExpect(jsonPath("$.result[1].coordinateId").value(2))
-                    .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"));
+                    .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"))
+                    .andExpect(jsonPath("$.result[1].coordinateName").value("testCoordinateName2"));
         }
     }
 
     @Nested
-    class 오늘의_코디_조회_요청_시 {
+    class 오늘의_코디_Preview_조회_요청_시 {
 
         @Test
-        void 유효한_요청이면_오늘의_코디_정보를_반환한다() throws Exception {
+        void 유효한_요청이면_오늘의_코디_Preview를_반환한다() throws Exception {
             // given
-            List<DailyCoordinateClothResponse> response =
-                    List.of(
-                            new DailyCoordinateClothResponse(
-                                    "https://image.example/cloth1.jpg",
-                                    "brand1",
-                                    "name1",
-                                    "category1",
-                                    "parent1"),
-                            new DailyCoordinateClothResponse(
-                                    "https://image.example/cloth2.jpg",
-                                    "brand2",
-                                    "name2",
-                                    "category2",
-                                    "parent2"));
+            LocalDate today = LocalDate.now();
+            DailyCoordinatePreviewResponse response =
+                    new DailyCoordinatePreviewResponse(1L, "testImageUrl", LocalDate.now());
+            given(coordinateService.getTodayCoordinatePreview()).willReturn(response);
 
-            given(coordinateService.getTodayDailyCoordinateClothes()).willReturn(response);
-
-            ResultActions perform = mockMvc.perform(get("/coordinate/daily/today"));
             // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/coordinate/daily/today/preview")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result.coordinateId").value(1))
+                    .andExpect(jsonPath("$.result.imageUrl").value("testImageUrl"))
+                    .andExpect(jsonPath("$.result.date").value(today.toString()));
+        }
+    }
+
+    @Nested
+    class 오늘의_코디_Details_조회_요청_시 {
+
+        @Test
+        void 유효한_요청이면_오늘의_코디_Details를_반환한다() throws Exception {
+            // given
+            List<CoordinateDetailsListResponse> response =
+                    List.of(
+                            new CoordinateDetailsListResponse(
+                                    1L,
+                                    50.2,
+                                    60.1,
+                                    1.5,
+                                    240.1,
+                                    1,
+                                    14L,
+                                    "testImageUrl1",
+                                    "testBrand1",
+                                    "testName1",
+                                    "testCategoryName1",
+                                    "testParentCategoryName1"),
+                            new CoordinateDetailsListResponse(
+                                    2L,
+                                    50.2,
+                                    60.1,
+                                    1.5,
+                                    240.1,
+                                    2,
+                                    15L,
+                                    "testImageUrl2",
+                                    "testBrand2",
+                                    "testName2",
+                                    "testCategoryName2",
+                                    "testParentCategoryName2"));
+
+            given(coordinateService.getTodayCoordinateDetails()).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/coordinate/daily/today/details")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.message").value("성공입니다."))
+                    .andExpect(jsonPath("$.result[0].coordinateClothId").value(1))
+                    .andExpect(jsonPath("$.result[0].locationX").value(50.2))
+                    .andExpect(jsonPath("$.result[0].locationY").value(60.1))
+                    .andExpect(jsonPath("$.result[0].ratio").value(1.5))
+                    .andExpect(jsonPath("$.result[0].degree").value(240.1))
+                    .andExpect(jsonPath("$.result[0].order").value(1))
+                    .andExpect(jsonPath("$.result[0].clothId").value(14))
+                    .andExpect(jsonPath("$.result[0].imageUrl").value("testImageUrl1"))
+                    .andExpect(jsonPath("$.result[0].brand").value("testBrand1"))
+                    .andExpect(jsonPath("$.result[0].name").value("testName1"))
+                    .andExpect(jsonPath("$.result[0].category").value("testCategoryName1"))
                     .andExpect(
-                            jsonPath("$.result[0].imageUrl")
-                                    .value("https://image.example/cloth1.jpg"))
-                    .andExpect(jsonPath("$.result[0].brand").value("brand1"))
-                    .andExpect(jsonPath("$.result[0].name").value("name1"))
-                    .andExpect(jsonPath("$.result[0].category").value("category1"))
-                    .andExpect(jsonPath("$.result[0].parentCategory").value("parent1"))
+                            jsonPath("$.result[0].parentCategory").value("testParentCategoryName1"))
+                    .andExpect(jsonPath("$.result[1].coordinateClothId").value(2))
+                    .andExpect(jsonPath("$.result[1].locationX").value(50.2))
+                    .andExpect(jsonPath("$.result[1].locationY").value(60.1))
+                    .andExpect(jsonPath("$.result[1].ratio").value(1.5))
+                    .andExpect(jsonPath("$.result[1].degree").value(240.1))
+                    .andExpect(jsonPath("$.result[1].order").value(2))
+                    .andExpect(jsonPath("$.result[1].clothId").value(15))
+                    .andExpect(jsonPath("$.result[1].imageUrl").value("testImageUrl2"))
+                    .andExpect(jsonPath("$.result[1].brand").value("testBrand2"))
+                    .andExpect(jsonPath("$.result[1].name").value("testName2"))
+                    .andExpect(jsonPath("$.result[1].category").value("testCategoryName2"))
                     .andExpect(
-                            jsonPath("$.result[1].imageUrl")
-                                    .value("https://image.example/cloth2.jpg"))
-                    .andExpect(jsonPath("$.result[1].brand").value("brand2"))
-                    .andExpect(jsonPath("$.result[1].name").value("name2"))
-                    .andExpect(jsonPath("$.result[1].category").value("category2"))
-                    .andExpect(jsonPath("$.result[1].parentCategory").value("parent2"));
+                            jsonPath("$.result[1].parentCategory")
+                                    .value("testParentCategoryName2"));
         }
     }
 }

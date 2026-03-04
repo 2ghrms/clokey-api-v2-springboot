@@ -10,7 +10,7 @@ import org.springframework.data.domain.Slice;
 public interface ClothRepositoryCustom {
 
     Slice<ClothRecommendListResponse> findAllMemberRecommendClothesByCategoryAndSeason(
-            Long lastClothId, int size, Long categoryId, Long memberId, Season season);
+            Long lastClothId, int size, List<Long> categoryIds, Long memberId, Season season);
 
     Slice<ClothListResponse> findAllMemberClothesByCategoriesAndSeasons(
             Long lastClothId,

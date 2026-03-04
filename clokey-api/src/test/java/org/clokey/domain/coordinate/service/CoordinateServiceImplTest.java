@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.clokey.IntegrationTest;
@@ -24,22 +25,23 @@ import org.clokey.domain.coordinate.dto.request.CoordinateAutoCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateManualCreateRequest;
 import org.clokey.domain.coordinate.dto.request.CoordinateUpdateRequest;
 import org.clokey.domain.coordinate.dto.request.DailyCoordinateCreateRequest;
-import org.clokey.domain.coordinate.dto.response.CoordinateDetailsListResponse;
-import org.clokey.domain.coordinate.dto.response.CoordinatePreviewResponse;
-import org.clokey.domain.coordinate.dto.response.DailyCoordinateClothResponse;
-import org.clokey.domain.coordinate.dto.response.DailyCoordinateListResponse;
-import org.clokey.domain.coordinate.dto.response.FavoriteCoordinateResponse;
+import org.clokey.domain.coordinate.dto.response.*;
 import org.clokey.domain.coordinate.exception.CoordinateErrorCode;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.lookbook.exception.LookBookErrorCode;
 import org.clokey.domain.lookbook.repository.LookBookRepository;
+import org.clokey.domain.member.exception.MemberErrorCode;
+import org.clokey.domain.member.repository.BlockRepository;
+import org.clokey.domain.member.repository.FollowRepository;
 import org.clokey.domain.member.repository.MemberRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.lookbook.entity.LookBook;
+import org.clokey.member.entity.Block;
+import org.clokey.member.entity.Follow;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
@@ -60,6 +62,8 @@ class CoordinateServiceImplTest extends IntegrationTest {
 
     @Autowired private CoordinateRepository coordinateRepository;
     @Autowired private MemberRepository memberRepository;
+    @Autowired private BlockRepository blockRepository;
+    @Autowired private FollowRepository followRepository;
     @Autowired private CoordinateClothRepository coordinateClothRepository;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ClothRepository clothRepository;
@@ -1619,11 +1623,58 @@ class CoordinateServiceImplTest extends IntegrationTest {
         }
 
         @Test
-        void 나의_코디가_아닌_경우_예외가_발생한다() {
+        void 타인의_공개_코디면_조회할_수_있다() {
+            // when
+            CoordinatePreviewResponse response = coordinateService.getCoordinatePreview(2L);
+
+            // then
+            assertThat(response)
+                    .extracting("coordinateId", "imageUrl", "coordinateName", "coordinateMemo")
+                    .containsExactly(2L, "testImageUrl2", "testName2", "testMemo2");
+        }
+
+        @Test
+        void 타인의_비공개_코디이고_팔로우하지_않으면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            member.changeVisibility();
+            memberRepository.saveAndFlush(member);
+
             // when & then
             assertThatThrownBy(() -> coordinateService.getCoordinatePreview(2L))
                     .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(CoordinateErrorCode.NOT_COORDINATE_OWNER.getMessage());
+                    .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 타인의_비공개_코디여도_승인된_팔로우면_조회할_수_있다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            targetMember.changeVisibility();
+            memberRepository.saveAndFlush(targetMember);
+            followRepository.save(Follow.createFollow(currentMember, targetMember));
+
+            // when
+            CoordinatePreviewResponse response = coordinateService.getCoordinatePreview(2L);
+
+            // then
+            assertThat(response)
+                    .extracting("coordinateId", "imageUrl", "coordinateName", "coordinateMemo")
+                    .containsExactly(2L, "testImageUrl2", "testName2", "testMemo2");
+        }
+
+        @Test
+        void 차단_관계의_타인_코디면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(currentMember, targetMember));
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getCoordinatePreview(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
         }
 
         @Test
@@ -1719,6 +1770,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
                             CoordinateDetailsListResponse::ratio,
                             CoordinateDetailsListResponse::degree,
                             CoordinateDetailsListResponse::order,
+                            CoordinateDetailsListResponse::clothId,
                             CoordinateDetailsListResponse::imageUrl,
                             CoordinateDetailsListResponse::brand,
                             CoordinateDetailsListResponse::name,
@@ -1732,6 +1784,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
                                     1.5,
                                     240.1,
                                     1,
+                                    1L,
                                     "testImageUrl1",
                                     null,
                                     null,
@@ -1744,6 +1797,7 @@ class CoordinateServiceImplTest extends IntegrationTest {
                                     1.5,
                                     240.1,
                                     2,
+                                    2L,
                                     "testImageUrl2",
                                     null,
                                     null,
@@ -1760,11 +1814,56 @@ class CoordinateServiceImplTest extends IntegrationTest {
         }
 
         @Test
-        void 나의_코디가_아닌_경우_예외가_발생한다() {
+        void 타인의_공개_코디면_Details를_조회할_수_있다() {
+            // when
+            List<CoordinateDetailsListResponse> response =
+                    coordinateService.getCoordinateDetails(2L);
+
+            // then
+            assertThat(response).isEmpty();
+        }
+
+        @Test
+        void 타인의_비공개_코디이고_팔로우하지_않으면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            member.changeVisibility();
+            memberRepository.saveAndFlush(member);
+
             // when & then
             assertThatThrownBy(() -> coordinateService.getCoordinateDetails(2L))
                     .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(CoordinateErrorCode.NOT_COORDINATE_OWNER.getMessage());
+                    .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 타인의_비공개_코디여도_승인된_팔로우면_Details를_조회할_수_있다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            targetMember.changeVisibility();
+            memberRepository.saveAndFlush(targetMember);
+            followRepository.save(Follow.createFollow(currentMember, targetMember));
+
+            // when
+            List<CoordinateDetailsListResponse> response =
+                    coordinateService.getCoordinateDetails(2L);
+
+            // then
+            assertThat(response).isEmpty();
+        }
+
+        @Test
+        void 차단_관계의_타인_코디면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(currentMember, targetMember));
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getCoordinateDetails(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
         }
 
         @Test
@@ -1945,111 +2044,261 @@ class CoordinateServiceImplTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_좋아요한_코디를_반환한다() {
             // when
-            List<FavoriteCoordinateResponse> responses = coordinateService.getFavoriteCoordinates();
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(null);
 
             // then
             assertThat(responses)
-                    .extracting("coordinateId", "imageUrl")
-                    .containsExactly(tuple(1L, "testUrl1"), tuple(2L, "testUrl2"));
+                    .extracting("coordinateId", "imageUrl", "coordinateName")
+                    .containsExactly(
+                            tuple(1L, "testUrl1", "testName1"), tuple(2L, "testUrl2", "testName2"));
         }
 
         @Test
-        void 좋아요한_코디가_없는_경우_빈_리스틀_반환한다() {
+        void 좋아요한_코디가_없는_경우_빈_리스트를_반환한다() {
             // given
             Member member = memberRepository.findById(2L).orElseThrow();
             given(memberUtil.getCurrentMember()).willReturn(member);
 
             // when
-            List<FavoriteCoordinateResponse> responses = coordinateService.getFavoriteCoordinates();
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(null);
 
             // then
             assertThat(responses).isEmpty();
         }
+
+        @Test
+        void memberId를_전달하면_해당_회원의_좋아요한_코디를_반환한다() {
+            // when
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(1L);
+
+            // then
+            assertThat(responses)
+                    .extracting("coordinateId", "imageUrl", "coordinateName")
+                    .containsExactly(
+                            tuple(1L, "testUrl1", "testName1"), tuple(2L, "testUrl2", "testName2"));
+        }
+
+        @Test
+        void 비공개_계정의_memberId를_팔로우하지_않고_조회하면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            member.changeVisibility();
+            memberRepository.saveAndFlush(member);
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getFavoriteCoordinates(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.PRIVATE_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 비공개_계정의_memberId여도_승인된_팔로우면_조회할_수_있다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            targetMember.changeVisibility();
+            memberRepository.saveAndFlush(targetMember);
+            followRepository.save(Follow.createFollow(currentMember, targetMember));
+
+            LookBook lookBook = lookBookRepository.findById(2L).orElseThrow();
+            Coordinate targetLikedCoordinate =
+                    Coordinate.createCoordinateManual(
+                            "targetLike", "memo", "targetUrl", targetMember, lookBook);
+            targetLikedCoordinate.toggleLike();
+            coordinateRepository.saveAndFlush(targetLikedCoordinate);
+
+            // when
+            List<FavoriteCoordinateResponse> responses =
+                    coordinateService.getFavoriteCoordinates(2L);
+
+            // then
+            assertThat(responses)
+                    .extracting("coordinateId", "imageUrl", "coordinateName")
+                    .containsExactly(
+                            tuple(targetLikedCoordinate.getId(), "targetUrl", "targetLike"));
+        }
+
+        @Test
+        void 차단_관계의_memberId로_조회하면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(currentMember, targetMember));
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getFavoriteCoordinates(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
+        }
     }
 
     @Nested
-    class 오늘의_코디를_조회할_때 {
+    class 오늘의_코디_Preview를_조회할_때 {
 
         @BeforeEach
         void setUp() {
             Member member1 =
                     Member.createMember(
-                            "todayEmail1",
-                            "todayNickName1",
-                            OauthInfo.createOauthInfo("todayOauthId1", OauthProvider.KAKAO));
+                            "testEmail1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
             Member member2 =
                     Member.createMember(
-                            "todayEmail2",
-                            "todayNickName2",
-                            OauthInfo.createOauthInfo("todayOauthId2", OauthProvider.KAKAO));
+                            "testEmail2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Category parentCategory = Category.createCategory("parentCategory", null);
-            Category category = Category.createCategory("category", parentCategory);
+            Coordinate coordinate1 = Coordinate.createDailyCoordinate("testImageUrl1", member1);
+            coordinateRepository.save(coordinate1);
+        }
+
+        @Test
+        void 유효한_요청이면_Preview를_반환한다() {
+            // when
+            DailyCoordinatePreviewResponse response = coordinateService.getTodayCoordinatePreview();
+
+            // then
+            assertThat(response)
+                    .extracting("coordinateId", "imageUrl", "date")
+                    .containsExactly(1L, "testImageUrl1", LocalDate.now(ZoneId.of("Asia/Seoul")));
+        }
+
+        @Test
+        void 오늘의_코디가_존재하지_않으면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getTodayCoordinatePreview())
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CoordinateErrorCode.DAILY_COORDINATE_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 오늘의_코디_Details를_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Coordinate coordinate1 = Coordinate.createDailyCoordinate("testImageUrl1", member1);
+            coordinateRepository.save(coordinate1);
+
+            Category parentCategory = Category.createCategory("testParentCategory", null);
+            Category category = Category.createCategory("testCategory", parentCategory);
             categoryRepository.saveAll(List.of(parentCategory, category));
 
             Cloth cloth1 =
                     Cloth.createCloth(
-                            "imageUrl1",
+                            "testImageUrl1",
                             null,
-                            "name1",
-                            "brand1",
+                            null,
+                            null,
                             List.of(Season.SPRING),
                             category,
                             member1);
             Cloth cloth2 =
                     Cloth.createCloth(
-                            "imageUrl2",
+                            "testImageUrl2",
                             null,
-                            "name2",
-                            "brand2",
+                            null,
+                            null,
                             List.of(Season.SPRING),
                             category,
                             member1);
             clothRepository.saveAll(List.of(cloth1, cloth2));
 
-            Coordinate coordinate = Coordinate.createDailyCoordinate("coordImage", member1);
-            coordinateRepository.save(coordinate);
-
             CoordinateCloth coordinateCloth1 =
                     CoordinateCloth.createCoordinateCloth(
-                            10.0, 20.0, 1.0, 30.0, 1, coordinate, cloth1);
+                            50.1, 120.1, 1.5, 240.1, 1, coordinate1, cloth1);
+
             CoordinateCloth coordinateCloth2 =
                     CoordinateCloth.createCoordinateCloth(
-                            11.0, 21.0, 1.0, 31.0, 2, coordinate, cloth2);
+                            50.1, 120.1, 1.5, 240.1, 2, coordinate1, cloth2);
+
             coordinateClothRepository.saveAll(List.of(coordinateCloth1, coordinateCloth2));
         }
 
         @Test
-        void 유효한_요청이면_오늘의_코디를_반환한다() {
+        void 유효한_요청이면_코디_Details를_반환한다() {
             // when
-            List<DailyCoordinateClothResponse> responses =
-                    coordinateService.getTodayDailyCoordinateClothes();
+            List<CoordinateDetailsListResponse> response =
+                    coordinateService.getTodayCoordinateDetails();
 
             // then
-            assertThat(responses)
+            assertThat(response)
                     .extracting(
-                            DailyCoordinateClothResponse::imageUrl,
-                            DailyCoordinateClothResponse::brand,
-                            DailyCoordinateClothResponse::name,
-                            DailyCoordinateClothResponse::category,
-                            DailyCoordinateClothResponse::parentCategory)
+                            CoordinateDetailsListResponse::coordinateClothId,
+                            CoordinateDetailsListResponse::locationX,
+                            CoordinateDetailsListResponse::locationY,
+                            CoordinateDetailsListResponse::ratio,
+                            CoordinateDetailsListResponse::degree,
+                            CoordinateDetailsListResponse::order,
+                            CoordinateDetailsListResponse::clothId,
+                            CoordinateDetailsListResponse::imageUrl,
+                            CoordinateDetailsListResponse::brand,
+                            CoordinateDetailsListResponse::name,
+                            CoordinateDetailsListResponse::category,
+                            CoordinateDetailsListResponse::parentCategory)
                     .containsExactly(
-                            tuple("imageUrl1", "brand1", "name1", "category", "parentCategory"),
-                            tuple("imageUrl2", "brand2", "name2", "category", "parentCategory"));
+                            tuple(
+                                    1L,
+                                    50.1,
+                                    120.1,
+                                    1.5,
+                                    240.1,
+                                    1,
+                                    1L,
+                                    "testImageUrl1",
+                                    null,
+                                    null,
+                                    "testCategory",
+                                    "testParentCategory"),
+                            tuple(
+                                    2L,
+                                    50.1,
+                                    120.1,
+                                    1.5,
+                                    240.1,
+                                    2,
+                                    2L,
+                                    "testImageUrl2",
+                                    null,
+                                    null,
+                                    "testCategory",
+                                    "testParentCategory"));
         }
 
         @Test
-        void 오늘의_코디가_없으면_빈_리스트를_반환한다() {
+        void 오늘의_코디가_존재하지_않으면_예외가_발생한다() {
             // given
-            Member member = memberRepository.findByNickname("todayNickName2").orElseThrow();
+            Member member = memberRepository.findById(2L).orElseThrow();
             given(memberUtil.getCurrentMember()).willReturn(member);
-            // when
-            List<DailyCoordinateClothResponse> responses =
-                    coordinateService.getTodayDailyCoordinateClothes();
-            // then
-            assertThat(responses).isEmpty();
+
+            // when & then
+            assertThatThrownBy(() -> coordinateService.getTodayCoordinateDetails())
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(CoordinateErrorCode.DAILY_COORDINATE_NOT_FOUND.getMessage());
         }
     }
 }

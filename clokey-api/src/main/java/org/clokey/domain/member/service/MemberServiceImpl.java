@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.history.repository.HistoryRepository;
-import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
+import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.*;
 import org.clokey.domain.member.event.NewFollowerEvent;
@@ -70,7 +70,8 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public DuplicatedIdCheckResponse checkDuplicateNickname(DuplicatedIdCheckRequest request) {
+    public DuplicatedIdCheckResponse checkDuplicateNickname(
+            DuplicatedNicknameCheckRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         boolean duplicated =
@@ -147,6 +148,10 @@ public class MemberServiceImpl implements MemberService {
     public MemberInfoResponse getMemberInfo(Long memberId) {
         Member currentMember = memberUtil.getCurrentMember();
         Member targetMember = getMemberById(memberId);
+
+        if (!currentMember.getId().equals(targetMember.getId())) {
+            validateBlockedMutual(currentMember.getId(), targetMember.getId());
+        }
 
         return memberRepository.findMemberInfoById(currentMember.getId(), memberId);
     }
@@ -246,6 +251,13 @@ public class MemberServiceImpl implements MemberService {
     private void validateBlocked(Member currentMember, Member targetMember) {
         if (blockRepository.existsByBlockerIdAndBlockedId(
                 targetMember.getId(), currentMember.getId())) {
+            throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
+        }
+    }
+
+    private void validateBlockedMutual(Long currentMemberId, Long targetMemberId) {
+        if (blockRepository.existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(
+                currentMemberId, targetMemberId, targetMemberId, currentMemberId)) {
             throw new BaseCustomException(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED);
         }
     }

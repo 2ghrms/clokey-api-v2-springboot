@@ -11,7 +11,7 @@ import org.springframework.data.annotation.Id;
 @Setter
 @Document(indexUid = "histories")
 @Setting(
-        searchableAttributes = {"hashtagNames", "categoryNames"},
+        searchableAttributes = {"styleNames", "hashtagNames", "categoryNames"},
         displayedAttributes = {
             "id",
             "memberId",
@@ -21,6 +21,7 @@ import org.springframework.data.annotation.Id;
             "historyImageUrl",
             "profileImageUrl",
             "nickname",
+            "styleNames",
             "hashtagNames",
             "categoryNames"
         },
@@ -44,6 +45,8 @@ public class HistoryDocument {
     private String profileImageUrl; // Member.profileUrl
 
     private String nickname; // Member.nickname
+
+    private List<String> styleNames;
 
     private List<String> hashtagNames;
 

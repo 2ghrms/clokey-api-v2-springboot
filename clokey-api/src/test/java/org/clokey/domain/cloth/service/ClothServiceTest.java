@@ -259,9 +259,10 @@ class ClothServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Category category1 = Category.createCategory("testCategory1", null);
-            Category category2 = Category.createCategory("testCategory2", null);
-            categoryRepository.saveAll(List.of(category1, category2));
+            Category parentCategory1 = Category.createCategory("testParentCategory1", null);
+            Category parentCategory2 = Category.createCategory("testParentCategory2", null);
+            Category category1 = Category.createCategory("testCategory1", parentCategory1);
+            categoryRepository.saveAll(List.of(parentCategory1, parentCategory2, category1));
 
             Cloth cloth1 =
                     Cloth.createCloth(

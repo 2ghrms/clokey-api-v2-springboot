@@ -12,6 +12,7 @@ import org.clokey.domain.history.repository.HistoryImageRepository;
 import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.like.dto.response.LikedHistoriesResponse;
 import org.clokey.domain.like.dto.response.LikedMembersResponse;
+import org.clokey.domain.like.event.NewLikeEvent;
 import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.like.repository.MemberLikeRepositoryCustom;
 import org.clokey.domain.member.repository.BlockRepository;
@@ -111,6 +112,14 @@ public class LikeServiceImpl implements LikeService {
         } else {
             MemberLike newLike = MemberLike.createMemberLike(currentMember, history);
             memberLikeRepository.save(newLike);
+            eventPublisher.publishEvent(
+                    new NewLikeEvent(
+                            newLike.getId(),
+                            history.getId(),
+                            historyOwner.getId(),
+                            currentMember.getId(),
+                            currentMember.getNickname(),
+                            currentMember.getProfileImageUrl()));
         }
 
         eventPublisher.publishEvent(

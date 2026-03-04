@@ -90,10 +90,11 @@ public class ClothServiceImpl implements ClothService {
     public SliceResponse<ClothRecommendListResponse> recommendCategoryClothes(
             Long lastClothId, int size, Long categoryId, Season season) {
         final Member currentMember = memberUtil.getCurrentMember();
+        List<Long> categoryIds = resolveCategoryIds(categoryId);
 
         Slice<ClothRecommendListResponse> result =
                 clothRepository.findAllMemberRecommendClothesByCategoryAndSeason(
-                        lastClothId, size, categoryId, currentMember.getId(), season);
+                        lastClothId, size, categoryIds, currentMember.getId(), season);
 
         return SliceResponse.from(result);
     }

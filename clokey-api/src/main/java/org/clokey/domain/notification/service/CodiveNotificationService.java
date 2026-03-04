@@ -2,6 +2,7 @@ package org.clokey.domain.notification.service;
 
 import org.clokey.domain.comment.event.NewCommentEvent;
 import org.clokey.domain.comment.event.NewReplyEvent;
+import org.clokey.domain.like.event.NewLikeEvent;
 import org.clokey.domain.notification.dto.request.TemperatureNotificationRequest;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
 import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
@@ -16,6 +17,8 @@ public interface CodiveNotificationService {
     void sendNewCommentNotification(NewCommentEvent event);
 
     void sendNewReplyNotification(NewReplyEvent event);
+
+    void sendNewLikeNotification(NewLikeEvent event);
 
     void sendNewTemperatureNotification(TemperatureNotificationRequest request);
 

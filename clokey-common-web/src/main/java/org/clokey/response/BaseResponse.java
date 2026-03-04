@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import org.clokey.code.BaseSuccessCode;
 import org.clokey.exception.BaseErrorCode;
 
@@ -14,12 +15,15 @@ public record BaseResponse<T>(
         String message,
         LocalDateTime timeStamp,
         @JsonInclude(JsonInclude.Include.NON_NULL) T result) {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     public static <T> BaseResponse<T> onSuccess(BaseSuccessCode code, T result) {
         return new BaseResponse<>(
                 true,
                 code.getReasonDto().code(),
                 code.getReasonDto().message(),
-                LocalDateTime.now(),
+                LocalDateTime.now(KST),
                 result);
     }
 
@@ -28,11 +32,11 @@ public record BaseResponse<T>(
                 false,
                 code.getErrorReason().code(),
                 code.getErrorReason().message(),
-                LocalDateTime.now(),
+                LocalDateTime.now(KST),
                 result);
     }
 
     public static <T> BaseResponse<T> onFailure(String code, String message, T data) {
-        return new BaseResponse<>(false, code, message, LocalDateTime.now(), data);
+        return new BaseResponse<>(false, code, message, LocalDateTime.now(KST), data);
     }
 }

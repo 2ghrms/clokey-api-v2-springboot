@@ -24,7 +24,9 @@ public interface CoordinateService {
     SliceResponse<DailyCoordinateListResponse> getDailyCoordinates(
             Long lastCoordinateId, int size, SortDirection direction);
 
-    List<DailyCoordinateClothResponse> getTodayDailyCoordinateClothes();
+    DailyCoordinatePreviewResponse getTodayCoordinatePreview();
+
+    List<CoordinateDetailsListResponse> getTodayCoordinateDetails();
 
     CoordinatePreviewResponse getCoordinatePreview(Long coordinateId);
 
@@ -32,5 +34,5 @@ public interface CoordinateService {
 
     void toggleCoordinateLike(Long coordinateId);
 
-    List<FavoriteCoordinateResponse> getFavoriteCoordinates();
+    List<FavoriteCoordinateResponse> getFavoriteCoordinates(Long memberId);
 }
