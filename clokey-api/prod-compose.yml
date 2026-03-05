@@ -10,6 +10,8 @@ services:
     command: ["sh", "-c", "if [ -n \"$$REDIS_PASSWORD\" ]; then exec redis-server --requirepass \"$$REDIS_PASSWORD\"; else exec redis-server; fi"]
     ports:
       - "6380:6379"
+    volumes:
+      - redis_prod_data:/data
     networks:
       - prod_app_network
 
@@ -93,3 +95,6 @@ networks:
   prod_app_network:
     name: prod_app_network
     driver: bridge
+
+volumes:
+  redis_prod_data:
