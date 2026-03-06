@@ -98,7 +98,7 @@ swagger:
   username: ${SWAGGER_USERNAME}
   password: ${SWAGGER_PASSWORD}
 
-spring-doc:
+springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
   swagger-ui:

@@ -9,24 +9,18 @@ import org.clokey.domain.auth.service.CustomOAuth2UserService;
 import org.clokey.domain.auth.service.JwtTokenService;
 import org.clokey.global.security.AppleAwareOAuth2AuthorizationRequestResolver;
 import org.clokey.global.security.JwtAuthenticationFilter;
-import org.clokey.helper.SpringEnvironmentHelper;
-import org.springframework.beans.factory.annotation.Value;
+import org.clokey.global.security.SwaggerBasicAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -38,15 +32,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final SpringEnvironmentHelper springEnvironmentHelper;
+    private static final String[] SWAGGER_PATHS = {
+        "/swagger-ui", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
+    };
+
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OidcLoginSuccessHandler oidcLoginSuccessHandler;
-
-    @Value("${swagger.username:default}")
-    private String swaggerUsername;
-
-    @Value("${swagger.password:default}")
-    private String swaggerPassword;
 
     private void defaultFilterChain(HttpSecurity http) throws Exception {
         http.httpBasic(AbstractHttpConfigurer::disable)
@@ -59,53 +50,26 @@ public class SecurityConfig {
     }
 
     @Bean
-    public InMemoryUserDetailsManager inMemoryUserDetailsManager() {
-        UserDetails user =
-                User.withUsername(swaggerUsername)
-                        .password(passwordEncoder().encode(swaggerPassword))
-                        .roles("SWAGGER")
-                        .build();
-
-        return new InMemoryUserDetailsManager(user);
-    }
-
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    @Order(1)
-    @Profile({"dev", "local", "prod"})
-    public SecurityFilterChain swaggerFilterChain(HttpSecurity http) throws Exception {
-        defaultFilterChain(http);
-
-        http.securityMatcher("/swagger-ui/**", "/v3/api-docs/**").httpBasic(withDefaults());
-
-        http.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated());
-
-        return http.build();
-    }
-
-    /** 인증 없이 제공하고 싶은 API는 /public 으로 시작해야 합니다. */
-    @Bean
-    @Order(2)
-    @Profile({"local", "dev", "prod"})
     public SecurityFilterChain apiFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            OAuth2AuthorizationRequestResolver authorizationRequestResolver)
+            OAuth2AuthorizationRequestResolver authorizationRequestResolver,
+            SwaggerBasicAuthenticationFilter swaggerBasicAuthenticationFilter)
             throws Exception {
         defaultFilterChain(http);
 
         http.authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers(
-                                                "/public/**",
-                                                "/swagger-ui/**",
-                                                "/v3/api-docs/**",
-                                                "/oauth2/**",
-                                                "/login/oauth2/**")
+                                auth.requestMatchers("/public/**")
+                                        .permitAll()
+                                        .requestMatchers("/oauth2/**", "/login/oauth2/**")
+                                        .permitAll()
+                                        .requestMatchers(SWAGGER_PATHS)
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
@@ -121,6 +85,9 @@ public class SecurityConfig {
                                             a.authorizationRequestResolver(
                                                     authorizationRequestResolver));
                         })
+                .addFilterBefore(
+                        swaggerBasicAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -158,7 +125,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Profile({"local", "dev", "prod"})
     public OAuth2AuthorizationRequestResolver oauth2AuthorizationRequestResolver(
             ClientRegistrationRepository clientRegistrationRepository) {
         AppleAwareOAuth2AuthorizationRequestResolver resolver =

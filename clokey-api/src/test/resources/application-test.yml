@@ -31,3 +31,7 @@ firebase:
   token-uri: dummy
   auth-provider-x509-cert-url: dummy
   client-x509-cert-url: dummy
+
+swagger:
+  username: swagger
+  password: swagger
