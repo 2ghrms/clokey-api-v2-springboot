@@ -1,5 +1,7 @@
 package org.clokey.domain.cloth.service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +19,7 @@ import org.clokey.domain.cloth.dto.response.*;
 import org.clokey.domain.cloth.exception.ClothErrorCode;
 import org.clokey.domain.cloth.repository.ClothRepository;
 import org.clokey.domain.coordinate.repository.CoordinateClothRepository;
+import org.clokey.domain.coordinate.repository.CoordinateRepository;
 import org.clokey.domain.history.repository.HistoryClothTagRepository;
 import org.clokey.domain.image.event.ImageDeleteEvent;
 import org.clokey.domain.search.event.ClothDeleteEvent;
@@ -28,7 +31,9 @@ import org.clokey.member.entity.Member;
 import org.clokey.response.SliceResponse;
 import org.clokey.util.S3Util;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +41,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ClothServiceImpl implements ClothService {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final MemberUtil memberUtil;
 
     private final ClothRepository clothRepository;
     private final CategoryRepository categoryRepository;
     private final HistoryClothTagRepository historyClothTagRepository;
+    private final CoordinateRepository coordinateRepository;
 
     private final ApplicationEventPublisher eventPublisher;
     private final CoordinateClothRepository coordinateClothRepository;
@@ -115,7 +123,27 @@ public class ClothServiceImpl implements ClothService {
                 clothRepository.findAllMemberClothesByCategoriesAndSeasons(
                         lastClothId, size, direction, categoryIds, currentMember.getId(), seasons);
 
-        return SliceResponse.from(result);
+        Set<Long> todayCoordinateClothIds =
+                coordinateRepository
+                        .findDailyCoordinateByDateAndMemberId(
+                                LocalDate.now(KST), currentMember.getId())
+                        .map(
+                                coordinate ->
+                                        coordinate.getCoordinateClothes().stream()
+                                                .map(cc -> cc.getCloth().getId())
+                                                .collect(Collectors.toSet()))
+                        .orElse(Set.of());
+
+        List<ClothListResponse> content =
+                result.getContent().stream()
+                        .map(
+                                cloth ->
+                                        cloth.withTodayCoordinateCloth(
+                                                todayCoordinateClothIds.contains(cloth.clothId())))
+                        .toList();
+
+        return SliceResponse.from(
+                new SliceImpl<>(content, PageRequest.of(0, size), result.hasNext()));
     }
 
     @Override
