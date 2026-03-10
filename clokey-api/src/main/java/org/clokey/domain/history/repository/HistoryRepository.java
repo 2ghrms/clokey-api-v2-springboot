@@ -1,5 +1,6 @@
 package org.clokey.domain.history.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -12,6 +13,8 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
     Optional<History> findByIdWithMember(Long id);
 
     boolean existsByMemberId(Long memberId);
+
+    boolean existsByMemberIdAndHistoryDate(Long memberId, LocalDate historyDate);
 
     @Query(
             """

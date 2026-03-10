@@ -19,6 +19,7 @@ import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
+import org.clokey.domain.history.dto.response.TodayHistoryExistenceResponse;
 import org.clokey.domain.history.service.HistoryService;
 import org.clokey.enums.FileExtension;
 import org.junit.jupiter.api.Nested;
@@ -920,6 +921,29 @@ public class HistoryControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON204"));
+        }
+    }
+
+    @Nested
+    class 오늘_기록_존재_여부_확인_요청_시 {
+
+        @Test
+        void 유효한_요청이면_오늘_기록_존재_여부를_반환한다() throws Exception {
+            // given
+            TodayHistoryExistenceResponse response = TodayHistoryExistenceResponse.of(true);
+
+            given(historyService.checkTodayHistoryExistence()).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/histories/today/existence")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.exists").value(true));
         }
     }
 }

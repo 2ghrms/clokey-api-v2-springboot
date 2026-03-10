@@ -31,6 +31,7 @@ import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
+import org.clokey.domain.history.dto.response.TodayHistoryExistenceResponse;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
@@ -1273,6 +1274,60 @@ class HistoryServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> historyService.deleteHistory(2L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+    }
+
+    @Nested
+    class 오늘_기록_존재_여부를_확인할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
+
+            History todayHistory =
+                    History.createHistory(LocalDate.now(), "testContent", member1, situation);
+            History otherHistory =
+                    History.createHistory(
+                            LocalDate.now().minusDays(1), "oldContent", member2, situation);
+            historyRepository.saveAll(List.of(todayHistory, otherHistory));
+        }
+
+        @Test
+        void 오늘_기록이_존재하면_true를_반환한다() {
+            // when
+            TodayHistoryExistenceResponse response = historyService.checkTodayHistoryExistence();
+
+            // then
+            assertThat(response.exists()).isTrue();
+        }
+
+        @Test
+        void 오늘_기록이_존재하지_않으면_false를_반환한다() {
+            // given
+            Member otherMember =
+                    transactionUtil.getResult(() -> memberRepository.findById(2L).orElseThrow());
+            given(memberUtil.getCurrentMember()).willReturn(otherMember);
+
+            // when
+            TodayHistoryExistenceResponse response = historyService.checkTodayHistoryExistence();
+
+            // then
+            assertThat(response.exists()).isFalse();
         }
     }
 }

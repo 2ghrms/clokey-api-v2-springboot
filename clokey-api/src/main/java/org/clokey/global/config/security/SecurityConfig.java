@@ -67,6 +67,8 @@ public class SecurityConfig {
                         auth ->
                                 auth.requestMatchers("/public/**")
                                         .permitAll()
+                                        .requestMatchers("/auth/reissue-token")
+                                        .permitAll()
                                         .requestMatchers("/oauth2/**", "/login/oauth2/**")
                                         .permitAll()
                                         .requestMatchers(SWAGGER_PATHS)

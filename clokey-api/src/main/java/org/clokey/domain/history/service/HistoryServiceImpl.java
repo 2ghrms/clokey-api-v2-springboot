@@ -21,6 +21,7 @@ import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
+import org.clokey.domain.history.dto.response.TodayHistoryExistenceResponse;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
@@ -348,6 +349,16 @@ public class HistoryServiceImpl implements HistoryService {
         boolean isOwner = history.getMember().getId().equals(currentMember.getId());
 
         return HistoryOwnershipCheckResponse.of(isOwner);
+    }
+
+    @Override
+    public TodayHistoryExistenceResponse checkTodayHistoryExistence() {
+        final Member currentMember = memberUtil.getCurrentMember();
+        boolean exists =
+                historyRepository.existsByMemberIdAndHistoryDate(
+                        currentMember.getId(), LocalDate.now(KST));
+
+        return TodayHistoryExistenceResponse.of(exists);
     }
 
     @Override
