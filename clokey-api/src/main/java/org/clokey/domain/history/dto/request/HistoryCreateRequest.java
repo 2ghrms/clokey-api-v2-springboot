@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import java.time.LocalDate;
 import java.util.List;
 
 @Schema(description = "기록 생성 요청")
@@ -13,6 +14,9 @@ public record HistoryCreateRequest(
                         description = "기록의 내용",
                         example = "안녕 오늘 오지게 덥다 ㄷㄷ;; 근데 한달 뒤면 가을임 벌써 가을 기대 만발ㅋ")
                 String content,
+        @NotNull(message = "기록 작성 날짜는 비워둘 수 없습니다.")
+                @Schema(description = "기록 작성 날짜", example = "2026-04-12")
+                LocalDate historyDate,
         @NotNull(message = "상황 ID는 비워둘 수 없습니다.") @Schema(description = "상황 ID", example = "7")
                 Long situationId,
         @NotNull(message = "스타일 목록은 비워둘 수 없습니다.")

@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
@@ -58,6 +59,8 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 @RecordApplicationEvents
 class HistoryServiceImplTest extends IntegrationTest {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Autowired private TransactionUtil transactionUtil;
 
@@ -192,6 +195,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -217,8 +221,9 @@ class HistoryServiceImplTest extends IntegrationTest {
                     .extracting(
                             h -> h.getMember().getId(),
                             h -> h.getSituation().getId(),
+                            History::getHistoryDate,
                             History::getContent)
-                    .containsExactly(1L, 1L, "testContent 1");
+                    .containsExactly(1L, 1L, LocalDate.of(2026, 4, 12), "testContent 1");
 
             List<HistoryImage> images = historyImageRepository.findByHistoryId(history.getId());
             assertThat(images).hasSize(2);
@@ -254,11 +259,38 @@ class HistoryServiceImplTest extends IntegrationTest {
         }
 
         @Test
+        void 같은_날짜의_기록이_이미_존재하면_예외가_발생한다() {
+            // given
+            Member currentMember =
+                    transactionUtil.getResult(() -> memberRepository.findById(1L).orElseThrow());
+            Situation situation =
+                    transactionUtil.getResult(() -> situationRepository.findById(1L).orElseThrow());
+            historyRepository.save(
+                    History.createHistory(
+                            LocalDate.of(2026, 4, 12), "existing", currentMember, situation));
+
+            HistoryCreateRequest request =
+                    new HistoryCreateRequest(
+                            "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
+                            1L,
+                            List.of(1L, 2L),
+                            List.of("testHashtag1", "testHashtag2"),
+                            List.of(new Payload("testUrl1", null)));
+
+            // when & then
+            assertThatThrownBy(() -> historyService.createHistory(request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_ALREADY_EXISTS.getMessage());
+        }
+
+        @Test
         void 존재하지_않는_상황_ID를_포함하는_경우_예외가_발생한다() {
             // given
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "hi",
+                            LocalDate.of(2026, 4, 12),
                             999L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -281,6 +313,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 10L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -302,6 +335,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -318,6 +352,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -334,6 +369,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -354,6 +390,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2", "testHashtag3"),
@@ -1300,10 +1337,10 @@ class HistoryServiceImplTest extends IntegrationTest {
             situationRepository.save(situation);
 
             History todayHistory =
-                    History.createHistory(LocalDate.now(), "testContent", member1, situation);
+                    History.createHistory(LocalDate.now(KST), "testContent", member1, situation);
             History otherHistory =
                     History.createHistory(
-                            LocalDate.now().minusDays(1), "oldContent", member2, situation);
+                            LocalDate.now(KST).minusDays(1), "oldContent", member2, situation);
             historyRepository.saveAll(List.of(todayHistory, otherHistory));
         }
 

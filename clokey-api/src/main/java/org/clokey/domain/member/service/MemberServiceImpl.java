@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.history.repository.HistoryRepository;
+import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.*;
@@ -40,6 +41,7 @@ public class MemberServiceImpl implements MemberService {
     private final FollowRepository followRepository;
     private final PendingFollowRepository pendingFollowRepository;
     private final BlockRepository blockRepository;
+    private final MemberLikeRepository memberLikeRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -95,6 +97,8 @@ public class MemberServiceImpl implements MemberService {
         if (existingBlock.isPresent()) {
             blockRepository.delete(existingBlock.get());
         } else {
+            memberLikeRepository.deleteAllByMemberIdAndHistoryOwnerId(
+                    blocker.getId(), blocked.getId());
             Block block = Block.createBlock(blocker, blocked);
             blockRepository.save(block);
         }
