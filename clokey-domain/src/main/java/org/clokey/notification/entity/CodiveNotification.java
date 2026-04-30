@@ -69,10 +69,13 @@ public class CodiveNotification extends BaseEntity {
             String redirectInfo,
             RedirectType redirectType,
             NotificationType notificationType) {
+        String resolvedNotificationImageUrl =
+                (notificationImageUrl == null) ? "" : notificationImageUrl;
+
         return CodiveNotification.builder()
                 .member(member)
                 .content(content)
-                .notificationImageUrl(notificationImageUrl)
+                .notificationImageUrl(resolvedNotificationImageUrl)
                 .redirectInfo(redirectInfo)
                 .redirectType(redirectType)
                 .notificationType(notificationType)
