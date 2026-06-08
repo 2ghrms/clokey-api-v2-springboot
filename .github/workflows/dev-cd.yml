@@ -53,7 +53,7 @@ jobs:
             --platform linux/arm64 \
             --push \
             --file clokey-api/Dockerfile \
-            --tag ${{ secrets.DOCKERHUB_USERNAME }}/clokey-docker-2025:dev-app \
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/clokey-docker-2026:dev-app \
             .
 
       - name: Copy dev-compose
