@@ -146,7 +146,7 @@ jobs:
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             
             cd /home/ubuntu
-            docker-compose -f prod-compose.yml up -d --force-recreate
+            docker compose -f clokey-api/prod-compose.yml up -d
 
             echo "Cleaning up dangling Docker images..."
             docker image prune -f
