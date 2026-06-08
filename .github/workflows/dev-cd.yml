@@ -64,7 +64,6 @@ jobs:
           key: ${{ secrets.OCI_INSTANCE_SSH_KEY }}
           source: "clokey-api/dev-compose.yml"
           target: /home/ubuntu/
-          strip_components: 1
 
       - name: Set OCI private key env (multiline)
         run: |
