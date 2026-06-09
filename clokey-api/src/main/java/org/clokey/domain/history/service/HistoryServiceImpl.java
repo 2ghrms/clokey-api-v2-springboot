@@ -21,6 +21,7 @@ import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
+import org.clokey.domain.history.dto.response.TodayHistoryExistenceResponse;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
@@ -74,6 +75,9 @@ public class HistoryServiceImpl implements HistoryService {
     @Transactional
     public HistoryCreateResponse createHistory(HistoryCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final LocalDate historyDate = request.historyDate();
+
+        validateDuplicateHistoryDate(currentMember.getId(), historyDate);
 
         final Situation situation = getSituationById(request.situationId());
 
@@ -93,7 +97,7 @@ public class HistoryServiceImpl implements HistoryService {
         final String content =
                 Optional.ofNullable(request.content()).map(String::trim).orElse(null);
         final History history =
-                History.createHistory(LocalDate.now(KST), content, currentMember, situation);
+                History.createHistory(historyDate, content, currentMember, situation);
         historyRepository.save(history);
 
         List<HistoryImage> images = new ArrayList<>();
@@ -351,6 +355,16 @@ public class HistoryServiceImpl implements HistoryService {
     }
 
     @Override
+    public TodayHistoryExistenceResponse checkTodayHistoryExistence() {
+        final Member currentMember = memberUtil.getCurrentMember();
+        boolean exists =
+                historyRepository.existsByMemberIdAndHistoryDate(
+                        currentMember.getId(), LocalDate.now(KST));
+
+        return TodayHistoryExistenceResponse.of(exists);
+    }
+
+    @Override
     @Transactional
     public void deleteHistory(Long historyId) {
         final Member currentMember = memberUtil.getCurrentMember();
@@ -503,6 +517,12 @@ public class HistoryServiceImpl implements HistoryService {
         Map<Long, Style> styleMap = getStylesByIds(distinctStyleIds);
         validateStyleIds(styleIds, styleMap);
         return styleMap;
+    }
+
+    private void validateDuplicateHistoryDate(Long memberId, LocalDate historyDate) {
+        if (historyRepository.existsByMemberIdAndHistoryDate(memberId, historyDate)) {
+            throw new BaseCustomException(HistoryErrorCode.HISTORY_ALREADY_EXISTS);
+        }
     }
 
     private Map<Long, Cloth> validateAndLoadClothes(Member member, List<Long> clothIds) {

@@ -125,6 +125,8 @@ jobs:
             export CLOTH_INFERENCE_PATH=${{ secrets.CLOTH_INFERENCE_PATH }}
             export STYLE_INFERENCE_PATH=${{ secrets.STYLE_INFERENCE_PATH }}
             export HISTORY_CLOTH_DETECT_PATH=${{ secrets.HISTORY_CLOTH_DETECT_PATH }}
+            export DEFAULT_PROFILE_IMAGE_URL=${{ secrets.DEFAULT_PROFILE_IMAGE_URL }}
+            export TODAY_TEMPERATURE_IMAGE_URL=${{ secrets.TODAY_TEMPERATURE_IMAGE_URL }}
 
             mkdir -p /home/ubuntu/secrets
             echo "${{ secrets.FIREBASE_SA_JSON_B64 }}" | base64 -d | tee /home/ubuntu/secrets/firebase-sa.json > /dev/null

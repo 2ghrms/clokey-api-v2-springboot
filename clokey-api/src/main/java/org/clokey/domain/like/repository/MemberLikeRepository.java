@@ -39,6 +39,15 @@ public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
     @Query("delete from MemberLike ml where ml.history.id = :historyId")
     void deleteAllByHistoryId(Long historyId);
 
+    @Modifying
+    @Query(
+            """
+            delete from MemberLike ml
+            where ml.member.id = :memberId
+              and ml.history.member.id = :historyOwnerId
+            """)
+    void deleteAllByMemberIdAndHistoryOwnerId(Long memberId, Long historyOwnerId);
+
     @Query(
             """
         select ml.history.id

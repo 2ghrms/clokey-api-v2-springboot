@@ -544,6 +544,7 @@ class MemberControllerTest {
                                     2L,
                                     "nickname1",
                                     "https://img.example.com/bg.jpg",
+                                    true,
                                     false,
                                     false),
                             new FollowMemberResponse(
@@ -551,6 +552,7 @@ class MemberControllerTest {
                                     1L,
                                     "nickname2",
                                     "https://img.example2.com/bg.jpg",
+                                    false,
                                     true,
                                     false));
 
@@ -569,7 +571,9 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.content[0].followId").value(2L))
+                    .andExpect(jsonPath("$.result.content[0].isPublic").value(true))
                     .andExpect(jsonPath("$.result.content[1].followId").value(1L))
+                    .andExpect(jsonPath("$.result.content[1].isPublic").value(false))
                     .andExpect(jsonPath("$.result.isLast").value(true));
         }
 
@@ -584,12 +588,14 @@ class MemberControllerTest {
                                     "nickname2",
                                     "https://img.example.com/bg.jpg",
                                     false,
+                                    false,
                                     false),
                             new FollowMemberResponse(
                                     1L,
                                     1L,
                                     "nickname1",
                                     "https://img.example2.com/bg.jpg",
+                                    true,
                                     true,
                                     true));
 
@@ -608,7 +614,9 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.content[0].followId").value(2L))
+                    .andExpect(jsonPath("$.result.content[0].isPublic").value(false))
                     .andExpect(jsonPath("$.result.content[1].followId").value(1L))
+                    .andExpect(jsonPath("$.result.content[1].isPublic").value(true))
                     .andExpect(jsonPath("$.result.isLast").value(true));
         }
 
@@ -622,6 +630,7 @@ class MemberControllerTest {
                                     2L,
                                     "nickname1",
                                     "https://img.example.com/bg.jpg",
+                                    true,
                                     true,
                                     false));
 
@@ -641,6 +650,7 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.message").value("성공입니다."))
                     .andExpect(jsonPath("$.result.content[0].followId").value(2L))
+                    .andExpect(jsonPath("$.result.content[0].isPublic").value(true))
                     .andExpect(jsonPath("$.result.isLast").value(false));
         }
 

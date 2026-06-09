@@ -3,16 +3,19 @@ package org.clokey.domain.member.repository;
 import static org.clokey.member.entity.QFollow.follow;
 import static org.clokey.member.entity.QMember.member;
 
-import com.querydsl.core.types.Projections;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.member.dto.response.FollowMemberResponse;
 import org.clokey.member.entity.QBlock;
 import org.clokey.member.entity.QFollow;
+import org.clokey.member.enums.Visibility;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -28,23 +31,25 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
     public Slice<FollowMemberResponse> findAllFollowingsByMemberId(
             Long currentId, Long targetId, Long lastFollowId, Integer size) {
         QFollow followSub = new QFollow("followSub");
+        BooleanExpression isFollowingExpression =
+                JPAExpressions.selectOne()
+                        .from(followSub)
+                        .where(
+                                followSub.followFrom.id.eq(currentId),
+                                followSub.followTo.id.eq(member.id))
+                        .exists();
+        BooleanExpression isMeExpression = member.id.eq(currentId);
 
-        List<FollowMemberResponse> results =
+        List<Tuple> tuples =
                 queryFactory
                         .select(
-                                Projections.constructor(
-                                        FollowMemberResponse.class,
-                                        follow.id,
-                                        member.id,
-                                        member.nickname,
-                                        member.profileImageUrl,
-                                        JPAExpressions.selectOne()
-                                                .from(followSub)
-                                                .where(
-                                                        followSub.followFrom.id.eq(currentId),
-                                                        followSub.followTo.id.eq(member.id))
-                                                .exists(),
-                                        member.id.eq(currentId)))
+                                follow.id,
+                                member.id,
+                                member.nickname,
+                                member.profileImageUrl,
+                                member.visibility,
+                                isFollowingExpression,
+                                isMeExpression)
                         .from(follow)
                         .join(follow.followTo, member)
                         .where(
@@ -55,6 +60,9 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                         .orderBy(follow.id.desc())
                         .fetch();
 
+        List<FollowMemberResponse> results =
+                mapToFollowMemberResponses(tuples, isFollowingExpression, isMeExpression);
+
         return checkLastPage(size, results);
     }
 
@@ -62,23 +70,25 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
     public Slice<FollowMemberResponse> findAllFollowersByMemberId(
             Long currentId, Long targetId, Long lastFollowId, Integer size) {
         QFollow followSub = new QFollow("followSub");
+        BooleanExpression isFollowingExpression =
+                JPAExpressions.selectOne()
+                        .from(followSub)
+                        .where(
+                                followSub.followFrom.id.eq(currentId),
+                                followSub.followTo.id.eq(member.id))
+                        .exists();
+        BooleanExpression isMeExpression = member.id.eq(currentId);
 
-        List<FollowMemberResponse> results =
+        List<Tuple> tuples =
                 queryFactory
                         .select(
-                                Projections.constructor(
-                                        FollowMemberResponse.class,
-                                        follow.id,
-                                        member.id,
-                                        member.nickname,
-                                        member.profileImageUrl,
-                                        JPAExpressions.selectOne()
-                                                .from(followSub)
-                                                .where(
-                                                        followSub.followFrom.id.eq(currentId),
-                                                        followSub.followTo.id.eq(member.id))
-                                                .exists(),
-                                        member.id.eq(currentId)))
+                                follow.id,
+                                member.id,
+                                member.nickname,
+                                member.profileImageUrl,
+                                member.visibility,
+                                isFollowingExpression,
+                                isMeExpression)
                         .from(follow)
                         .join(follow.followFrom, member)
                         .where(
@@ -89,7 +99,31 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                         .orderBy(follow.id.desc())
                         .fetch();
 
+        List<FollowMemberResponse> results =
+                mapToFollowMemberResponses(tuples, isFollowingExpression, isMeExpression);
+
         return checkLastPage(size, results);
+    }
+
+    private List<FollowMemberResponse> mapToFollowMemberResponses(
+            List<Tuple> tuples,
+            Expression<Boolean> isFollowingExpression,
+            Expression<Boolean> isMeExpression) {
+        List<FollowMemberResponse> responses = new ArrayList<>(tuples.size());
+
+        for (Tuple tuple : tuples) {
+            responses.add(
+                    new FollowMemberResponse(
+                            tuple.get(follow.id),
+                            tuple.get(member.id),
+                            tuple.get(member.nickname),
+                            tuple.get(member.profileImageUrl),
+                            Visibility.PUBLIC.equals(tuple.get(member.visibility)),
+                            Boolean.TRUE.equals(tuple.get(isFollowingExpression)),
+                            Boolean.TRUE.equals(tuple.get(isMeExpression))));
+        }
+
+        return responses;
     }
 
     private BooleanExpression blockFilter(Long currentId) {
