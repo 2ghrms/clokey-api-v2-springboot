@@ -20,6 +20,7 @@ jobs:
 
     env:
       CODIVEAPI_BRANCH: main
+      PROD_OPENAPI_URL: "${{ secrets.CODIVE_PROD_BASE_URL }}/v3/api-docs"
       TARGET_PATH: Sources/CodiveAPI/openapi.yaml
       SWAGGER_USERNAME: ${{ secrets.SWAGGER_USERNAME }}
       SWAGGER_PASSWORD: ${{ secrets.SWAGGER_PASSWORD }}
@@ -31,8 +32,6 @@ jobs:
           fetch-depth: 1
 
       - name: Wait for production server to be ready
-        env:
-          PROD_OPENAPI_URL: ${{ secrets.PROD_OPENAPI_URL }}
         run: |
           set -euo pipefail
           echo "Waiting for production OpenAPI to be ready..."
@@ -53,8 +52,6 @@ jobs:
 
 
       - name: Fetch OpenAPI JSON from production
-        env:
-          PROD_OPENAPI_URL: ${{ secrets.PROD_OPENAPI_URL }}
         run: |
           set -euo pipefail
           echo "Fetching OpenAPI from: $PROD_OPENAPI_URL"

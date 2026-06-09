@@ -9,6 +9,7 @@ import org.clokey.domain.auth.service.CustomOAuth2UserService;
 import org.clokey.domain.auth.service.JwtTokenService;
 import org.clokey.global.security.AppleAwareOAuth2AuthorizationRequestResolver;
 import org.clokey.global.security.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.clokey.global.security.SwaggerBasicAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,18 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Value("${swagger.username:default}")
+    private String swaggerUsername;
+
+    @Value("${swagger.password:default}")
+    private String swaggerPassword;
+
+    @Value("${app.base-url.dev}")
+    private String devBaseUrl;
+
+    @Value("${app.base-url.prod}")
+    private String prodBaseUrl;
 
     private static final String[] SWAGGER_PATHS = {
         "/swagger-ui", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
@@ -100,10 +113,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(
-                List.of(
-                        "http://localhost:3000",
-                        "https://dev.clokey.store",
-                        "https://prod.clokey.store"));
+                List.of("http://localhost:3000", devBaseUrl, prodBaseUrl));
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

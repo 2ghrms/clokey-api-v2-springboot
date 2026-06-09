@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  dev-cd:
+  prod-cd:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,6 +33,9 @@ jobs:
       - name: Grant gradlew permission
         run: chmod +x ./gradlew
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -52,60 +55,71 @@ jobs:
       - name: Build & Push App Image
         run: |
           docker buildx build \
-            --platform linux/amd64 \
+            --platform linux/arm64 \
             --push \
             --file clokey-api/Dockerfile \
-            --tag ${{ secrets.DOCKERHUB_USERNAME }}/clokey-docker-2025:prod-app \
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/clokey-docker-2026:prod-app \
             .
 
-      - name: Copy prod-docker-compose.yml
+      - name: Copy prod-compose
         uses: appleboy/scp-action@v0.1.3
         with:
           username: ubuntu
-          host: ${{ secrets.PROD_EC2_HOST }}
-          key: ${{ secrets.PROD_EC2_SSH_KEY }}
-          source: ./clokey-api/prod-compose.yml
+          host: ${{ secrets.OCI_HOST }}
+          key: ${{ secrets.OCI_INSTANCE_SSH_KEY }}
+          source: "clokey-api/prod-compose.yml"
           target: /home/ubuntu/
+
+      - name: Set OCI private key env (multiline)
+        run: |
+          echo "OCI_PRIVATE_KEY<<ENDOFKEY" >> $GITHUB_ENV
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" >> $GITHUB_ENV
+          echo "ENDOFKEY" >> $GITHUB_ENV
+
+      - name: Prepare OCI key base64 for Deploy script
+        run: echo "OCI_PRIVATE_KEY_B64=$(echo -n "$OCI_PRIVATE_KEY" | base64 -w 0)" >> $GITHUB_ENV
 
       - name: Deploy App
         uses: appleboy/ssh-action@master
         with:
           username: ubuntu
-          host: ${{ secrets.PROD_EC2_HOST }}
-          key: ${{ secrets.PROD_EC2_SSH_KEY }}
+          host: ${{ secrets.OCI_HOST }}
+          key: ${{ secrets.OCI_INSTANCE_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,CODIVE_DEV_BASE_URL,CODIVE_PROD_BASE_URL,OCI_MYSQL_HEATWAVE_HOST,OCI_PROD_MYSQL_DB_NAME,OCI_MYSQL_USERNAME,OCI_MYSQL_PASSWORD,REDIS_PASSWORD,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,APPLE_CLIENT_ID,APPLE_CLIENT_SECRET,JWT_ACCESS_TOKEN_SECRET,JWT_REFRESH_TOKEN_SECRET,JWT_ACCESS_TOKEN_EXPIRATION_TIME,JWT_REFRESH_TOKEN_EXPIRATION_TIME,JWT_ISSUER,OCI_TENANCY_ID,OCI_USER_ID,OCI_FINGERPRINT,OCI_PRIVATE_KEY,OCI_REGION,OCI_PASSPHRASE,OCI_OBJECTSTORAGE_NAMESPACE,OCI_PROD_OBJECTSTORAGE_BUCKET,SWAGGER_USERNAME,SWAGGER_PASSWORD,FIREBASE_SA_JSON_B64,AI_SERVER_IP,CLOTH_INFERENCE_PATH,STYLE_INFERENCE_PATH,HISTORY_CLOTH_DETECT_PATH,MEILISEARCH_ENDPOINT,MEILISEARCH_KEY
           script: |
-            export DOCKERHUB_NAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             export DOCKER_TAG=prod-app
 
-            export PROD_MYSQL_HOST=${{ secrets.PROD_MYSQL_HOST }}
-            export MYSQL_PORT=${{ secrets.MYSQL_PORT }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export DB_USERNAME=${{ secrets.DB_USERNAME }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export CODIVE_DEV_BASE_URL=${{ secrets.CODIVE_DEV_BASE_URL }}
+            export CODIVE_PROD_BASE_URL=${{ secrets.CODIVE_PROD_BASE_URL }}
 
-            export REDIS_HOST=${{ secrets.REDIS_HOST }}
-            export REDIS_PORT=${{ secrets.REDIS_PORT }}
+            export OCI_MYSQL_HEATWAVE_HOST=${{ secrets.OCI_MYSQL_HEATWAVE_HOST }}
+            export OCI_PROD_MYSQL_DB_NAME=${{ secrets.OCI_PROD_MYSQL_DB_NAME }}
+            export OCI_MYSQL_USERNAME=${{ secrets.OCI_MYSQL_USERNAME }}
+            export OCI_MYSQL_PASSWORD=${{ secrets.OCI_MYSQL_PASSWORD }}
+
             export REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
 
             export KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
             export KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
-            export KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
 
             export APPLE_CLIENT_ID=${{ secrets.APPLE_CLIENT_ID }}
             export APPLE_CLIENT_SECRET=${{ secrets.APPLE_CLIENT_SECRET }}
-            export APPLE_REDIRECT_URI=${{ secrets.APPLE_REDIRECT_URI }}
-
+            
             export JWT_ACCESS_TOKEN_SECRET=${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
             export JWT_REFRESH_TOKEN_SECRET=${{ secrets.JWT_REFRESH_TOKEN_SECRET }}
             export JWT_ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION_TIME }}
             export JWT_REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION_TIME }}
             export JWT_ISSUER=${{ secrets.JWT_ISSUER }}
 
-            export PROD_AWS_ACCESS_KEY_ID=${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
-            export PROD_AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PROD_S3_BUCKET=${{ secrets.PROD_S3_BUCKET }}
-            export PROD_S3_ENDPOINT=${{ secrets.PROD_S3_ENDPOINT }}
+            export OCI_TENANCY_ID=${{ secrets.OCI_TENANCY_ID }}
+            export OCI_USER_ID=${{ secrets.OCI_USER_ID }}
+            export OCI_FINGERPRINT=${{ secrets.OCI_FINGERPRINT }}
+            export OCI_PRIVATE_KEY=${{ secrets.OCI_PRIVATE_KEY }}
+            export OCI_REGION=${{ secrets.OCI_REGION }}
+            export OCI_PASSPHRASE=${{ secrets.OCI_PASSPHRASE }}
+            export OCI_OBJECTSTORAGE_NAMESPACE=${{ secrets.OCI_OBJECTSTORAGE_NAMESPACE }}
+            export OCI_PROD_OBJECTSTORAGE_BUCKET=${{ secrets.OCI_PROD_OBJECTSTORAGE_BUCKET }}
 
             export SWAGGER_USERNAME=${{ secrets.SWAGGER_USERNAME }}
             export SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
@@ -116,13 +130,17 @@ jobs:
             export AI_SERVER_IP=${{ secrets.AI_SERVER_IP }}
             export CLOTH_INFERENCE_PATH=${{ secrets.CLOTH_INFERENCE_PATH }}
             export STYLE_INFERENCE_PATH=${{ secrets.STYLE_INFERENCE_PATH }}
-            export CLOTH_DETECT_PATH=${{ secrets.CLOTH_DETECT_PATH }}
+            export HISTORY_CLOTH_DETECT_PATH=${{ secrets.HISTORY_CLOTH_DETECT_PATH }}
             export DEFAULT_PROFILE_IMAGE_URL=${{ secrets.DEFAULT_PROFILE_IMAGE_URL }}
             export TODAY_TEMPERATURE_IMAGE_URL=${{ secrets.TODAY_TEMPERATURE_IMAGE_URL }}
 
-            sudo mkdir -p /home/ubuntu/secrets
-            echo "${{ secrets.FIREBASE_SA_JSON_B64 }}" | base64 -d | sudo tee /home/ubuntu/secrets/firebase-sa.json > /dev/null
-            sudo chmod 600 /home/ubuntu/secrets/firebase-sa.json
+            mkdir -p /home/ubuntu/secrets
+            echo "${{ secrets.FIREBASE_SA_JSON_B64 }}" | base64 -d | tee /home/ubuntu/secrets/firebase-sa.json > /dev/null
+            chmod 600 /home/ubuntu/secrets/firebase-sa.json
+
+            echo '${{ env.OCI_PRIVATE_KEY_B64 }}' | base64 -d | tee /home/ubuntu/secrets/oci_key.pem > /dev/null
+            chmod 600 /home/ubuntu/secrets/oci_key.pem
+            export OCI_PRIVATE_KEY="$(cat /home/ubuntu/secrets/oci_key.pem)"
 
             export FIREBASE_CREDENTIALS_PATH=/home/ubuntu/secrets/firebase-sa.json
 
@@ -133,4 +151,3 @@ jobs:
 
             echo "Cleaning up dangling Docker images..."
             docker image prune -f
-            

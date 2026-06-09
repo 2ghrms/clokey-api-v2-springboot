@@ -43,7 +43,7 @@ spring:
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
-            redirect-uri: ${KAKAO_REDIRECT_URI}
+            redirect-uri: "${app.base-url.dev}/login/oauth2/code/kakao"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope:
@@ -52,7 +52,7 @@ spring:
           apple:
             client-id: ${APPLE_CLIENT_ID}
             client-secret: ${APPLE_CLIENT_SECRET}
-            redirect-uri: ${APPLE_REDIRECT_URI}
+            redirect-uri: "${app.base-url.dev}/login/oauth2/code/apple"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope:
@@ -79,20 +79,27 @@ jwt:
   refresh-token-expiration-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
   issuer: ${JWT_ISSUER}
 
-aws:
-  access-key-id: ${AWS_ACCESS_KEY_ID}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
-  region: ${AWS_REGION}
-  s3:
-    bucket: ${S3_BUCKET}
-    endpoint: ${S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
+oci:
+  tenancy-id: ${OCI_TENANCY_ID}
+  user-id: ${OCI_USER_ID}
+  fingerprint: ${OCI_FINGERPRINT}
+  private-key: ${OCI_PRIVATE_KEY}
+  region: ${OCI_REGION}
+  passphrase: ${OCI_PASSPHRASE:}
+  objectstorage:
+    namespace: ${OCI_OBJECTSTORAGE_NAMESPACE}
+    bucket: ${OCI_DEV_OBJECTSTORAGE_BUCKET}
 
 external:
   api:
     ai-server-ip: ${AI_SERVER_IP}
     cloth-inference-path: ${CLOTH_INFERENCE_PATH}
     style-inference-path: ${STYLE_INFERENCE_PATH}
-    cloth-detect-path: ${CLOTH_DETECT_PATH}
+    cloth-detect-path: ${HISTORY_CLOTH_DETECT_PATH}
+
+swagger:
+  username: ${SWAGGER_USERNAME}
+  password: ${SWAGGER_PASSWORD}
 
 springdoc:
   default-consumes-media-type: application/json
@@ -115,3 +122,6 @@ firebase:
 app:
   oauth:
     redirect-scheme: codive
+  base-url:
+    dev: ${CODIVE_DEV_BASE_URL}
+    prod: ${CODIVE_PROD_BASE_URL}
