@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.clokey.code.GlobalBaseSuccessCode;
-import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
+import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.*;
 import org.clokey.domain.member.service.MemberService;
@@ -42,7 +42,7 @@ public class MemberController {
             summary = "닉네임 중복확인",
             description = "닉네임 중복을 확인합니다.")
     public BaseResponse<DuplicatedIdCheckResponse> checkDuplicateNickname(
-            @Valid @RequestBody DuplicatedIdCheckRequest request) {
+            @Valid @RequestBody DuplicatedNicknameCheckRequest request) {
 
         DuplicatedIdCheckResponse response = memberService.checkDuplicateNickname(request);
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);

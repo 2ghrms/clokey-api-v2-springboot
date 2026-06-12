@@ -22,6 +22,8 @@ public interface HistoryService {
 
     HistoryOwnershipCheckResponse checkHistoryOwnership(Long historyId);
 
+    TodayHistoryExistenceResponse checkTodayHistoryExistence();
+
     void deleteHistory(Long historyId);
 
     HistoryImagesPresignedUrlResponse getHistoryUploadPresignedUrls(

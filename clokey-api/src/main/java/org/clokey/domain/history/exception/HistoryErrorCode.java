@@ -9,6 +9,7 @@ import org.clokey.exception.BaseErrorCode;
 @AllArgsConstructor
 public enum HistoryErrorCode implements BaseErrorCode {
     BANNED_HISTORY(400, "HISTORY_4001", "신고당한 기록은 조회할 수 없습니다."),
+    HISTORY_ALREADY_EXISTS(400, "HISTORY_4002", "해당 날짜의 기록이 이미 존재합니다."),
 
     LIMITED_AUTHORITY(403, "HISTORY_4031", "기록에 대한 접근 권한이 없습니다."),
     BLOCKED_AUTHORITY(403, "HISTORY_4032", "기록 작성자를 차단했거나 차단 당했습니다"),

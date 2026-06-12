@@ -84,7 +84,9 @@ public class LookBookServiceImpl implements LookBookService {
         eventPublisher.publishEvent(
                 ImagesDeleteEvent.of(
                         defaultCoordinates.stream().map(Coordinate::getImageUrl).toList()));
-        coordinateRepository.deleteAllInBatch(defaultCoordinates);
+        coordinateRepository.deleteAll(defaultCoordinates);
+
+        lookBookRepository.delete(lookBook);
     }
 
     @Override

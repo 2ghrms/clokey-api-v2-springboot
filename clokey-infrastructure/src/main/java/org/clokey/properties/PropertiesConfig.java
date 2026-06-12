@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({
     RedisProperties.class,
     JwtProperties.class,
-    S3Properties.class,
-    AwsProperties.class,
+    StorageProperties.class,
+    OciProperties.class,
     WebClientProperties.class,
     FirebaseProperties.class,
     MeilisearchProperties.class

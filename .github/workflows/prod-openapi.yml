@@ -16,11 +16,14 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     env:
       CODIVEAPI_BRANCH: main
+      PROD_OPENAPI_URL: "${{ secrets.CODIVE_PROD_BASE_URL }}/v3/api-docs"
       TARGET_PATH: Sources/CodiveAPI/openapi.yaml
+      SWAGGER_USERNAME: ${{ secrets.SWAGGER_USERNAME }}
+      SWAGGER_PASSWORD: ${{ secrets.SWAGGER_PASSWORD }}
 
     steps:
       - name: Checkout backend repo (for context only)
@@ -29,14 +32,14 @@ jobs:
           fetch-depth: 1
 
       - name: Wait for production server to be ready
-        env:
-          PROD_OPENAPI_URL: ${{ secrets.PROD_OPENAPI_URL }}
         run: |
           set -euo pipefail
           echo "Waiting for production OpenAPI to be ready..."
 
           for i in {1..30}; do
-            if curl -fsS --connect-timeout 5 "$PROD_OPENAPI_URL" > /dev/null; then
+            if curl -fsS --connect-timeout 5 \
+              -u "$SWAGGER_USERNAME:$SWAGGER_PASSWORD" \
+              "$PROD_OPENAPI_URL" > /dev/null; then
               echo "Server is ready."
               exit 0
             fi
@@ -49,12 +52,11 @@ jobs:
 
 
       - name: Fetch OpenAPI JSON from production
-        env:
-          PROD_OPENAPI_URL: ${{ secrets.PROD_OPENAPI_URL }}
         run: |
           set -euo pipefail
           echo "Fetching OpenAPI from: $PROD_OPENAPI_URL"
           curl -fsSL --retry 5 --retry-delay 2 --connect-timeout 10 --max-time 30 \
+            -u "$SWAGGER_USERNAME:$SWAGGER_PASSWORD" \
             "$PROD_OPENAPI_URL" -o openapi.json
           test -s openapi.json
           head -c 1 openapi.json | grep -q '{'

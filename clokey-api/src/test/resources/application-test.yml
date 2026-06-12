@@ -7,18 +7,15 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
+      password: ${REDIS_PASSWORD:}
     meilisearch:
       url: ${MEILISEARCH_ENDPOINT:http://localhost:7700}
       api-key: ${MEILISEARCH_KEY:dummy}
 
-aws:
-  access-key-id: dummy
-  secret-access-key: dummy
-  region: dummy
-  s3:
-    bucket: dummy
-    endpoint: dummy
+oci:
+  objectstorage:
+    namespace: test-namespace
+    bucket: test-bucket
 
 firebase:
   type: dummy
@@ -31,3 +28,7 @@ firebase:
   token-uri: dummy
   auth-provider-x509-cert-url: dummy
   client-x509-cert-url: dummy
+
+swagger:
+  username: swagger
+  password: swagger

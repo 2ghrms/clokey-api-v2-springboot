@@ -34,5 +34,5 @@ public interface CoordinateService {
 
     void toggleCoordinateLike(Long coordinateId);
 
-    List<FavoriteCoordinateResponse> getFavoriteCoordinates();
+    List<FavoriteCoordinateResponse> getFavoriteCoordinates(Long memberId);
 }

@@ -165,10 +165,11 @@ public class SearchServiceImpl implements SearchService {
     @Transactional(readOnly = true)
     public SliceResponse<SearchedMemberResponse> searchUserByNickname(
             String keyword, Long page, Integer size) {
-        Member currentMember = memberUtil.getCurrentMember();
+        Long memberId = memberUtil.getCurrentMember().getId();
 
-        List<Long> excludedMemberIds =
-                blockRepository.findBlockedMemberIdsByBlockerId(currentMember.getId());
+        // 차단한 회원과 본인 제외
+        List<Long> excludedMemberIds = blockRepository.findBlockedMemberIdsByBlockerId(memberId);
+        excludedMemberIds.add(memberId);
 
         return searchRepository.findUsersByKeyword(keyword, page, size, excludedMemberIds);
     }

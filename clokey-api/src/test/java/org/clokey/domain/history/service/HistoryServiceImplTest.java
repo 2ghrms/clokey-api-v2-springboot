@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
@@ -31,6 +32,7 @@ import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
+import org.clokey.domain.history.dto.response.TodayHistoryExistenceResponse;
 import org.clokey.domain.history.exception.HistoryErrorCode;
 import org.clokey.domain.history.exception.SituationErrorCode;
 import org.clokey.domain.history.exception.StyleErrorCode;
@@ -48,7 +50,7 @@ import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Member;
 import org.clokey.member.entity.OauthInfo;
 import org.clokey.member.enums.OauthProvider;
-import org.clokey.util.S3Util;
+import org.clokey.util.StorageUtil;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -57,6 +59,8 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 @RecordApplicationEvents
 class HistoryServiceImplTest extends IntegrationTest {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Autowired private TransactionUtil transactionUtil;
 
@@ -77,7 +81,7 @@ class HistoryServiceImplTest extends IntegrationTest {
     @Autowired private BlockRepository blockRepository;
 
     @MockitoBean private MemberUtil memberUtil;
-    @MockitoBean private S3Util s3Util;
+    @MockitoBean private StorageUtil storageUtil;
     @Autowired private ApplicationEvents applicationEvents;
 
     @Nested
@@ -105,9 +109,9 @@ class HistoryServiceImplTest extends IntegrationTest {
                                     new HistoryImagesUploadRequest.Payload(
                                             FileExtension.PNG, "testMd5Hash2")));
 
-            given(s3Util.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash1")))
+            given(storageUtil.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash1")))
                     .willReturn("testUrl1");
-            given(s3Util.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash2")))
+            given(storageUtil.createPresignedUrl(any(), anyLong(), any(), eq("testMd5Hash2")))
                     .willReturn("testUrl2");
 
             // when
@@ -191,6 +195,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -216,8 +221,9 @@ class HistoryServiceImplTest extends IntegrationTest {
                     .extracting(
                             h -> h.getMember().getId(),
                             h -> h.getSituation().getId(),
+                            History::getHistoryDate,
                             History::getContent)
-                    .containsExactly(1L, 1L, "testContent 1");
+                    .containsExactly(1L, 1L, LocalDate.of(2026, 4, 12), "testContent 1");
 
             List<HistoryImage> images = historyImageRepository.findByHistoryId(history.getId());
             assertThat(images).hasSize(2);
@@ -253,11 +259,38 @@ class HistoryServiceImplTest extends IntegrationTest {
         }
 
         @Test
+        void 같은_날짜의_기록이_이미_존재하면_예외가_발생한다() {
+            // given
+            Member currentMember =
+                    transactionUtil.getResult(() -> memberRepository.findById(1L).orElseThrow());
+            Situation situation =
+                    transactionUtil.getResult(() -> situationRepository.findById(1L).orElseThrow());
+            historyRepository.save(
+                    History.createHistory(
+                            LocalDate.of(2026, 4, 12), "existing", currentMember, situation));
+
+            HistoryCreateRequest request =
+                    new HistoryCreateRequest(
+                            "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
+                            1L,
+                            List.of(1L, 2L),
+                            List.of("testHashtag1", "testHashtag2"),
+                            List.of(new Payload("testUrl1", null)));
+
+            // when & then
+            assertThatThrownBy(() -> historyService.createHistory(request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(HistoryErrorCode.HISTORY_ALREADY_EXISTS.getMessage());
+        }
+
+        @Test
         void 존재하지_않는_상황_ID를_포함하는_경우_예외가_발생한다() {
             // given
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "hi",
+                            LocalDate.of(2026, 4, 12),
                             999L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -280,6 +313,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 10L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -301,6 +335,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -317,6 +352,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -333,6 +369,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -353,6 +390,7 @@ class HistoryServiceImplTest extends IntegrationTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent 1 ",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2", "testHashtag3"),
@@ -1273,6 +1311,60 @@ class HistoryServiceImplTest extends IntegrationTest {
             assertThatThrownBy(() -> historyService.deleteHistory(2L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(HistoryErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+    }
+
+    @Nested
+    class 오늘_기록_존재_여부를_확인할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            "testEmail1",
+                            "testNickName1",
+                            OauthInfo.createOauthInfo("testOauthId1", OauthProvider.KAKAO));
+            Member member2 =
+                    Member.createMember(
+                            "testEmail2",
+                            "testNickName2",
+                            OauthInfo.createOauthInfo("testOauthId2", OauthProvider.KAKAO));
+
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Situation situation = Situation.createSituation("testSituation");
+            situationRepository.save(situation);
+
+            History todayHistory =
+                    History.createHistory(LocalDate.now(KST), "testContent", member1, situation);
+            History otherHistory =
+                    History.createHistory(
+                            LocalDate.now(KST).minusDays(1), "oldContent", member2, situation);
+            historyRepository.saveAll(List.of(todayHistory, otherHistory));
+        }
+
+        @Test
+        void 오늘_기록이_존재하면_true를_반환한다() {
+            // when
+            TodayHistoryExistenceResponse response = historyService.checkTodayHistoryExistence();
+
+            // then
+            assertThat(response.exists()).isTrue();
+        }
+
+        @Test
+        void 오늘_기록이_존재하지_않으면_false를_반환한다() {
+            // given
+            Member otherMember =
+                    transactionUtil.getResult(() -> memberRepository.findById(2L).orElseThrow());
+            given(memberUtil.getCurrentMember()).willReturn(otherMember);
+
+            // when
+            TodayHistoryExistenceResponse response = historyService.checkTodayHistoryExistence();
+
+            // then
+            assertThat(response.exists()).isFalse();
         }
     }
 }

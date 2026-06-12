@@ -16,6 +16,7 @@ import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
+import org.clokey.domain.history.dto.response.TodayHistoryExistenceResponse;
 import org.clokey.domain.history.service.HistoryService;
 import org.clokey.response.BaseResponse;
 import org.springframework.validation.annotation.Validated;
@@ -124,6 +125,16 @@ public class HistoryController {
     public BaseResponse<HistoryOwnershipCheckResponse> checkHistoryOwnership(
             @PathVariable Long historyId) {
         HistoryOwnershipCheckResponse response = historyService.checkHistoryOwnership(historyId);
+        return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
+    }
+
+    @GetMapping("/today/existence")
+    @Operation(
+            operationId = "History_checkTodayHistoryExistence",
+            summary = "오늘 기록 존재 여부 확인",
+            description = "현재 사용자가 오늘 작성한 기록이 존재하는지 확인합니다.")
+    public BaseResponse<TodayHistoryExistenceResponse> checkTodayHistoryExistence() {
+        TodayHistoryExistenceResponse response = historyService.checkTodayHistoryExistence();
         return BaseResponse.onSuccess(GlobalBaseSuccessCode.OK, response);
     }
 

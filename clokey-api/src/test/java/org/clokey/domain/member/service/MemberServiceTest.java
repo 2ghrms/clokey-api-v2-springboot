@@ -3,11 +3,15 @@ package org.clokey.domain.member.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
-import org.clokey.domain.member.dto.request.DuplicatedIdCheckRequest;
+import org.clokey.domain.history.repository.HistoryRepository;
+import org.clokey.domain.history.repository.SituationRepository;
+import org.clokey.domain.like.repository.MemberLikeRepository;
+import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
 import org.clokey.domain.member.dto.response.FollowMemberResponse;
@@ -22,6 +26,9 @@ import org.clokey.domain.member.repository.PendingFollowRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
+import org.clokey.history.entity.History;
+import org.clokey.history.entity.Situation;
+import org.clokey.like.entity.MemberLike;
 import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Follow;
 import org.clokey.member.entity.Member;
@@ -51,6 +58,9 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private FollowRepository followRepository;
     @Autowired private PendingFollowRepository pendingFollowRepository;
     @Autowired private BlockRepository blockRepository;
+    @Autowired private HistoryRepository historyRepository;
+    @Autowired private SituationRepository situationRepository;
+    @Autowired private MemberLikeRepository memberLikeRepository;
 
     @Autowired private TransactionUtil transactionUtil;
     @MockitoBean private MemberUtil memberUtil;
@@ -135,7 +145,7 @@ class MemberServiceTest extends IntegrationTest {
         @ValueSource(strings = {"testNickname1", "distinctId1", "distinctId2"})
         void 현재_닉네임_또는_중복되지_않는_닉네임을_입력하면_false를_반환한다(String nickname) {
             // given
-            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest(nickname);
+            DuplicatedNicknameCheckRequest request = new DuplicatedNicknameCheckRequest(nickname);
 
             // when& then
             assertThat(memberService.checkDuplicateNickname(request).duplicated()).isFalse();
@@ -144,7 +154,8 @@ class MemberServiceTest extends IntegrationTest {
         @Test
         void 중복되는_닉네임을_입력한_경우_true를_반환한다() {
             // given
-            DuplicatedIdCheckRequest request = new DuplicatedIdCheckRequest("testNickname2");
+            DuplicatedNicknameCheckRequest request =
+                    new DuplicatedNicknameCheckRequest("testNickname2");
 
             // when& then
             assertThat(memberService.checkDuplicateNickname(request).duplicated()).isTrue();
@@ -393,6 +404,28 @@ class MemberServiceTest extends IntegrationTest {
             assertThat(blockRepository.findById(1L).orElseThrow())
                     .extracting("blocker.id", "blocked.id")
                     .containsExactly(1L, 2L);
+        }
+
+        @Test
+        void 차단하면_내가_눌렀던_상대_기록_좋아요를_삭제한다() {
+            // given
+            Member blocker = memberRepository.findById(1L).orElseThrow();
+            Member blocked = memberRepository.findById(2L).orElseThrow();
+            Situation situation = situationRepository.save(Situation.createSituation("daily"));
+            History blockedHistory =
+                    historyRepository.save(
+                            History.createHistory(
+                                    LocalDate.of(2026, 4, 12), "content", blocked, situation));
+            memberLikeRepository.save(MemberLike.createMemberLike(blocker, blockedHistory));
+
+            // when
+            memberService.toggleBlockStatus(2L);
+
+            // then
+            assertThat(
+                            memberLikeRepository.findByMemberIdAndHistoryId(
+                                    blocker.getId(), blockedHistory.getId()))
+                    .isEmpty();
         }
 
         @Test
@@ -786,6 +819,27 @@ class MemberServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> memberService.getMemberInfo(33L))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 내가_차단한_회원의_정보를_조회하면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> memberService.getMemberInfo(3L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
+        }
+
+        @Test
+        void 나를_차단한_회원의_정보를_조회하면_예외가_발생한다() {
+            // given
+            Member currentMember = memberRepository.findById(1L).orElseThrow();
+            Member targetMember = memberRepository.findById(2L).orElseThrow();
+            blockRepository.save(Block.createBlock(targetMember, currentMember));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.getMemberInfo(2L))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(MemberErrorCode.BLOCKED_MEMBER_ACCESS_DENIED.getMessage());
         }
     }
 

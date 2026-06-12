@@ -6,6 +6,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.clokey.domain.notification.dto.response.NotificationListResponse;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class CodiveNotificationRepositoryImpl implements CodiveNotificationRepositoryCustom {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final JPAQueryFactory queryFactory;
 
@@ -56,7 +59,7 @@ public class CodiveNotificationRepositoryImpl implements CodiveNotificationRepos
         queryFactory
                 .update(codiveNotification)
                 .set(codiveNotification.readStatus, ReadStatus.READ)
-                .set(codiveNotification.updatedAt, LocalDateTime.now())
+                .set(codiveNotification.updatedAt, LocalDateTime.now(KST))
                 .where(
                         codiveNotification.member.id.eq(memberId),
                         codiveNotification.readStatus.eq(ReadStatus.NOT_READ))
