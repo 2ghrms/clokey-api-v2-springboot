@@ -1,3 +1,5 @@
+name: clokey-prod
+
 version: "3.8"
 
 services:
@@ -46,12 +48,10 @@ services:
       # Kakao OIDC
       KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
       KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
-      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
 
       # Apple OIDC
       APPLE_CLIENT_ID: ${APPLE_CLIENT_ID}
       APPLE_CLIENT_SECRET: ${APPLE_CLIENT_SECRET}
-      APPLE_REDIRECT_URI: ${APPLE_REDIRECT_URI}
 
       # Firebase
       FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-sa.json

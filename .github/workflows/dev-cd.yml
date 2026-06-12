@@ -139,7 +139,7 @@ jobs:
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
             cd /home/ubuntu
-            docker compose -f clokey-api/dev-compose.yml up -d
+            docker compose -p clokey-dev -f clokey-api/dev-compose.yml up -d
 
             echo "Cleaning up dangling Docker images..."
             docker image prune -f
