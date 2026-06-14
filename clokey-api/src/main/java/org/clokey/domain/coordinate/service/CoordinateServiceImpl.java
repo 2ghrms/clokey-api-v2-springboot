@@ -36,6 +36,7 @@ import org.clokey.lookbook.entity.LookBook;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.Visibility;
 import org.clokey.response.SliceResponse;
+import org.clokey.util.StorageUtil;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -61,6 +62,7 @@ public class CoordinateServiceImpl implements CoordinateService {
     private final RedisTemplate<String, String> redisTemplate;
 
     private final ApplicationEventPublisher eventPublisher;
+    private final StorageUtil storageUtil;
 
     @Override
     @Transactional
@@ -97,7 +99,8 @@ public class CoordinateServiceImpl implements CoordinateService {
         validateDailyCoordinateExist(currentMember.getId(), LocalDate.now(KST));
 
         Coordinate coordinate =
-                Coordinate.createDailyCoordinate(request.coordinateImageUrl(), currentMember);
+                Coordinate.createDailyCoordinate(
+                        storageUtil.toPublicObjectUrl(request.coordinateImageUrl()), currentMember);
         coordinateRepository.save(coordinate);
 
         List<CoordinateCloth> coordinateClothes =
@@ -160,7 +163,7 @@ public class CoordinateServiceImpl implements CoordinateService {
                 Coordinate.createCoordinateManual(
                         request.name(),
                         request.memo(),
-                        request.coordinateImageUrl(),
+                        storageUtil.toPublicObjectUrl(request.coordinateImageUrl()),
                         currentMember,
                         lookBook);
         coordinateRepository.save(coordinate);
@@ -245,10 +248,11 @@ public class CoordinateServiceImpl implements CoordinateService {
         validateAllClothesOwnership(currentMember, clothes);
 
         /** Coordinate 업데이트 로직 */
-        if (!Objects.equals(coordinate.getImageUrl(), request.coordinateImageUrl())) {
+        String normalizedImageUrl = storageUtil.toPublicObjectUrl(request.coordinateImageUrl());
+        if (!storageUtil.toPublicObjectUrl(coordinate.getImageUrl()).equals(normalizedImageUrl)) {
             eventPublisher.publishEvent(ImageDeleteEvent.of(coordinate.getImageUrl()));
         }
-        coordinate.updateCoordinate(request.name(), request.memo(), request.coordinateImageUrl());
+        coordinate.updateCoordinate(request.name(), request.memo(), normalizedImageUrl);
 
         /** CoordinateCloth 업데이트 로직 */
         List<CoordinateCloth> coordinateCloths = coordinate.getCoordinateClothes();

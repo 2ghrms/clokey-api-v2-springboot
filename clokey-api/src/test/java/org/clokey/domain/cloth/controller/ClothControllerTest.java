@@ -59,7 +59,8 @@ class ClothControllerTest {
 
             ClothImagesPresignedUrlResponse response =
                     new ClothImagesPresignedUrlResponse(
-                            List.of("testPresignedUrl1", "testPresignedUrl2"));
+                            List.of("testPresignedUrl1", "testPresignedUrl2"),
+                            List.of("testObjectUrl1", "testObjectUrl2"));
 
             given(clothAiService.getClothUploadPresignedUrls(request)).willReturn(response);
 

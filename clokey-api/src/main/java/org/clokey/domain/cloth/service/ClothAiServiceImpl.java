@@ -36,6 +36,7 @@ import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
 import org.clokey.member.entity.Member;
 import org.clokey.properties.WebClientProperties;
+import org.clokey.util.PresignedUrlResult;
 import org.clokey.util.StorageUtil;
 import org.clokey.util.WebClientUtil;
 import org.springframework.stereotype.Service;
@@ -61,19 +62,19 @@ public class ClothAiServiceImpl implements ClothAiService {
             ClothImagesUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        // 중요 :  md5 해시로 변조 확인을 하기 때문에 들어온 순서대로 반환해야함!!
-        List<String> presignedUrls =
+        List<PresignedUrlResult> presignedUrlResults =
                 request.payloads().stream()
                         .map(
                                 req ->
                                         storageUtil.createPresignedUrl(
                                                 ImageType.CLOTH_IMAGE,
                                                 currentMember.getId(),
-                                                req.fileExtension(),
-                                                req.md5Hashes()))
+                                                req.fileExtension()))
                         .toList();
 
-        return ClothImagesPresignedUrlResponse.of(presignedUrls);
+        return ClothImagesPresignedUrlResponse.of(
+                presignedUrlResults.stream().map(PresignedUrlResult::uploadUrl).toList(),
+                presignedUrlResults.stream().map(PresignedUrlResult::objectUrl).toList());
     }
 
     @Override
@@ -150,7 +151,7 @@ public class ClothAiServiceImpl implements ClothAiService {
 
             for (int i = 0; i < resultItems.size(); i++) {
                 ClothInfoExtractAiResponseDTO.ResultItem resultItem = resultItems.get(i);
-                String clothImageUrl = resultItem.uploadedUrl();
+                String clothImageUrl = storageUtil.toPublicObjectUrl(resultItem.uploadedUrl());
 
                 List<ClothInfoExtractAiResponseDTO.CategoryItem> categories =
                         resultItem.categories();
@@ -346,7 +347,10 @@ public class ClothAiServiceImpl implements ClothAiService {
             phaseStartedAtNs = System.nanoTime();
             List<ClothDetectResponse.Payload> payloads =
                     aiResponse.result().uploadedUrls().stream()
-                            .map(ClothDetectResponse.Payload::new)
+                            .map(
+                                    url ->
+                                            new ClothDetectResponse.Payload(
+                                                    storageUtil.toPublicObjectUrl(url)))
                             .toList();
             postProcessMs = elapsedMillis(phaseStartedAtNs);
 
@@ -403,8 +407,10 @@ public class ClothAiServiceImpl implements ClothAiService {
         return java.util.stream.IntStream.range(0, count)
                 .mapToObj(
                         i ->
-                                storageUtil.createPresignedUrlWithoutMd5(
-                                        ImageType.CLOTH_IMAGE, memberId, FileExtension.JPEG))
+                                storageUtil
+                                        .createPresignedUrl(
+                                                ImageType.CLOTH_IMAGE, memberId, FileExtension.JPEG)
+                                        .uploadUrl())
                 .toList();
     }
 

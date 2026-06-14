@@ -11,6 +11,9 @@ public class TestObjectStorageConfig {
     @Bean
     @ConditionalOnMissingBean(ObjectStorageClient.class)
     public ObjectStorageClient objectStorageClient() {
-        return org.mockito.Mockito.mock(ObjectStorageClient.class);
+        ObjectStorageClient client = org.mockito.Mockito.mock(ObjectStorageClient.class);
+        org.mockito.Mockito.when(client.getEndpoint())
+                .thenReturn("https://objectstorage.test.oraclecloud.com");
+        return client;
     }
 }

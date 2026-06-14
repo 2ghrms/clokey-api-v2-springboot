@@ -5,6 +5,9 @@ import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
 import com.oracle.bmc.objectstorage.requests.*;
 import com.oracle.bmc.objectstorage.responses.CreatePreauthenticatedRequestResponse;
 import com.oracle.bmc.objectstorage.responses.HeadObjectResponse;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,42 +29,14 @@ public class StorageUtil {
     private final ObjectStorageClient objectStorageClient;
     private final StorageProperties storageProperties;
 
-    // TODO : S3 -> OCI Storage로 이관하면서 MD5 해시를 사용하지 않게 되었습니다. 추후에 삭제할 필요가 있습니다.
-    public String createPresignedUrl(
-            ImageType imageType, Long memberId, FileExtension fileExtension, String md5Hash) {
-        String imageKey = UUID.randomUUID().toString();
-        String fileName = createFileName(imageType, memberId, imageKey, fileExtension);
-
-        CreatePreauthenticatedRequestDetails details =
-                CreatePreauthenticatedRequestDetails.builder()
-                        .name("presigned-url-" + imageKey)
-                        .objectName(fileName)
-                        .accessType(CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite)
-                        .timeExpires(getPresignedUrlExpiration())
-                        .build();
-
-        CreatePreauthenticatedRequestRequest request =
-                CreatePreauthenticatedRequestRequest.builder()
-                        .namespaceName(storageProperties.namespace())
-                        .bucketName(storageProperties.bucket())
-                        .createPreauthenticatedRequestDetails(details)
-                        .build();
-
-        CreatePreauthenticatedRequestResponse response =
-                objectStorageClient.createPreauthenticatedRequest(request);
-
-        String presignedUrl =
-                objectStorageClient.getEndpoint()
-                        + response.getPreauthenticatedRequest().getAccessUri();
-
-        return presignedUrl;
-    }
-
-    public String createPresignedUrlWithoutMd5(
+    public PresignedUrlResult createPresignedUrl(
             ImageType imageType, Long memberId, FileExtension fileExtension) {
         String imageKey = UUID.randomUUID().toString();
         String fileName = createFileName(imageType, memberId, imageKey, fileExtension);
+        return createPresignedUrlForObject(fileName, imageKey);
+    }
 
+    private PresignedUrlResult createPresignedUrlForObject(String fileName, String imageKey) {
         CreatePreauthenticatedRequestDetails details =
                 CreatePreauthenticatedRequestDetails.builder()
                         .name("presigned-url-" + imageKey)
@@ -80,8 +55,35 @@ public class StorageUtil {
         CreatePreauthenticatedRequestResponse response =
                 objectStorageClient.createPreauthenticatedRequest(request);
 
+        String uploadUrl =
+                objectStorageClient.getEndpoint()
+                        + response.getPreauthenticatedRequest().getAccessUri();
+        String objectUrl = buildPublicObjectUrl(fileName);
+
+        return new PresignedUrlResult(uploadUrl, objectUrl);
+    }
+
+    public String buildPublicObjectUrl(String objectKey) {
         return objectStorageClient.getEndpoint()
-                + response.getPreauthenticatedRequest().getAccessUri();
+                + "/n/"
+                + storageProperties.namespace()
+                + "/b/"
+                + storageProperties.bucket()
+                + "/o/"
+                + encodeObjectKey(objectKey);
+    }
+
+    public String toPublicObjectUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return url;
+        }
+
+        try {
+            return buildPublicObjectUrl(extractObjectKey(url));
+        } catch (IllegalArgumentException e) {
+            log.warn("Failed to normalize object URL, returning original url: {}", url, e);
+            return url;
+        }
     }
 
     private String createFileName(
@@ -144,21 +146,23 @@ public class StorageUtil {
     }
 
     private String extractObjectKey(String url) {
-        // OCI Object Storage URL 형식에 맞게 파싱
-        // 예: https://objectstorage.{region}.oraclecloud.com/n/{namespace}/b/{bucket}/o/{object}
-        int oIndex = url.indexOf("/o/");
-        if (oIndex != -1) {
-            return url.substring(oIndex + 3);
+        String path = url;
+        int queryIndex = path.indexOf('?');
+        if (queryIndex != -1) {
+            path = path.substring(0, queryIndex);
         }
-        int comIndex = url.indexOf(".com/");
-        if (comIndex != -1) {
-            String afterCom = url.substring(comIndex + 5);
-            int firstSlash = afterCom.indexOf("/");
-            if (firstSlash != -1) {
-                return afterCom.substring(firstSlash + 1);
-            }
+
+        int oIndex = path.indexOf("/o/");
+        if (oIndex == -1) {
+            throw new IllegalArgumentException("Invalid URL format: " + url);
         }
-        throw new IllegalArgumentException("Invalid URL format: " + url);
+
+        String encodedKey = path.substring(oIndex + 3);
+        return URLDecoder.decode(encodedKey, StandardCharsets.UTF_8);
+    }
+
+    private String encodeObjectKey(String objectKey) {
+        return URLEncoder.encode(objectKey, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private Date getPresignedUrlExpiration() {

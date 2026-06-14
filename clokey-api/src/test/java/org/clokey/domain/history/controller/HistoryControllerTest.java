@@ -61,7 +61,9 @@ public class HistoryControllerTest {
                                             FileExtension.PNG, "testMd5Hash2")));
 
             HistoryImagesPresignedUrlResponse response =
-                    new HistoryImagesPresignedUrlResponse(List.of("testUrl1", "testUrl2"));
+                    new HistoryImagesPresignedUrlResponse(
+                            List.of("testUrl1", "testUrl2"),
+                            List.of("testObjectUrl1", "testObjectUrl2"));
 
             given(historyService.getHistoryUploadPresignedUrls(request)).willReturn(response);
 
