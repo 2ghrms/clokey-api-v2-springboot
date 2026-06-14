@@ -25,6 +25,7 @@ import org.clokey.member.entity.PendingFollow;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.member.enums.Visibility;
 import org.clokey.response.SliceResponse;
+import org.clokey.util.StorageUtil;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ public class MemberServiceImpl implements MemberService {
     private final BlockRepository blockRepository;
 
     private final ApplicationEventPublisher eventPublisher;
+    private final StorageUtil storageUtil;
 
     @Override
     @Transactional
@@ -53,8 +55,10 @@ public class MemberServiceImpl implements MemberService {
 
         // s3 삭제 로직 구현 이후에 반영 필요 -> 배경 및 프로필 이미지를 없애버리는 경우
 
+        String normalizedProfileImageUrl = storageUtil.toPublicObjectUrl(request.profileImageUrl());
+
         currentMember.updateProfile(
-                request.nickname(), request.profileImageUrl(), request.bio(), request.visibility());
+                request.nickname(), normalizedProfileImageUrl, request.bio(), request.visibility());
 
         // Member 동기화
         eventPublisher.publishEvent(
