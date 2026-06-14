@@ -34,6 +34,7 @@ import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
+import org.clokey.util.StorageUtil;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -57,6 +58,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     private final ApplicationEventPublisher eventPublisher;
 
     private final MemberUtil memberUtil;
+    private final StorageUtil storageUtil;
 
     private static final String NEW_FOLLOWER_NOTIFICATION = "%s님이 회원님의 옷장을 팔로우하기 시작했습니다.";
     private static final String NEW_PENDING_FOLLOWER_NOTIFICATION = "%s님이 회원님의 옷장에 팔로우를 요청했습니다.";
@@ -66,7 +68,8 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
 
     private static final String TODAY_TEMPERATURE_NOTIFICATION =
             "오늘의 기온은 %d도 입니다!\n날씨에 맞는 오늘의 옷차림이 기다리고 있어요👀";
-    private static final String TODAY_TEMPERATURE_IMAGE_URL = "https://example.com/temperature.png";
+    private static final String TEMPERATURE_ICON_OBJECT_KEY =
+            "icon/temperature/temperature_icon.jpeg";
 
     @Override
     @Transactional
@@ -259,11 +262,11 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                 String.format(TODAY_TEMPERATURE_NOTIFICATION, Math.round(request.temperature()));
 
         if (isAbleToSendNotification(receiver)) {
+            String temperatureImageUrl =
+                    storageUtil.buildPublicObjectUrl(TEMPERATURE_ICON_OBJECT_KEY);
+
             Notification notification =
-                    Notification.builder()
-                            .setBody(content)
-                            .setImage(TODAY_TEMPERATURE_IMAGE_URL)
-                            .build();
+                    Notification.builder().setBody(content).setImage(temperatureImageUrl).build();
             Message message =
                     Message.builder()
                             .setToken(receiver.getDeviceToken())
@@ -274,7 +277,7 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                     CodiveNotification.createCodiveNotification(
                             receiver,
                             content,
-                            TODAY_TEMPERATURE_IMAGE_URL,
+                            temperatureImageUrl,
                             "",
                             RedirectType.NONE,
                             NotificationType.TEMPERATURE_DAILY);
