@@ -44,6 +44,7 @@ public class ClothServiceImpl implements ClothService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final MemberUtil memberUtil;
+    private final StorageUtil storageUtil;
 
     private final ClothRepository clothRepository;
     private final CategoryRepository categoryRepository;
@@ -52,7 +53,6 @@ public class ClothServiceImpl implements ClothService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final CoordinateClothRepository coordinateClothRepository;
-    private final StorageUtil storageUtil;
 
     @Override
     @Transactional
@@ -73,7 +73,7 @@ public class ClothServiceImpl implements ClothService {
                                 cr -> {
                                     Category category = categoryMap.get(cr.categoryId());
                                     return Cloth.createCloth(
-                                            cr.clothImageUrl(),
+                                            storageUtil.toPublicObjectUrl(cr.clothImageUrl()),
                                             cr.clothUrl(),
                                             cr.name(),
                                             cr.brand(),
@@ -168,7 +168,8 @@ public class ClothServiceImpl implements ClothService {
         validateChildCategory(category);
 
         // 사진이 바뀌는 경우 기존 imageUrl을 기반으로 S3에서 삭제합니다.
-        if (!cloth.getClothImageUrl().equals(request.clothImageUrl())) {
+        String normalizedImageUrl = storageUtil.toPublicObjectUrl(request.clothImageUrl());
+        if (!storageUtil.toPublicObjectUrl(cloth.getClothImageUrl()).equals(normalizedImageUrl)) {
             eventPublisher.publishEvent(ImageDeleteEvent.of(cloth.getClothImageUrl()));
         }
 
@@ -176,7 +177,7 @@ public class ClothServiceImpl implements ClothService {
         boolean categoryChanged = !cloth.getCategory().getId().equals(category.getId());
 
         cloth.updateCloth(
-                request.clothImageUrl(),
+                normalizedImageUrl,
                 request.clothUrl(),
                 request.name(),
                 request.brand(),
