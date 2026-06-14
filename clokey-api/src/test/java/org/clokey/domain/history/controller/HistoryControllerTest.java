@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
 import java.util.List;
 import org.clokey.domain.history.dto.request.HistoryCreateRequest;
 import org.clokey.domain.history.dto.request.HistoryImagesUploadRequest;
@@ -19,6 +20,7 @@ import org.clokey.domain.history.dto.response.HistoryOwnershipCheckResponse;
 import org.clokey.domain.history.dto.response.MonthlyHistoryResponse;
 import org.clokey.domain.history.dto.response.SituationListResponse;
 import org.clokey.domain.history.dto.response.StyleListResponse;
+import org.clokey.domain.history.dto.response.TodayHistoryExistenceResponse;
 import org.clokey.domain.history.service.HistoryService;
 import org.clokey.enums.FileExtension;
 import org.junit.jupiter.api.Nested;
@@ -89,6 +91,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -128,6 +131,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             longContent,
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -152,10 +156,40 @@ public class HistoryControllerTest {
         }
 
         @Test
+        void 기록작성날짜가_null이면_예외가_발생한다() throws Exception {
+            HistoryCreateRequest request =
+                    new HistoryCreateRequest(
+                            "testContent",
+                            null,
+                            1L,
+                            List.of(1L, 2L),
+                            List.of("testHashtag1", "testHashtag2"),
+                            List.of(
+                                    new HistoryCreateRequest.Payload(
+                                            "testUrl",
+                                            List.of(
+                                                    new HistoryCreateRequest.ClothTag(
+                                                            1L, 0.42, 0.73)))));
+
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/histories")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.isSuccess").value(false))
+                    .andExpect(jsonPath("$.code").value("COMMON400"))
+                    .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+                    .andExpect(jsonPath("$.result.historyDate").value("기록 작성 날짜는 비워둘 수 없습니다."));
+        }
+
+        @Test
         void 상황ID가_null이면_예외가_발생한다() throws Exception {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             null,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -184,6 +218,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             null,
                             List.of("testHashtag1", "testHashtag2"),
@@ -212,6 +247,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(),
                             List.of("testHashtag1", "testHashtag2"),
@@ -240,6 +276,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L, 3L, 4L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -268,6 +305,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -291,6 +329,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -314,6 +353,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -351,6 +391,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -374,6 +415,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -402,6 +444,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -431,6 +474,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -459,6 +503,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -488,6 +533,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of("testHashtag1", "testHashtag2"),
@@ -516,6 +562,7 @@ public class HistoryControllerTest {
             HistoryCreateRequest request =
                     new HistoryCreateRequest(
                             "testContent",
+                            LocalDate.of(2026, 4, 12),
                             1L,
                             List.of(1L, 2L),
                             List.of(" "),
@@ -922,6 +969,29 @@ public class HistoryControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON204"));
+        }
+    }
+
+    @Nested
+    class 오늘_기록_존재_여부_확인_요청_시 {
+
+        @Test
+        void 유효한_요청이면_오늘_기록_존재_여부를_반환한다() throws Exception {
+            // given
+            TodayHistoryExistenceResponse response = TodayHistoryExistenceResponse.of(true);
+
+            given(historyService.checkTodayHistoryExistence()).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/histories/today/existence")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isSuccess").value(true))
+                    .andExpect(jsonPath("$.code").value("COMMON200"))
+                    .andExpect(jsonPath("$.result.exists").value(true));
         }
     }
 }

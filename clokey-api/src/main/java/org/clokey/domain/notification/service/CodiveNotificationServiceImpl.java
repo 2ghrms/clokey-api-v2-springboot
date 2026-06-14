@@ -6,13 +6,8 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.clokey.comment.entitiy.Comment;
 import org.clokey.domain.comment.event.NewCommentEvent;
 import org.clokey.domain.comment.event.NewReplyEvent;
-import org.clokey.domain.comment.exception.CommentErrorCode;
-import org.clokey.domain.comment.repository.CommentRepository;
-import org.clokey.domain.history.exception.HistoryErrorCode;
-import org.clokey.domain.history.repository.HistoryRepository;
 import org.clokey.domain.like.event.NewLikeEvent;
 import org.clokey.domain.member.exception.MemberErrorCode;
 import org.clokey.domain.member.repository.MemberRepository;
@@ -22,11 +17,9 @@ import org.clokey.domain.notification.dto.response.UnreadNotificationResponse;
 import org.clokey.domain.notification.exception.NotificationErrorCode;
 import org.clokey.domain.notification.repository.CodiveNotificationRepository;
 import org.clokey.domain.term.enums.TermInfo;
-import org.clokey.domain.term.exception.TermErrorCode;
 import org.clokey.domain.term.repository.MemberTermRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.util.MemberUtil;
-import org.clokey.history.entity.History;
 import org.clokey.member.entity.Member;
 import org.clokey.member.enums.MemberStatus;
 import org.clokey.notification.entity.CodiveNotification;
@@ -34,7 +27,8 @@ import org.clokey.notification.enums.NotificationType;
 import org.clokey.notification.enums.ReadStatus;
 import org.clokey.notification.enums.RedirectType;
 import org.clokey.response.SliceResponse;
-import org.clokey.util.StorageUtil;
+import org.clokey.term.entity.MemberTerm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -52,8 +46,6 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
     private final MemberRepository memberRepository;
     private final CodiveNotificationRepository codiveNotificationRepository;
     private final MemberTermRepository memberTermRepository;
-    private final HistoryRepository historyRepository;
-    private final CommentRepository commentRepository;
     private final FirebaseMessaging firebaseMessaging;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -68,8 +60,12 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
 
     private static final String TODAY_TEMPERATURE_NOTIFICATION =
             "오늘의 기온은 %d도 입니다!\n날씨에 맞는 오늘의 옷차림이 기다리고 있어요👀";
-    private static final String TEMPERATURE_ICON_OBJECT_KEY =
-            "icon/temperature/temperature_icon.jpeg";
+
+    @Value("${DEFAULT_PROFILE_IMAGE_URL:}")
+    private String configuredDefaultProfileImageUrl;
+
+    @Value("${TODAY_TEMPERATURE_IMAGE_URL:}")
+    private String configuredTemperatureImageUrl;
 
     @Override
     @Transactional
@@ -80,10 +76,10 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
         if (isAbleToSendNotification(followToMember)) {
             String content =
                     String.format(NEW_FOLLOWER_NOTIFICATION, followFromMember.getNickname());
-            String profileImageUrl = followFromMember.getProfileImageUrl();
+            String profileImageUrl =
+                    resolveNotificationImageUrl(followFromMember.getProfileImageUrl());
 
-            Notification notification =
-                    Notification.builder().setBody(content).setImage(profileImageUrl).build();
+            Notification notification = createPushNotification(content, profileImageUrl);
 
             Message message =
                     Message.builder()
@@ -118,10 +114,10 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
             String content =
                     String.format(
                             NEW_PENDING_FOLLOWER_NOTIFICATION, followFromMember.getNickname());
-            String profileImageUrl = followFromMember.getProfileImageUrl();
+            String profileImageUrl =
+                    resolveNotificationImageUrl(followFromMember.getProfileImageUrl());
 
-            Notification notification =
-                    Notification.builder().setBody(content).setImage(profileImageUrl).build();
+            Notification notification = createPushNotification(content, profileImageUrl);
 
             Message message =
                     Message.builder()
@@ -158,10 +154,9 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                             NEW_COMMENT_NOTIFICATION,
                             event.commenterNickname(),
                             event.commentContent());
-            String profileImageUrl = event.commenterProfileImageUrl();
+            String profileImageUrl = resolveNotificationImageUrl(event.commenterProfileImageUrl());
 
-            Notification notification =
-                    Notification.builder().setBody(content).setImage(profileImageUrl).build();
+            Notification notification = createPushNotification(content, profileImageUrl);
 
             Message message =
                     Message.builder()
@@ -194,10 +189,9 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
             String content =
                     String.format(
                             NEW_REPLY_NOTIFICATION, event.replierNickname(), event.replyContent());
-            String profileImageUrl = event.replierProfileImageUrl();
+            String profileImageUrl = resolveNotificationImageUrl(event.replierProfileImageUrl());
 
-            Notification notification =
-                    Notification.builder().setBody(content).setImage(profileImageUrl).build();
+            Notification notification = createPushNotification(content, profileImageUrl);
             Message message =
                     Message.builder()
                             .setToken(receiver.getDeviceToken())
@@ -228,10 +222,9 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
 
         if (isAbleToSendNotification(receiver)) {
             String content = String.format(NEW_LIKE_NOTIFICATION, event.likerNickname());
-            String profileImageUrl = event.likerProfileImageUrl();
+            String profileImageUrl = resolveNotificationImageUrl(event.likerProfileImageUrl());
 
-            Notification notification =
-                    Notification.builder().setBody(content).setImage(profileImageUrl).build();
+            Notification notification = createPushNotification(content, profileImageUrl);
             Message message =
                     Message.builder()
                             .setToken(receiver.getDeviceToken())
@@ -260,13 +253,11 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
         Member receiver = memberUtil.getCurrentMember();
         String content =
                 String.format(TODAY_TEMPERATURE_NOTIFICATION, Math.round(request.temperature()));
+        String temperatureImageUrl = configuredTemperatureImageUrl;
 
         if (isAbleToSendNotification(receiver)) {
-            String temperatureImageUrl =
-                    storageUtil.buildPublicObjectUrl(TEMPERATURE_ICON_OBJECT_KEY);
+            Notification notification = createPushNotification(content, temperatureImageUrl);
 
-            Notification notification =
-                    Notification.builder().setBody(content).setImage(temperatureImageUrl).build();
             Message message =
                     Message.builder()
                             .setToken(receiver.getDeviceToken())
@@ -330,18 +321,6 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                 .orElseThrow(() -> new BaseCustomException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private History getHistoryById(Long historyId) {
-        return historyRepository
-                .findById(historyId)
-                .orElseThrow(() -> new BaseCustomException(HistoryErrorCode.HISTORY_NOT_FOUND));
-    }
-
-    private Comment getCommentById(Long commentId) {
-        return commentRepository
-                .findById(commentId)
-                .orElseThrow(() -> new BaseCustomException(CommentErrorCode.COMMENT_NOT_FOUND));
-    }
-
     private CodiveNotification getNotificationById(Long notificationId) {
         return codiveNotificationRepository
                 .findById(notificationId)
@@ -351,22 +330,45 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
                                         NotificationErrorCode.NOTIFICATION_NOT_FOUND));
     }
 
-    private boolean isAbleToSendNotification(Member followToMember) {
+    private boolean isAbleToSendNotification(Member member) {
+        if (member.getMemberStatus() != MemberStatus.ACTIVE) {
+            return false;
+        }
 
-        boolean isActive = (followToMember.getMemberStatus() == MemberStatus.ACTIVE);
+        if (member.getDeviceToken() == null || member.getDeviceToken().isBlank()) {
+            return false;
+        }
 
-        boolean hasDeviceToken =
-                (followToMember.getDeviceToken() != null
-                        && !followToMember.getDeviceToken().isBlank());
+        return memberTermRepository
+                .findByMemberIdAndTermId(member.getId(), TermInfo.PUSH_NOTIFICATION_RECEIVE.getId())
+                .map(MemberTerm::isAgreed)
+                .orElse(false);
+    }
 
-        boolean hasAgreed =
-                memberTermRepository
-                        .findByMemberIdAndTermId(
-                                followToMember.getId(), TermInfo.PUSH_NOTIFICATION_RECEIVE.getId())
-                        .orElseThrow(() -> new BaseCustomException(TermErrorCode.TERM_NOT_FOUND))
-                        .isAgreed();
+    private String resolveNotificationImageUrl(String profileImageUrl) {
+        if (profileImageUrl != null && !profileImageUrl.isBlank()) {
+            return profileImageUrl;
+        }
 
-        return isActive && hasDeviceToken && hasAgreed;
+        return resolveDefaultImageUrl();
+    }
+
+    private String resolveDefaultImageUrl() {
+        if (configuredDefaultProfileImageUrl != null
+                && !configuredDefaultProfileImageUrl.isBlank()) {
+            return configuredDefaultProfileImageUrl;
+        }
+
+        return "";
+    }
+
+    private Notification createPushNotification(String content, String imageUrl) {
+        Notification.Builder notificationBuilder = Notification.builder().setBody(content);
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            notificationBuilder.setImage(imageUrl);
+        }
+
+        return notificationBuilder.build();
     }
 
     @Async
@@ -376,8 +378,13 @@ public class CodiveNotificationServiceImpl implements CodiveNotificationService 
         try {
             firebaseMessaging.send(event.message());
         } catch (FirebaseMessagingException e) {
-            log.warn("[Notification] Firebase 전송 실패", e);
-            throw new BaseCustomException(NotificationErrorCode.NOTIFICATION_FIREBASE_ERROR);
+            log.warn(
+                    "[Notification] Firebase 전송 실패: errorCode={}, message={}",
+                    e.getMessagingErrorCode(),
+                    e.getMessage(),
+                    e);
+        } catch (Exception e) {
+            log.error("[Notification] Firebase 전송 중 예기치 않은 오류 발생", e);
         }
     }
 

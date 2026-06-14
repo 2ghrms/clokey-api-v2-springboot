@@ -99,6 +99,20 @@ external:
     cloth-inference-path: ${CLOTH_INFERENCE_PATH}
     style-inference-path: ${STYLE_INFERENCE_PATH}
     cloth-detect-path: ${HISTORY_CLOTH_DETECT_PATH}
+
+swagger:
+  username: ${SWAGGER_USERNAME}
+  password: ${SWAGGER_PASSWORD}
+
+springdoc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter : method
+    path: /swagger-ui
+    doc-expansion : none
+
 app:
   oauth:
     redirect-scheme: codive

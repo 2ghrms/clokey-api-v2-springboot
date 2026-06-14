@@ -377,14 +377,16 @@ class ClothControllerTest {
                                     "testBrand1",
                                     "testName1",
                                     "testParentCategory1",
-                                    "testCategory1"),
+                                    "testCategory1",
+                                    true),
                             new ClothListResponse(
                                     2L,
                                     "testImageUrl2",
                                     "testBrand2",
                                     "testName2",
                                     "testParentCategory2",
-                                    "testCategory2"));
+                                    "testCategory2",
+                                    false));
 
             given(clothService.getClothes(null, 2, SortDirection.ASC, 1L, List.of(Season.SPRING)))
                     .willReturn(new SliceResponse<>(clothListResponses, true));
@@ -402,7 +404,9 @@ class ClothControllerTest {
                     .andExpect(jsonPath("$.isSuccess").value(true))
                     .andExpect(jsonPath("$.code").value("COMMON200"))
                     .andExpect(jsonPath("$.result.content[0].clothId").value(1))
+                    .andExpect(jsonPath("$.result.content[0].isTodayCoordinateCloth").value(true))
                     .andExpect(jsonPath("$.result.content[1].clothId").value(2))
+                    .andExpect(jsonPath("$.result.content[1].isTodayCoordinateCloth").value(false))
                     .andExpect(jsonPath("$.result.isLast").value(true));
         }
 

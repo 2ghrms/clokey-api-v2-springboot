@@ -3,10 +3,14 @@ package org.clokey.domain.member.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.clokey.IntegrationTest;
 import org.clokey.TransactionUtil;
+import org.clokey.domain.history.repository.HistoryRepository;
+import org.clokey.domain.history.repository.SituationRepository;
+import org.clokey.domain.like.repository.MemberLikeRepository;
 import org.clokey.domain.member.dto.request.DuplicatedNicknameCheckRequest;
 import org.clokey.domain.member.dto.request.ProfileUpdateRequest;
 import org.clokey.domain.member.dto.response.BlockedMemberResponse;
@@ -22,6 +26,9 @@ import org.clokey.domain.member.repository.PendingFollowRepository;
 import org.clokey.exception.BaseCustomException;
 import org.clokey.global.paging.SortDirection;
 import org.clokey.global.util.MemberUtil;
+import org.clokey.history.entity.History;
+import org.clokey.history.entity.Situation;
+import org.clokey.like.entity.MemberLike;
 import org.clokey.member.entity.Block;
 import org.clokey.member.entity.Follow;
 import org.clokey.member.entity.Member;
@@ -51,6 +58,9 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private FollowRepository followRepository;
     @Autowired private PendingFollowRepository pendingFollowRepository;
     @Autowired private BlockRepository blockRepository;
+    @Autowired private HistoryRepository historyRepository;
+    @Autowired private SituationRepository situationRepository;
+    @Autowired private MemberLikeRepository memberLikeRepository;
 
     @Autowired private TransactionUtil transactionUtil;
     @MockitoBean private MemberUtil memberUtil;
@@ -394,6 +404,28 @@ class MemberServiceTest extends IntegrationTest {
             assertThat(blockRepository.findById(1L).orElseThrow())
                     .extracting("blocker.id", "blocked.id")
                     .containsExactly(1L, 2L);
+        }
+
+        @Test
+        void 차단하면_내가_눌렀던_상대_기록_좋아요를_삭제한다() {
+            // given
+            Member blocker = memberRepository.findById(1L).orElseThrow();
+            Member blocked = memberRepository.findById(2L).orElseThrow();
+            Situation situation = situationRepository.save(Situation.createSituation("daily"));
+            History blockedHistory =
+                    historyRepository.save(
+                            History.createHistory(
+                                    LocalDate.of(2026, 4, 12), "content", blocked, situation));
+            memberLikeRepository.save(MemberLike.createMemberLike(blocker, blockedHistory));
+
+            // when
+            memberService.toggleBlockStatus(2L);
+
+            // then
+            assertThat(
+                            memberLikeRepository.findByMemberIdAndHistoryId(
+                                    blocker.getId(), blockedHistory.getId()))
+                    .isEmpty();
         }
 
         @Test
